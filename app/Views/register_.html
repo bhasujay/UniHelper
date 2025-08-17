@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - UniHelper</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/components/buttons.css">
+    <link rel="stylesheet" href="../../css/components/forms.css">
+    <link rel="stylesheet" href="../../css/pages/auth.css">
+    <link rel="stylesheet" href="../../css/pages/register.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="auth-bg">
+        <div class="bg-gradient"></div>
+        <div class="bg-blur bg-blur-1"></div>
+        <div class="bg-blur bg-blur-2"></div>
+        <div class="bg-blur bg-blur-3"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="auth-header">
+        <div class="container">
+            <div class="auth-header-content">
+                <a href="../../Index.html" class="auth-logo">
+                    <img src="../../assects/images/HAT recolor.png" alt="UniHelper" class="logo-icon">
+                    <span class="logo-text">UniHelper</span>
+                </a>
+                <div class="auth-header-actions">
+                    <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="auth-main">
+        <div class="container">
+            <div class="auth-container">
+                <!-- Registration Form Card -->
+                <div class="auth-card register-card">
+                    <div class="auth-card-header">
+                        <div class="auth-icon-container">
+                            <i class="fas fa-user-plus auth-icon"></i>
+                            <div class="auth-icon-glow"></div>
+                        </div>
+                        <h1 class="auth-title">Create Your Account</h1>
+                        <p class="auth-subtitle">Join UniHelper and start your academic journey</p>
+                    </div>
+
+                    <!-- Role Selection Tabs -->
+                    <div class="role-tabs">
+                        <button type="button" class="role-tab active" data-role="applicant">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>University Applicant</span>
+                        </button>
+                        <button type="button" class="role-tab" data-role="undergrad">
+                            <i class="fas fa-users"></i>
+                            <span>Undergraduate Student</span>
+                        </button>
+                        <button type="button" class="role-tab" data-role="admin">
+                            <i class="fas fa-university"></i>
+                            <span>University Admin</span>
+                        </button>
+                    </div>
+
+                    <form class="auth-form" id="registerForm">
+                        <input type="hidden" id="role" name="role" value="applicant" required>
+
+                        <!-- Step 1: Basic Information -->
+                        <div class="form-step" id="step1" data-step="1">
+                            <div class="form-section">
+                                <h3 class="form-section-title">Basic Information</h3>
+                                <p class="form-section-description">Tell us about yourself</p>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="firstName" class="form-label required">First Name</label>
+                                        <input type="text" id="firstName" name="firstName" class="form-input" placeholder="Enter your first name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="lastName" class="form-label required">Last Name</label>
+                                        <input type="text" id="lastName" name="lastName" class="form-input" placeholder="Enter your last name" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="email" class="form-label required">Email Address</label>
+                                    <div class="form-input-with-icon">
+                                        <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email address" required>
+                                        <i class="fas fa-envelope form-input-icon"></i>
+                                    </div>
+                                    <div class="form-help">We'll send a verification link to this email</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="phone" class="form-label">Contact Number</label>
+                                    <div class="form-input-with-icon">
+                                        <input type="tel" id="phone" name="phone" class="form-input" placeholder="Enter your phone number">
+                                        <i class="fas fa-phone form-input-icon"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Applicant A/L Year (only for applicants) -->
+                                <div class="role-fields" id="applicantFields" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="alYear" class="form-label required">GCE A/L Year</label>
+                                        <select id="alYear" name="alYear" class="form-select" required>
+                                            <option value="">Select A/L Year</option>
+                                            <option value="2024">2024</option>
+                                            <option value="2023">2023</option>
+                                            <option value="2022">2022</option>
+                                            <option value="2021">2021</option>
+                                            <option value="2020">2020</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-primary btn-lg" id="nextStep1">
+                                    Continue
+                                    <i class="fas fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Role-Specific Information (Undergrad & Admin) -->
+                        <div class="form-step" id="step2" data-step="2" style="display: none;">
+                            <div class="form-section">
+                                <h3 class="form-section-title">Role-Specific Information</h3>
+                                <p class="form-section-description">Tell us more about your academic background</p>
+                                
+                                <!-- Undergraduate Fields -->
+                                <div class="role-fields" id="undergradFields" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="university" class="form-label required">University</label>
+                                        <select id="university" name="university" class="form-select" required>
+                                            <option value="">Select University</option>
+                                            <!-- Options will be populated from JSON -->
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="faculty" class="form-label required">Faculty</label>
+                                        <select id="faculty" name="faculty" class="form-select" required>
+                                            <option value="">Select Faculty</option>
+                                            <!-- Will be populated based on university selection -->
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="degreeProgram" class="form-label required">Degree Program</label>
+                                        <select id="degreeProgram" name="degreeProgram" class="form-select" required>
+                                            <option value="">Select Degree Program</option>
+                                            <!-- Will be populated based on faculty selection -->
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="academicYear" class="form-label required">Current Academic Year</label>
+                                        <select id="academicYear" name="academicYear" class="form-select" required>
+                                            <option value="">Select Academic Year</option>
+                                            <option value="1">1st Year</option>
+                                            <option value="2">2nd Year</option>
+                                            <option value="3">3rd Year</option>
+                                            <option value="4">4th Year</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="universityEmail" class="form-label required">University Email</label>
+                                        <div class="form-input-with-icon">
+                                            <input type="email" id="universityEmail" name="universityEmail" class="form-input" placeholder="Enter your university email" required>
+                                            <i class="fas fa-envelope form-input-icon"></i>
+                                        </div>
+                                        <div class="form-help">Please use your official university email address</div>
+                                    </div>
+                                </div>
+
+                                <!-- Admin Fields -->
+                                <div class="role-fields" id="adminFields" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="adminUniversity" class="form-label required">University</label>
+                                        <select id="adminUniversity" name="adminUniversity" class="form-select" required>
+                                            <option value="">Select University</option>
+                                            <!-- Options will be populated from JSON -->
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="department" class="form-label required">Department / Office Name</label>
+                                        <input type="text" id="department" name="department" class="form-input" placeholder="Enter department or office name" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="designation" class="form-label required">Designation</label>
+                                        <input type="text" id="designation" name="designation" class="form-input" placeholder="e.g., Event Coordinator, Academic Officer" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="officialEmail" class="form-label required">Official Email</label>
+                                        <div class="form-input-with-icon">
+                                            <input type="email" id="officialEmail" name="officialEmail" class="form-input" placeholder="Enter your official university email" required>
+                                            <i class="fas fa-envelope form-input-icon"></i>
+                                        </div>
+                                        <div class="form-help">Must be a verifiable university email address</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="verificationDoc" class="form-label required">Verification Document</label>
+                                        <div class="form-file">
+                                            <input type="file" id="verificationDoc" name="verificationDoc" class="form-file-input" accept=".pdf,.jpg,.jpeg,.png" required>
+                                            <label for="verificationDoc" class="form-file-label">
+                                                <i class="fas fa-upload"></i>
+                                                <span>Upload ID card or official letter (PDF/JPG)</span>
+                                            </label>
+                                        </div>
+                                        <div class="form-help">Upload your university ID card or official letter for verification</div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-outline btn-lg" id="prevStep2">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Back
+                                </button>
+                                <button type="button" class="btn btn-primary btn-lg" id="nextStep2">
+                                    Continue
+                                    <i class="fas fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+
+
+                        <!-- Step 3: Password & Submit (Undergrad & Admin) -->
+                        <div class="form-step" id="step3" data-step="3" style="display: none;">
+                            <div class="form-section">
+                                <h3 class="form-section-title">Account Security</h3>
+                                <p class="form-section-description">Create a strong password for your account</p>
+                                
+                                <div class="form-group">
+                                    <label for="password" class="form-label required">Password</label>
+                                    <div class="form-input-with-icon">
+                                        <input type="password" id="password" name="password" class="form-input" placeholder="Create a strong password" required>
+                                        <i class="fas fa-lock form-input-icon"></i>
+                                        <button type="button" class="password-toggle" id="passwordToggle">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="password-requirements">
+                                        <div class="requirement" data-requirement="length">
+                                            <i class="fas fa-circle"></i>
+                                            <span>At least 8 characters</span>
+                                        </div>
+                                        <div class="requirement" data-requirement="number">
+                                            <i class="fas fa-circle"></i>
+                                            <span>At least 1 number</span>
+                                        </div>
+                                        <div class="requirement" data-requirement="special">
+                                            <i class="fas fa-circle"></i>
+                                            <span>At least 1 special character</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="confirmPassword" class="form-label required">Confirm Password</label>
+                                    <div class="form-input-with-icon">
+                                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" placeholder="Confirm your password" required>
+                                        <i class="fas fa-lock form-input-icon"></i>
+                                        <button type="button" class="password-toggle" id="confirmPasswordToggle">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="profilePicture" class="form-label">Profile Picture</label>
+                                    <div class="form-file">
+                                        <input type="file" id="profilePicture" name="profilePicture" class="form-file-input" accept="image/*">
+                                        <label for="profilePicture" class="form-file-label">
+                                            <i class="fas fa-upload"></i>
+                                            <span>Choose a profile picture (optional)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-outline btn-lg" id="prevStep3">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Back
+                                </button>
+                                <button type="submit" class="btn btn-primary btn-lg" id="submitForm">
+                                    <span class="btn-text">Create Account</span>
+                                    <i class="fas fa-spinner fa-spin btn-loading-icon" style="display: none;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Sign In Link -->
+                    <div class="auth-footer">
+                        <p>Already have an account? <a href="login.html" class="auth-link">Sign in</a></p>
+                    </div>
+                </div>
+
+                <!-- Features Preview -->
+                <div class="auth-features">
+                    <div class="features-content">
+                        <h2 class="features-title">Join the UniHelper Community</h2>
+                        <p class="features-subtitle">Connect with thousands of students and educators</p>
+                        
+                        <div class="features-list">
+                            <div class="feature-item">
+                                <div class="feature-icon">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <h3>Smart Z-Score Calculator</h3>
+                                    <p>Find your perfect degree program match</p>
+                                </div>
+                            </div>
+                            
+                            <div class="feature-item">
+                                <div class="feature-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <h3>Peer Learning Network</h3>
+                                    <p>Connect with fellow students and mentors</p>
+                                </div>
+                            </div>
+                            
+                            <div class="feature-item">
+                                <div class="feature-icon">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <h3>Q&A Community</h3>
+                                    <p>Get answers from experienced students</p>
+                                </div>
+                            </div>
+                            
+                            <div class="feature-item">
+                                <div class="feature-icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <h3>University Events</h3>
+                                    <p>Stay updated with latest opportunities</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="auth-footer-main">
+        <div class="container">
+            <div class="auth-footer-content">
+                <p>&copy; 2024 UniHelper. All rights reserved.</p>
+                <div class="auth-footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Help Center</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/registration.js"></script>
+
+
+
+</body>
+</html>
