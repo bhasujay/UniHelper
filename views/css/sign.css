@@ -117,6 +117,62 @@
   margin-left: 0.25rem;
 }
 
+.form-select-group {
+  position: relative;
+  width: 100%;
+}
+
+.form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: rgba(8, 8, 8, 0.7);
+  color: var(--foreground);
+  border: 1px solid rgba(164, 109, 255, 0.2);
+  border-radius: 0.5rem;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  font-size: 1rem;
+  width: 100%;
+  transition: border-color 0.3s;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.form-select-arrow {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: none;
+}
+.form-select-arrow::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 0.5rem solid transparent;
+  border-right: 0.5rem solid transparent;
+  border-top: 0.5rem solid var(--muted-foreground);
+}
+
+.form-instructions {
+  font-size: 0.92rem;
+  color: var(--muted-foreground);
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
 .form-input-with-icon {
   position: relative;
   display: flex;

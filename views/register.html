@@ -12,7 +12,7 @@
     <nav class="nav">
         <div class="nav-container">
             <div class="nav-left">
-                <div class="logo">UniHelper</div>
+                <a href="home" class="logo">UniHelper</a>
                 <div class="nav-links"></div>
             </div>
             <div class="nav-right">
@@ -29,7 +29,7 @@
                 <div class="auth-card">
                     <div class="auth-card-header">
                         <div class="auth-icon-container">
-                            <i class="fas fa-user-plus auth-icon"></i>
+                            <i class="auth-icon"></i>
                             <div class="auth-icon-glow"></div>
                         </div>
                         <h1 class="auth-title">Create Your Account</h1>
@@ -48,77 +48,69 @@
                             <label for="email" class="form-label required">Email Address</label>
                             <div class="form-input-with-icon">
                                 <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email address" required>
-                                <i class="fas fa-envelope form-input-icon"></i>
+                                <i class="form-input-icon"></i>
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="phone" class="form-label">Contact Number</label>
                             <div class="form-input-with-icon">
                                 <input type="tel" id="phone" name="phone" class="form-input" placeholder="Enter your phone number">
-                                <i class="fas fa-phone form-input-icon"></i>
+                                <i class="form-input-icon"></i>
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="alYear" class="form-label required">GCE A/L Year</label>
-                            <select id="alYear" name="alYear" class="form-select" required>
-                                <option value="">Select A/L Year</option>
-                                <option value="2024">2024</option>
-                                <option value="2023">2023</option>
-                                <option value="2022">2022</option>
-                                <option value="2021">2021</option>
-                                <option value="2020">2020</option>
-                            </select>
+                            <div class="form-select-group">
+                                <select id="alYear" name="alYear" class="form-select" required>
+                                    <option value="" disabled selected>Select A/L Year</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2022">2022</option>
+                                    <option value="2021">2021</option>
+                                    <option value="2020">2020</option>
+                                </select>
+                                <span class="form-select-arrow"></span>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="password" class="form-label required">Password</label>
                             <div class="form-input-with-icon">
                                 <input type="password" id="password" name="password" class="form-input" placeholder="Create a strong password" required>
-                                <i class="fas fa-lock form-input-icon"></i>
+                                <i class="form-input-icon"></i>
                                 <button type="button" class="password-toggle" id="passwordToggle">
-                                    <i class="fas fa-eye"></i>
                                 </button>
                             </div>
-                            <div class="password-requirements">
-                                <div class="requirement" data-requirement="length">
-                                    <i class="fas fa-circle"></i>
-                                    <span>At least 8 characters</span>
-                                </div>
-                                <div class="requirement" data-requirement="number">
-                                    <i class="fas fa-circle"></i>
-                                    <span>At least 1 number</span>
-                                </div>
-                                <div class="requirement" data-requirement="special">
-                                    <i class="fas fa-circle"></i>
-                                    <span>At least 1 special character</span>
-                                </div>
-                            </div>
+                                <ul class="form-instructions">
+                                    <li>At least 8 characters</li>
+                                    <li>At least 1 number</li>
+                                    <li>At least 1 special character</li>
+                                </ul>
                         </div>
                         <div class="form-group">
                             <label for="confirmPassword" class="form-label required">Confirm Password</label>
                             <div class="form-input-with-icon">
                                 <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" placeholder="Confirm your password" required>
-                                <i class="fas fa-lock form-input-icon"></i>
+                                <i class="form-input-icon"></i>
                                 <button type="button" class="password-toggle" id="confirmPasswordToggle">
-                                    <i class="fas fa-eye"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="profilePicture" class="form-label">Profile Picture</label>
-                            <div class="form-file">
-                                <input type="file" id="profilePicture" name="profilePicture" class="form-file-input" accept="image/*">
-                                <label for="profilePicture" class="form-file-label">
-                                    <i class="fas fa-upload"></i>
-                                    <span>Choose a profile picture (optional)</span>
-                                </label>
+                            <div>
+                                <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
+                                <br>
+                                <span class="form-instructions">
+                                    <i>Choose a profile picture (optional)</i>
+                                </span>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary btn-full btn-lg" id="registerBtn">
                             <span class="btn-text">Create Account</span>
-                            <i class="fas fa-spinner fa-spin btn-loading-icon" style="display: none;"></i>
+                            <i class="btn-loading-icon" style="display: none;"></i>
                         </button>
                         <div class="auth-footer">
-                            <p>Already have an account? <a href="login.html" class="auth-link">Sign in</a></p>
+                            <p>Already have an account? <a href="login" class="auth-link">Sign in</a></p>
                         </div>
                     </form>
                 </div>
@@ -186,7 +178,6 @@
             </div>
         </div>
     </footer>
-    <script src="js/script.js"></script>
     <script src="js/register.js"></script>
 </body>
 </html>

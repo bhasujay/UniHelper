@@ -12,7 +12,7 @@
   <nav class="nav">
     <div class="nav-container">
       <div class="nav-left">
-        <div class="logo">UniHelper</div>
+        <a href="home" class="logo">UniHelper</a>
         <div class="nav-links">
           <!--a href="#home" class="nav-link">Home</a-->
         </div>
@@ -32,7 +32,7 @@
       <div class="auth-card">
         <div class="auth-card-header">
           <div class="auth-icon-container">
-            <i class="fas fa-graduation-cap auth-icon"></i>
+            <i class="auth-icon"></i>
             <div class="auth-icon-glow"></div>
           </div>
           <h1 class="auth-title">Welcome Back</h1>
@@ -51,7 +51,7 @@
                 placeholder="Enter your email"
                 required
               >
-              <i class="fas fa-envelope form-input-icon"></i>
+              <i class="form-input-icon"></i>
             </div>
           </div>
           <!-- Password Field -->
@@ -66,9 +66,8 @@
                 placeholder="Enter your password"
                 required
               >
-              <i class="fas fa-lock form-input-icon"></i>
+              <i class="form-input-icon"></i>
               <button type="button" class="password-toggle" id="passwordToggle">
-                <i class="fas fa-eye"></i>
               </button>
             </div>
           </div>
@@ -83,7 +82,7 @@
           <!-- Login Button -->
           <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">
             <span class="btn-text">Sign In</span>
-            <i class="fas fa-spinner fa-spin btn-loading-icon" style="display: none;"></i>
+            <i class="btn-loading-icon" style="display: none;"></i>
           </button>
           <!-- Sign Up Link -->
           <div class="auth-footer">
@@ -162,7 +161,6 @@
     </div>
   </footer>
 
-  <script src="js/script.js"></script>
-  <script src="js/sign.js"></script>
+  <script src="js/login.js"></script>
 </body>
 </html>
