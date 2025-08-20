@@ -7,7 +7,7 @@
   --foreground: hsl(0, 0%, 98%);
   --muted-foreground: hsl(0, 0%, 65%);
   --border: hsl(0, 0%, 15%);
-  --card: hsl(0, 0%, 8%);
+  --card: hsl(0, 0%, 0%);
   --gradient-primary: linear-gradient(135deg, hsl(206, 100%, 70%), hsl(320, 80%, 93%));
   --glow-primary: 0 0 60px hsla(264, 83%, 63%, 0.3);
 }
@@ -41,7 +41,10 @@
   border-radius: 1.25rem;
   box-shadow: var(--glow-primary), 0 8px 32px rgba(0,0,0,0.25);
   border: 1px solid var(--border);
-  padding: 2.5rem 2rem;
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 1.3rem;
   max-width: 400px;
   width: 100%;
   text-align: center;
@@ -87,6 +90,54 @@
   background-clip: text;
 }
 
+.role-switch-container {
+  display: flex; 
+  justify-content: center; 
+  gap: 1rem; 
+  margin-bottom: 1.5rem;
+  z-index: 1;
+}
+
+.role-switch{
+  display: flex; 
+  background: var(--card);
+  border-radius: 2rem;
+  position: relative;
+  width: 100%;
+  padding: 0rem;
+  justify-content: space-evenly;
+  z-index: 2;
+  border: 1px solid rgb(108, 70, 192);
+}
+
+.label-container {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+}
+
+.role-switch-label{
+  padding: 0.2rem;
+  background: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  z-index: 3;
+  width: 100%;
+  text-align: center;
+}
+
+.role-switch-slider{
+  position: absolute; 
+  top: 0; 
+  left: 0; 
+  width: 33.33%; 
+  height: 100%; 
+  background-color: rgb(108, 70, 192); 
+  border-radius: 2rem; 
+  transition: left 0.2s;
+  z-index: 2;
+}
+
 .auth-subtitle {
   font-size: 1.1rem;
   color: var(--muted-foreground);
@@ -96,7 +147,7 @@
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .form-group {
@@ -107,7 +158,7 @@
   font-size: 1rem;
   color: var(--foreground);
   font-weight: 500;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0rem;
   display: block;
 }
 
@@ -167,10 +218,11 @@
   color: var(--muted-foreground);
   background: rgba(0, 0, 0, 0.08);
   border-radius: 0.4rem;
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  margin-bottom: 0rem;
   font-style: italic;
   letter-spacing: 0.01em;
+  line-height: 1.2;
 }
 
 .form-input-with-icon {
@@ -188,6 +240,47 @@
   font-size: 1rem;
   width: 100%;
   transition: border-color 0.3s;
+}
+
+.file-input[type="file"] {
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(164, 109, 255, 0.18);
+  background: rgba(8, 8, 8, 0.6);
+  color: var(--foreground);
+  font-size: 0.97rem;
+  width: 100%;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+.file-input[type="file"]::-webkit-file-upload-button {
+  background: var(--primary);
+  color: #111;
+  border: none;
+  border-radius: 0.3rem;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.97rem;
+  cursor: pointer;
+  transition: background 0.18s;
+  font-weight: 500;
+}
+.file-input[type="file"]:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.file-input[type="file"]::-webkit-file-upload-button:hover {
+  background: var(--accent);
+  color: #222;
+}
+.file-input[type="file"]::-ms-browse {
+  background: var(--primary);
+  color: #111;
+  border: none;
+  border-radius: 0.3rem;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.97rem;
+  cursor: pointer;
+  font-weight: 500;
 }
 
 .form-input:focus {
@@ -208,11 +301,15 @@
   border: none;
   position: absolute;
   right: 0.5rem;
-  color: var(--muted-foreground);
+  color: #fff;
   font-size: 1.1rem;
   cursor: pointer;
   padding: 0.25rem;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
 }
 
 .form-row {
@@ -272,7 +369,7 @@
 }
 
 .auth-footer {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   font-size: 0.95rem;
 }
 
@@ -294,4 +391,52 @@
   .auth-title {
     font-size: 1.5rem;
   }
+}
+
+
+/* Modal error box styles */
+.modal-error-box {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  background: rgba(0,0,0,0.3);
+}
+.modal-error-content {
+  background: #fff;
+  color: #d32f2f;
+  padding: 24px 32px;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  text-align: center;
+  min-width: 300px;
+  max-width: 90vw;
+}
+.modal-error-close {
+  margin-top: 16px;
+  padding: 8px 24px;
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Input error highlight and shake animation */
+.input-error {
+  border: 2px solid #d32f2f !important;
+  box-shadow: 0 0 4px #d32f2f;
+}
+@keyframes shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+  100% { transform: translateX(0); }
+}
+.shake {
+  animation: shake 0.5s;
 }

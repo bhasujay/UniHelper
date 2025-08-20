@@ -35,6 +35,28 @@
                         <h1 class="auth-title">Create Your Account</h1>
                         <p class="auth-subtitle">Join UniHelper and start your academic journey</p>
                     </div>
+
+                    <div class="role-switch-container">
+                        <div class="role-switch">
+                            <div class="role-switch-slider"></div>
+
+                            <input type="radio" id="role-applicant" name="userRole" value="Applicant" checked hidden>
+                            <input type="radio" id="role-undergrad" name="userRole" value="Undergraduate" hidden>
+                            <input type="radio" id="role-admin" name="userRole" value="Profile Admin" hidden>
+                            <div class="label-container">
+                                <label for="role-applicant" class="role-switch-label">
+                                    Applicant
+                                </label>
+                                <label for="role-undergrad" class="role-switch-label">
+                                    Undergrad
+                                </label>
+                                <label for="role-admin" class="role-switch-label">
+                                    Profile
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <form class="auth-form" id="registerForm" method="post" action="register.php" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="firstName" class="form-label required">First Name</label>
@@ -52,13 +74,16 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="phone" class="form-label">Contact Number</label>
+                            <label for="phone" class="form-label required">Contact Number</label>
                             <div class="form-input-with-icon">
-                                <input type="tel" id="phone" name="phone" class="form-input" placeholder="Enter your phone number">
+                                <input type="tel" id="phone" name="phone" class="form-input" placeholder="Enter your phone number" required>
                                 <i class="form-input-icon"></i>
                             </div>
                         </div>
-                        <div class="form-group">
+
+                        <!-- Specialized fields  -->
+
+                        <div class="form-group role-student">
                             <label for="alYear" class="form-label required">GCE A/L Year</label>
                             <div class="form-select-group">
                                 <select id="alYear" name="alYear" class="form-select" required>
@@ -72,6 +97,55 @@
                                 <span class="form-select-arrow"></span>
                             </div>
                         </div>
+
+                        <div class="form-group role-undergrad">
+                            <label for="University" class="form-label required">University</label>
+                            <div class="form-select-group">
+                                <select id="University" name="University" class="form-select" required>
+                                    <option value="" disabled selected>Select University</option>
+                                    <option value="1">sample 1</option>
+                                    <option value="2">sample 2</option>
+                                </select>
+                                <span class="form-select-arrow"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group role-undergrad">
+                            <label for="Major" class="form-label required">Major</label>
+                            <div class="form-select-group">
+                                <select id="Major" name="Major" class="form-select" required>
+                                    <option value="" disabled selected>Select Major</option>
+                                    <option value="1">sample 1</option>
+                                    <option value="2">sample 2</option>
+                                </select>
+                                <span class="form-select-arrow"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group role-profile">
+                            <label for="University" class="form-label required">University</label>
+                            <div class="form-select-group">
+                                <select id="University" name="University" class="form-select" required>
+                                    <option value="" disabled selected>Select University</option>
+                                    <option value="1">sample 1</option>
+                                    <option value="2">sample 2</option>
+                                </select>
+                                <span class="form-select-arrow"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group role-profile">
+                            <label for="role" class="form-label required">Role</label>
+                            <div class="form-input-with-icon">
+                                <input type="text" id="role" name="role" class="form-input" placeholder="Enter your role" required>
+                                <i class="form-input-icon"></i>
+                            </div>
+                        </div>
+
+
+                        <!-- <Specialized fields> end -->
+
+
                         <div class="form-group">
                             <label for="password" class="form-label required">Password</label>
                             <div class="form-input-with-icon">
@@ -97,13 +171,13 @@
                         </div>
                         <div class="form-group">
                             <label for="profilePicture" class="form-label">Profile Picture</label>
-                            <div>
-                                <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
-                                <br>
-                                <span class="form-instructions">
-                                    <i>Choose a profile picture (optional)</i>
-                                </span>
+                            <div class="form-input-with-icon">
+                                <input type="file" id="profilePicture" name="profilePicture" accept="image/*" class="file-input">
+                                <svg class="form-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="20" height="18" rx="2" ry="2"/><circle cx="8.5" cy="10.5" r="2.5"/><polyline points="21 19 17 15 13 19 9 15 3 19"/></svg>
                             </div>
+                            <span class="form-instructions">
+                                <i>Choose a profile picture (optional)</i>
+                            </span>
                         </div>
                         <button type="submit" class="btn btn-primary btn-full btn-lg" id="registerBtn">
                             <span class="btn-text">Create Account</span>
@@ -113,6 +187,7 @@
                             <p>Already have an account? <a href="login" class="auth-link">Sign in</a></p>
                         </div>
                     </form>
+
                 </div>
             </div>
         </div>

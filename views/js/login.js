@@ -17,15 +17,21 @@ document.addEventListener('DOMContentLoaded', function() {
     form.insertBefore(errorBox, form.firstChild);
   }
 
+  // Inline SVG icons for eye and eye-slash
+  // Simple standard eye and eye-slash SVGs
+  const eyeSVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8e8e8eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="7" ry="5"/><circle cx="12" cy="12" r="2"/></svg>';
+  const eyeSlashSVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8e8e8eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="7" ry="5"/><circle cx="12" cy="12" r="2"/><line x1="5" y1="5" x2="19" y2="19"/></svg>';
+
   // Password show/hide toggle
   if (passwordToggle && passwordInput) {
+    passwordToggle.innerHTML = eyeSVG;
     passwordToggle.addEventListener('click', function() {
       if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
-        passwordToggle.innerHTML = '<i class="fas fa-eye-slash"></i>';
+        passwordToggle.innerHTML = eyeSlashSVG;
       } else {
         passwordInput.type = 'password';
-        passwordToggle.innerHTML = '<i class="fas fa-eye"></i>';
+        passwordToggle.innerHTML = eyeSVG;
       }
     });
   }

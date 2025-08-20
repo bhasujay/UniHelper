@@ -51,7 +51,8 @@ class Router
 
     public function render_view($view)
     {
-        require_once Application::$ROOT_DIR . "/views/$view.html";
+        require_once Application::$ROOT_DIR . "/views/$view";
+        
         // Optionally, you can include a layout file here
         
     }
