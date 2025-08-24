@@ -30,9 +30,6 @@
   </nav>
 
 
-{{content}}
-
-
 <!-- Sidebar Section -->
 <aside class="sidebar">
   <ul class="sidebar-menu">
