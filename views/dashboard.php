@@ -2,62 +2,309 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UniHelper - From Application to Graduation</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/dashboard.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniHelper - From Application to Graduation</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- Navigation -->
-  <nav class="nav">
-    <div class="nav-container">
-      <div class="nav-left">
-        <div class="logo">UniHelper</div>
-        <div class="nav-links">
-          <!--a href="#home" class="nav-link">Home</a-->
+    <!-- Part 1: Navigation Bar (Completely Separate) -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo">UniHelper</div>
+                <div class="nav-links">
+                    <!--a href="#home" class="nav-link">Home</a-->
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="profile-container">
+                    <div class="profile-picture">U</div>
+                    <div class="profile-info">
+                        <span class="profile-name">User</span>
+                        <span class="profile-role">Welcome</span>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="profile-container">
-        <div class="profile-picture">
-          <img src="path/to/profile-picture.jpg" alt="Profile Picture">
+    </nav>
+
+    <!-- Part 2: Sidebar (Completely Separate) -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">UniHelper</div>
+            <div class="user-role">Welcome</div>
         </div>
-        <div class="profile-info">
-          <span class="profile-name">John Doe</span>
-          <a href="#logout" class="btn btn-outline">Logout</a>
+        
+        <ul class="sidebar-menu">
+            <!-- Dashboard Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Main</div>
+                <li><a href="#dashboard" class="sidebar-link active">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a></li>
+                <li><a href="#feed" class="sidebar-link">
+                    <i class="fas fa-rss"></i>
+                    <span>Feed</span>
+                </a></li>
+                <li><a href="#profile" class="sidebar-link">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a></li>
+                <li><a href="#notifications" class="sidebar-link">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a></li>
+            </div>
+
+            <!-- University Applicant Features -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">University Applicant</div>
+                <li><a href="#zscore-checker" class="sidebar-link">
+                    <i class="fas fa-calculator"></i>
+                    <span>Z-Score Checker</span>
+                </a></li>
+                <li><a href="#degree-programs" class="sidebar-link">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Degree Programs</span>
+                </a></li>
+                <li><a href="#wishlist" class="sidebar-link">
+                    <i class="fas fa-heart"></i>
+                    <span>Wishlist</span>
+                </a></li>
+                <li><a href="#applicant-matching" class="sidebar-link">
+                    <i class="fas fa-users"></i>
+                    <span>Find Applicants</span>
+                </a></li>
+                <li><a href="#unicode-generator" class="sidebar-link">
+                    <i class="fas fa-list-ol"></i>
+                    <span>Unicode Generator</span>
+                </a></li>
+                <li><a href="#qa-forum" class="sidebar-link">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Q&A Forum</span>
+                </a></li>
+                <li><a href="#connect-undergrads" class="sidebar-link">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>Connect with Undergrads</span>
+                </a></li>
+            </div>
+
+            <!-- Undergraduate Features -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Undergraduate</div>
+                <li><a href="#peer-learning" class="sidebar-link">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>Peer Learning</span>
+                </a></li>
+                <li><a href="#create-session" class="sidebar-link">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Create Session</span>
+                </a></li>
+                <li><a href="#my-sessions" class="sidebar-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>My Sessions</span>
+                </a></li>
+                <li><a href="#join-sessions" class="sidebar-link">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Join Sessions</span>
+                </a></li>
+                <li><a href="#help-applicants" class="sidebar-link">
+                    <i class="fas fa-hands-helping"></i>
+                    <span>Help Applicants</span>
+                </a></li>
+                <li><a href="#points-badges" class="sidebar-link">
+                    <i class="fas fa-trophy"></i>
+                    <span>Points & Badges</span>
+                </a></li>
+                <li><a href="#schedule-meetings" class="sidebar-link">
+                    <i class="fas fa-video"></i>
+                    <span>Schedule Meetings</span>
+                </a></li>
+            </div>
+
+            <!-- University Admin Features -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">University Admin</div>
+                <li><a href="#publish-events" class="sidebar-link">
+                    <i class="fas fa-calendar-plus"></i>
+                    <span>Publish Events</span>
+                </a></li>
+                <li><a href="#workshops" class="sidebar-link">
+                    <i class="fas fa-tools"></i>
+                    <span>Workshops</span>
+                </a></li>
+                <li><a href="#insight-days" class="sidebar-link">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Insight Days</span>
+                </a></li>
+                <li><a href="#private-courses" class="sidebar-link">
+                    <i class="fas fa-university"></i>
+                    <span>Private Courses</span>
+                </a></li>
+                <li><a href="#announcements" class="sidebar-link">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Announcements</span>
+                </a></li>
+                <li><a href="#analytics" class="sidebar-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a></li>
+            </div>
+
+            <!-- Platform Moderator Features -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Moderator</div>
+                <li><a href="#content-moderation" class="sidebar-link">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Content Moderation</span>
+                </a></li>
+                <li><a href="#flagged-posts" class="sidebar-link">
+                    <i class="fas fa-flag"></i>
+                    <span>Flagged Posts</span>
+                </a></li>
+                <li><a href="#user-management" class="sidebar-link">
+                    <i class="fas fa-user-cog"></i>
+                    <span>User Management</span>
+                </a></li>
+                <li><a href="#activity-monitor" class="sidebar-link">
+                    <i class="fas fa-eye"></i>
+                    <span>Activity Monitor</span>
+                </a></li>
+                <li><a href="#expired-content" class="sidebar-link">
+                    <i class="fas fa-clock"></i>
+                    <span>Expired Content</span>
+                </a></li>
+                <li><a href="#moderator-dashboard" class="sidebar-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Moderator Dashboard</span>
+                </a></li>
+            </div>
+
+            <!-- Settings & Logout -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Account</div>
+                <li><a href="#settings" class="sidebar-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a></li>
+                <li><a href="#help" class="sidebar-link">
+                    <i class="fas fa-question"></i>
+                    <span>Help & Support</span>
+                </a></li>
+                <li><a href="#logout" class="sidebar-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a></li>
+            </div>
+        </ul>
+    </aside>
+
+    <!-- Part 3: Main Content Area (Posts and Q&As) -->
+    <main class="main-content">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" id="mobileMenuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <!-- Dashboard Content Area -->
+        <div class="dashboard-content">
+            <h1 class="dashboard-title">Dashboard</h1>
+            <p class="dashboard-subtitle">Create posts and engage with the community</p>
+            
+            <!-- Content will be added here for posts and Q&As -->
+            <div class="content-placeholder">
+                <p>Posts and Q&A content will appear here</p>
+            </div>
         </div>
-      </div>
-    </div>
-  </nav>
+    </main>
 
+    <!-- Part 4: Footer (At Very Bottom, Completely Separate) -->
+    <footer class="dashboard-footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <!-- Company Info -->
+                <div class="footer-section">
+                    <div class="footer-logo">UniHelper</div>
+                    <p class="footer-description">Empowering Sri Lankan students from application to graduation with smart tools and community support.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 3a10.9 10.9 0 0 1-3.14 1.68 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                                <rect x="2" y="9" width="4" height="12"/>
+                                <circle cx="4" cy="4" r="2"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
 
-{{content}}
+                <!-- Contact Info -->
+                <div class="footer-section">
+                    <h3 class="footer-title">Contact Info</h3>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            <span>unihelper@gmail.com</span>
+                        </div>
+                        <div class="contact-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                            </svg>
+                            <span>+94 11 234 5678</span>
+                        </div>
+                        <div class="contact-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            <span>Colombo, Sri Lanka</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-
-<!-- Sidebar Section -->
-<aside class="sidebar">
-  <ul class="sidebar-menu">
-    <li><a href="#dashboard" class="sidebar-link">Dashboard</a></li>
-    <li><a href="#applications" class="sidebar-link">Applications</a></li>
-    <li><a href="#courses" class="sidebar-link">Courses</a></li>
-    <li><a href="#calendar" class="sidebar-link">Calendar</a></li>
-    <li><a href="#settings" class="sidebar-link">Settings</a></li>
-  </ul>
-</aside>
-
-
-  <!-- Footer Section -->
-  <footer class="footer">
-    <div class="footer-container">
-      <!-- Footer Bottom -->
-      <div class="footer-bottom">
-        <div class="footer-bottom-content">
-          <p>&copy; 2024 UniHelper. All rights reserved.</p>
-
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <p>&copy; 2024 UniHelper. All rights reserved.</p>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </footer>
+    </footer>
 
-  <script src="js/script.js"></script>
+    <script src="js/script.js"></script>
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuToggle').addEventListener('click', function() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
+        });
+
+        // Sidebar link active state
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                // Remove active class from all links
+                document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                // Add active class to clicked link
+                this.classList.add('active');
+            });
+        });
+    </script>
 </body>
 </html>
