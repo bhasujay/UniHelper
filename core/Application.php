@@ -2,8 +2,6 @@
 
 namespace app\core;
 
-
-
 class Application
 {
     public static string $ROOT_DIR;
@@ -12,16 +10,14 @@ class Application
 
     public function __construct($root)
     {
-        self::$ROOT_DIR = $root . '/..';
+        self::$ROOT_DIR = $root;
         $this->request = new Request();
         $this->router = new Router($this->request);
     }
 
-
     public function run()
     {
+        echo "Path - " . self::$ROOT_DIR . "<br>";
         echo $this->router->resolve();
     }
-
-
 }

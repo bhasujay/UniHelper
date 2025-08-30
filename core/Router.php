@@ -30,10 +30,6 @@ class Router
         $path = $this->request->getPath();
         $method = $this->request->getMethod();
 
-        // Handle static files (CSS, JS, images)
-        if ($this->handleStaticFiles($path))
-            return;
-        
         $callback = $this->routes[$method][$path] ?? false;
 
         if (!$callback)
@@ -52,48 +48,6 @@ class Router
     public function render_view($view)
     {
         require_once Application::$ROOT_DIR . "/views/$view";
-        
-        // Optionally, you can include a layout file here
-        
+
     }
-
-    protected function handleStaticFiles($path)
-    {
-        // Define static file extensions and their MIME types
-        $staticExtensions = 
-        [
-            'css' => 'text/css',
-            'js' => 'application/javascript',
-            'png' => 'image/png',
-            'jpg' => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'gif' => 'image/gif',
-            'svg' => 'image/svg+xml',
-            'ico' => 'image/x-icon'
-        ];
-
-        // Get file extension
-        $pathInfo = pathinfo($path);
-        $extension = $pathInfo['extension'] ?? '';
-
-        if (!isset($staticExtensions[$extension]))
-            return false; // Not a static file
-
-        // Try to find the file in views directory
-        $filePath = Application::$ROOT_DIR . "/views" . $path;
-
-        if (file_exists($filePath))
-        {
-            // Set appropriate content type
-            header('Content-Type: ' . $staticExtensions[$extension]);
-            
-            // Output the file
-            readfile($filePath);
-            return true;
-        }
-
-        return false; // File not found
-    }
-
-    
 }

@@ -1,0 +1,17 @@
+Options -Indexes
+RewriteEngine On
+RewriteBase /unihelper/
+
+DirectoryIndex public/index.php
+
+# Don’t rewrite requests for existing files in views/
+RewriteCond %{REQUEST_URI} ^/unihelper/views/ [NC]
+RewriteRule ^ - [L]
+
+# If the file/folder exists anywhere, serve it directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Otherwise, send everything to public/index.php
+RewriteRule ^ public/index.php [L]
