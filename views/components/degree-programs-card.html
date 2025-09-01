@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Degree Program Card</title>
+
+    <!-- Link to your main stylesheet (contains variables and button styles) -->
+    <link rel="stylesheet" href="../css/style.css">
+    
+    <!-- Link to your card-specific stylesheet -->
+    <link rel="stylesheet" href="../css/cards.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 2rem;">
+
+    <!-- Degree Program Card -->
+    <div class="dashboard-card degree-program-card">
+        <div class="card-header">
+            <h3>Bachelor of Science in Computer Science</h3>
+            <p>University of Colombo</p>
+        </div>
+
+        <div class="card-body">
+            <p class="faculty-name">Faculty of Science</p>
+            
+            <div class="degree-metrics">
+                <div class="cutoff-info">Cutoff: <strong>1.5423</strong></div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-track">
+                        <!-- 1.2356 is ~80% of 1.5423 -->
+                        <div class="progress-bar-fill below-cutoff" style="width: 80%;"></div>
+                    </div>
+                </div>
+                <p class="user-score-label">Your Z-Score: 1.2356</p>
+            </div>
+            
+            <div class="degree-tags">
+                <span class="tag">Science Stream</span>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <div class="footer-details">
+                <span>Duration: <strong>4 Years</strong></span>
+                <span>Unicode: <strong>001A</strong></span>
+            </div>
+            <div class="card-actions">
+                <button class="icon-btn" aria-label="Save to Wishlist">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                </button>
+                <button class="icon-btn" aria-label="View Details">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
