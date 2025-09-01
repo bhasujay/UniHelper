@@ -17,7 +17,6 @@ class Application
 
     public function run()
     {
-        echo "Path - " . self::$ROOT_DIR . "<br>";
         echo $this->router->resolve();
     }
 }

@@ -48,6 +48,5 @@ class Router
     public function render_view($view)
     {
         require_once Application::$ROOT_DIR . "/views/$view";
-
     }
 }
