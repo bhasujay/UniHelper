@@ -666,4 +666,8 @@
     color: var(--muted-foreground);
     font-size: 0.875rem;
   }
-  
+
+  /* Remove any remote font imports or @font-face using URLs */
+body {
+    font-family: 'Segoe UI', Arial, sans-serif; /* Use only local system fonts */
+}

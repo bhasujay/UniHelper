@@ -6,8 +6,6 @@
     <title>UniHelper - From Application to Graduation</title>
     <link rel="stylesheet" href="views/css/style.css">
     <link rel="stylesheet" href="views/css/dashboard.css">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Part 1: Navigation Bar (Completely Separate) -->
