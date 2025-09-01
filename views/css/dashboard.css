@@ -61,6 +61,18 @@
     border-bottom: 1px solid rgba(164, 109, 255, 0.1);
   }
   
+
+  .sidebar-section-subtitle {
+    font-size: 0.875rem; /* Slightly smaller for subtitle */
+    font-weight: 500;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0 1.5rem 0.5rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(164, 109, 255, 0.1);
+  }
+
   .sidebar-link {
     display: flex;
     align-items: center;

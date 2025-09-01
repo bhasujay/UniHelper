@@ -35,29 +35,17 @@
             <!-- University Admin Features -->
             <div class="sidebar-section">
                 <div class="sidebar-section-title">University Admin</div>
-                <li><a href="#publish-events" class="sidebar-link">
+                <li><a href="dashboard/profile/qa-forum" class="sidebar-link">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Q&A Forum</span>
+                </a></li>
+                <li><a href="dashboard/profile/publish-events" class="sidebar-link">
                     <i class="fas fa-calendar-plus"></i>
                     <span>Publish Events</span>
                 </a></li>
-                <li><a href="#workshops" class="sidebar-link">
-                    <i class="fas fa-tools"></i>
-                    <span>Workshops</span>
-                </a></li>
-                <li><a href="#insight-days" class="sidebar-link">
-                    <i class="fas fa-lightbulb"></i>
-                    <span>Insight Days</span>
-                </a></li>
-                <li><a href="#private-courses" class="sidebar-link">
-                    <i class="fas fa-university"></i>
-                    <span>Private Courses</span>
-                </a></li>
-                <li><a href="#announcements" class="sidebar-link">
+                <li><a href="dashboard/profile/announcements" class="sidebar-link">
                     <i class="fas fa-bullhorn"></i>
                     <span>Announcements</span>
-                </a></li>
-                <li><a href="#analytics" class="sidebar-link">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Analytics</span>
                 </a></li>
             </div>
         </ul>

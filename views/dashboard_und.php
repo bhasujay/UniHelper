@@ -35,33 +35,34 @@
             <!-- Undergraduate Features -->
             <div class="sidebar-section">
                 <div class="sidebar-section-title">Undergraduate</div>
-                <li><a href="#peer-learning" class="sidebar-link">
+                <li><a href="dashboard/undergraduate/qa-forum" class="sidebar-link">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Q&A Forum</span>
+                </a></li>
+                <li><a href="dashboard/undergraduate/peer-learning" class="sidebar-link">
                     <i class="fas fa-chalkboard-teacher"></i>
                     <span>Peer Learning</span>
                 </a></li>
-                <li><a href="#create-session" class="sidebar-link">
+                <li><a href="dashboard/undergraduate/create-session" class="sidebar-link">
                     <i class="fas fa-plus-circle"></i>
                     <span>Create Session</span>
                 </a></li>
-                <li><a href="#my-sessions" class="sidebar-link">
+                <li><a href="dashboard/undergraduate/my-sessions" class="sidebar-link">
                     <i class="fas fa-calendar-alt"></i>
                     <span>My Sessions</span>
                 </a></li>
-                <li><a href="#join-sessions" class="sidebar-link">
+                <li><a href="dashboard/undergraduate/join-sessions" class="sidebar-link">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Join Sessions</span>
                 </a></li>
-                <li><a href="#help-applicants" class="sidebar-link">
-                    <i class="fas fa-hands-helping"></i>
-                    <span>Help Applicants</span>
+                <div class="sidebar-section-subtitle">Moderator Features</div>
+                <li><a href="dashboard/undergraduate/resources" class="sidebar-link">
+                    <i class="fas fa-book"></i>
+                    <span>Flagged Content</span>
                 </a></li>
-                <li><a href="#points-badges" class="sidebar-link">
-                    <i class="fas fa-trophy"></i>
-                    <span>Points & Badges</span>
-                </a></li>
-                <li><a href="#schedule-meetings" class="sidebar-link">
-                    <i class="fas fa-video"></i>
-                    <span>Schedule Meetings</span>
+                <li><a href="dashboard/undergraduate/banned-users" class="sidebar-link">
+                    <i class="fas fa-tools"></i>
+                    <span>Banned Users</span>
                 </a></li>
             </div>
         </ul>

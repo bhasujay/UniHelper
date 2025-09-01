@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UniHelper - From Application to Graduation</title>
+
     <link rel="stylesheet" href="views/css/style.css">
     <link rel="stylesheet" href="views/css/dashboard.css">
+    <link rel="stylesheet" href="views/css/cards.css">
 </head>
 <body>
     <!-- Part 1: Navigation Bar (Completely Separate) -->
@@ -38,31 +40,31 @@
 
                 <div class="sidebar-section-title">University Applicant</div>
 
-                <li><a href="#zscore-checker" class="sidebar-link">
-                    <i class="fas fa-calculator"></i>
-                    <span>Z-Score Checker</span>
-                </a></li>
-                <li><a href="#degree-programs" class="sidebar-link">
-                    <i class="fas fa-graduation-cap"></i>
-                    <span>Degree Programs</span>
-                </a></li>
-                <li><a href="#wishlist" class="sidebar-link">
-                    <i class="fas fa-heart"></i>
-                    <span>Wishlist</span>
-                </a></li>
-                <li><a href="#applicant-matching" class="sidebar-link">
-                    <i class="fas fa-users"></i>
-                    <span>Find Applicants</span>
-                </a></li>
-                <li><a href="#unicode-generator" class="sidebar-link">
-                    <i class="fas fa-list-ol"></i>
-                    <span>Unicode Generator</span>
-                </a></li>
-                <li><a href="#qa-forum" class="sidebar-link">
+                <li><a href="dashboard/applicant/qa-forum" class="sidebar-link">
                     <i class="fas fa-question-circle"></i>
                     <span>Q&A Forum</span>
                 </a></li>
-                <li><a href="#connect-undergrads" class="sidebar-link">
+                <li><a href="dashboard/applicant/z-score-checker" class="sidebar-link">
+                    <i class="fas fa-calculator"></i>
+                    <span>Z-Score Checker</span>
+                </a></li>
+                <li><a href="dashboard/applicant/degree-programs" class="sidebar-link">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Degree Programs</span>
+                </a></li>
+                <li><a href="dashboard/applicant/wishlist" class="sidebar-link">
+                    <i class="fas fa-heart"></i>
+                    <span>Wishlist</span>
+                </a></li>
+                <li><a href="dashboard/applicant/matching" class="sidebar-link">
+                    <i class="fas fa-users"></i>
+                    <span>Find Applicants</span>
+                </a></li>
+                <li><a href="dashboard/applicant/unicode-generator" class="sidebar-link">
+                    <i class="fas fa-list-ol"></i>
+                    <span>Unicode Generator</span>
+                </a></li>
+                <li><a href="dashboard/applicant/connect-undergrads" class="sidebar-link">
                     <i class="fab fa-whatsapp"></i>
                     <span>Connect with Undergrads</span>
                 </a></li>
@@ -71,10 +73,10 @@
     </aside>
 
 
-    <!-- Add some vertical space between sidebar and main content -->
-    <div style="margin-left: 260px; padding: 32px 24px 24px 24px; min-height: 400px;">
-        <!-- Main dashboard content goes here -->
-    </div>
+    <main>
+        <!-- Placeholder where component will be injected -->
+        <?php if (isset($content)) echo $content; ?>
+    </main>
 
 
     <!-- Part 4: Footer (At Very Bottom, Completely Separate) -->
