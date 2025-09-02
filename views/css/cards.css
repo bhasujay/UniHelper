@@ -598,3 +598,287 @@
     display: flex;
     gap: 0.5rem;
 }
+
+/*
+ * Peer Learning Card Styles
+ * (Add to cards.css)
+ */
+
+.peer-learning-card {
+    padding: 0;
+    max-width: 550px; /* Optimal width for this layout */
+}
+
+.peer-learning-card .card-header,
+.peer-learning-card .card-body,
+.peer-learning-card .card-footer {
+    padding: 1.25rem 1.75rem;
+}
+
+.peer-learning-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.host-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+}
+
+.host-info {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+.host-info strong {
+    color: var(--foreground);
+    font-weight: 500;
+}
+
+.peer-learning-card .card-body {
+    padding-bottom: 1rem;
+}
+
+.subject-tag {
+    display: inline-block;
+    background-color: rgba(102, 189, 255, 0.1);
+    color: var(--primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.session-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0 0 0.5rem 0;
+}
+
+.session-description {
+    color: var(--muted-foreground);
+    margin: 0 0 1.5rem 0;
+}
+
+.session-details-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.session-details-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+}
+
+.session-details-list svg {
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.peer-learning-card .card-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    border-top: 1px solid var(--border);
+    background-color: rgba(0,0,0,0.2); /* Slightly different footer background */
+}
+
+.engagement-metrics {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+}
+
+.participants {
+    color: var(--muted-foreground);
+}
+
+.trending-badge {
+    background: linear-gradient(to right, #ff7e5f, #feb47b);
+    color: #fff;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+}
+
+/*
+ * Create Session Modal Styles
+ * (Add to cards.css)
+ */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    z-index: 1001; /* Ensure it's on top of other content */
+}
+
+.create-session-modal {
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.modal-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--foreground);
+}
+
+.modal-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.modal-form .form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    margin-bottom: 0.5rem;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: #0f0f0f;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--foreground);
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102, 189, 255, 0.2);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-section {
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.time-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.location-options {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Custom Radio Button */
+.custom-radio {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: var(--foreground);
+}
+
+.custom-radio input {
+    display: none;
+}
+
+.radio-dot {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    margin-right: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s;
+}
+
+.radio-dot::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.2s ease-in-out;
+}
+
+.custom-radio input:checked + .radio-dot {
+    border-color: var(--primary);
+}
+
+.custom-radio input:checked + .radio-dot::after {
+    transform: scale(1);
+}
+
+.create-session-btn {
+    width: 100%;
+    justify-content: center;
+    margin-top: 1.5rem;
+    background: var(--gradient-primary); /* Vibrant color */
+}

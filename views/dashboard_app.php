@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="/unihelper/views/css/cards.css">
 </head>
 <body>
-    <!-- Part 1: Navigation Bar (Completely Separate) -->
     <nav class="nav">
         <div class="nav-container">
             <div class="nav-left">
@@ -32,7 +31,6 @@
         </div>
     </nav>
 
-    <!-- Part 2: Sidebar (Completely Separate) -->
     <aside class="sidebar">
         
         <ul class="sidebar-menu">
@@ -74,12 +72,10 @@
         </ul>
     </aside>
 
-    <!-- Placeholder where component will be injected -->
     <main class="main-content">
         <?php if (isset($content)) echo $content; ?>
     </main>
 
-    <!-- Part 4: Footer (At Very Bottom, Completely Separate) -->
     <footer class="dashboard-footer">
         <div class="footer-container">
             <div class="footer-content">
