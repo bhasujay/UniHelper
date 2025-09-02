@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <base href="/unihelper/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UniHelper - From Application to Graduation</title>
-    <link rel="stylesheet" href="views/css/style.css">
-    <link rel="stylesheet" href="views/css/dashboard.css">
+
+    <link rel="stylesheet" href="/unihelper/views/css/style.css">
+    <link rel="stylesheet" href="/unihelper/views/css/dashboard.css">
+    <link rel="stylesheet" href="/unihelper/views/css/cards.css">
 </head>
 <body>
     <!-- Part 1: Navigation Bar (Completely Separate) -->
@@ -56,7 +59,7 @@
                     <span>Join Sessions</span>
                 </a></li>
                 <div class="sidebar-section-subtitle">Moderator Features</div>
-                <li><a href="dashboard/undergraduate/resources" class="sidebar-link">
+                <li><a href="dashboard/undergraduate/flagged-content" class="sidebar-link">
                     <i class="fas fa-book"></i>
                     <span>Flagged Content</span>
                 </a></li>
@@ -68,6 +71,10 @@
         </ul>
     </aside>
 
+    <!-- Placeholder where component will be injected -->
+    <main class="main-content">
+        <?php if (isset($content)) echo $content; ?>
+    </main>
 
     <!-- Part 4: Footer (At Very Bottom, Completely Separate) -->
     <footer class="dashboard-footer">
@@ -135,7 +142,6 @@
         </div>
     </footer>
 
-    <script src="js/script.js"></script>
     <script>
         // Mobile menu toggle
         document.getElementById('mobileMenuToggle').addEventListener('click', function() {

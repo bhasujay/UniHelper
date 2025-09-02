@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <base href="/unihelper/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UniHelper - From Application to Graduation</title>
 
-    <link rel="stylesheet" href="views/css/style.css">
-    <link rel="stylesheet" href="views/css/dashboard.css">
-    <link rel="stylesheet" href="views/css/cards.css">
+    <link rel="stylesheet" href="/unihelper/views/css/style.css">
+    <link rel="stylesheet" href="/unihelper/views/css/dashboard.css">
+    <link rel="stylesheet" href="/unihelper/views/css/cards.css">
 </head>
 <body>
     <!-- Part 1: Navigation Bar (Completely Separate) -->
@@ -56,7 +57,7 @@
                     <i class="fas fa-heart"></i>
                     <span>Wishlist</span>
                 </a></li>
-                <li><a href="dashboard/applicant/matching" class="sidebar-link">
+                <li><a href="dashboard/applicant/find-applicant" class="sidebar-link">
                     <i class="fas fa-users"></i>
                     <span>Find Applicants</span>
                 </a></li>
@@ -64,6 +65,7 @@
                     <i class="fas fa-list-ol"></i>
                     <span>Unicode Generator</span>
                 </a></li>
+                <!-- not implemented -->
                 <li><a href="dashboard/applicant/connect-undergrads" class="sidebar-link">
                     <i class="fab fa-whatsapp"></i>
                     <span>Connect with Undergrads</span>
@@ -72,12 +74,10 @@
         </ul>
     </aside>
 
-
-    <main>
-        <!-- Placeholder where component will be injected -->
+    <!-- Placeholder where component will be injected -->
+    <main class="main-content">
         <?php if (isset($content)) echo $content; ?>
     </main>
-
 
     <!-- Part 4: Footer (At Very Bottom, Completely Separate) -->
     <footer class="dashboard-footer">
@@ -145,7 +145,6 @@
         </div>
     </footer>
 
-    <script src="js/script.js"></script>
     <script>
         // Mobile menu toggle
         document.getElementById('mobileMenuToggle').addEventListener('click', function() {

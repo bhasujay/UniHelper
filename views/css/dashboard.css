@@ -65,6 +65,7 @@
   .sidebar-section-subtitle {
     font-size: 0.875rem; /* Slightly smaller for subtitle */
     font-weight: 500;
+    margin-top: 10px;
     color: var(--muted-foreground);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -399,7 +400,29 @@
     color: var(--muted-foreground);
   }
   
-  /* Responsive Design */
+  /* Main Content Positioning */
+main {
+    margin-left: 280px; /* Same as sidebar width */
+    margin-top: 100px; /* Same as navbar height */
+    padding: 2rem;
+    min-height: calc(100vh - 100px - 20px - 200px); /* Subtract nav + spacing + footer height */
+    width: calc(100% - 280px - 4rem); /* Full width minus sidebar and padding */
+    position: relative;
+    z-index: 10; /* Ensure it's above background but below nav/sidebar */
+}
+
+/* Dashboard cards container */
+main .dashboard-card {
+    background: rgba(8, 8, 8, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(164, 109, 255, 0.2);
+    border-radius: 1rem;
+    max-width: 100%; /* Override the max-width from cards.css */
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(164, 109, 255, 0.2);
+}
+
+/* Responsive Design */
   @media (max-width: 1024px) {
     .sidebar {
       transform: translateX(-100%);

@@ -12,9 +12,6 @@ class Request
         array_shift($parts); // Remove the first part
         $path = '/' . implode('/', $parts);
         $position = strpos($path, '?');
-
-        echo $path;
-
         return ($position === false) ? $path : substr($path, 0, $position);
     }
 

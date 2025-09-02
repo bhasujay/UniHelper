@@ -113,7 +113,7 @@
   
   .btn-primary {
     background: var(--gradient-primary);
-    color: white;
+    color: rgb(0, 0, 0);
     box-shadow: var(--glow-primary);
   }
   
@@ -131,6 +131,12 @@
   .btn-outline:hover {
     border-color: var(--primary);
     background: rgba(164, 109, 255, 0.1);
+  }
+
+  .btn-text {
+    color: #111 !important;
+    font-weight: bold;
+    font-size: 1.15rem;
   }
 
   
