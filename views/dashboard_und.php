@@ -40,10 +40,6 @@
                     <i class="fas fa-question-circle"></i>
                     <span>Q&A Forum</span>
                 </a></li>
-                <li><a href="dashboard/undergraduate/peer-learning" class="sidebar-link">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <span>Peer Learning</span>
-                </a></li>
                 <li><a href="dashboard/undergraduate/create-session" class="sidebar-link">
                     <i class="fas fa-plus-circle"></i>
                     <span>Create Session</span>

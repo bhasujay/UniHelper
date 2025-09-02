@@ -9,7 +9,6 @@ class UndergradDashController extends DashboardController
 {
     protected $validComponents = [
         'qa-forum',
-        'peer-learning',
         'create-session',
         'my-sessions',
         'join-sessions',
