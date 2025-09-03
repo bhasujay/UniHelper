@@ -18,5 +18,5 @@ class ApplicantDashController extends DashboardController
     ];
     
     protected $dashboardTemplate = 'dashboard_app.php';
-    protected $defaultComponent = 'z-score-checker';
+    protected $defaultComponent = 'qa-forum';
 }

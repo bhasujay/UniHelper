@@ -57,7 +57,7 @@
     </div>
     
     <div class="card-action">
-        <a href="#" class="btn btn-primary btn-large generate-btn btn-text">Generate & Download PDF</a>
+        <a href="#" class="btn btn-primary generate-btn btn-text">Generate</a>
     </div>
     
     <p class="card-disclaimer">

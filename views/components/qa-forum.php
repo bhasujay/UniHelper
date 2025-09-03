@@ -1,3 +1,9 @@
+<div class="component-actions">
+    <button class="btn btn-primary btn-text" >Ask ?</button>
+
+</div>
+
+
 <div class="dashboard-card q-and-a-card">
     <div class="qa-stats">
         <div class="stat-item">
@@ -33,3 +39,5 @@
         </div>
     </div>
 </div>
+
+

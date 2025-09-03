@@ -14,7 +14,7 @@ abstract class DashboardController
     public function index()
     {
         // Load default component
-        $content = $this->loadComponent($this->defaultComponent . '.html');
+        $content = $this->loadComponent($this->defaultComponent . '.php');
         return $this->renderDashboard($content);
     }
 
@@ -29,7 +29,7 @@ abstract class DashboardController
         }
         
         // Load the requested component
-        $content = $this->loadComponent($component . '.html');
+        $content = $this->loadComponent($component . '.php');
         return $this->renderDashboard($content);
     }
 

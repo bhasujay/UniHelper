@@ -115,6 +115,7 @@
     background: var(--gradient-primary);
     color: rgb(0, 0, 0);
     box-shadow: var(--glow-primary);
+    justify-content: center;
   }
   
   .btn-primary:hover {
