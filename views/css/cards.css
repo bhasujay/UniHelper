@@ -890,3 +890,260 @@
     margin-top: 1.5rem;
     background: var(--gradient-primary); /* Vibrant color */
 }
+
+/*
+ * Flagged Content Review Card Styles
+ * (Add to cards.css)
+ */
+
+.flagged-content-card {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on very small screens */
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1200px; /* Allow card to be very wide */
+}
+
+/* Card Sections */
+.flagged-item-info { flex: 2; min-width: 250px; }
+.flagged-item-author { flex: 1.5; min-width: 200px; }
+.flagged-item-context { flex: 2.5; min-width: 300px; }
+.flagged-item-actions {
+    flex: 2;
+    min-width: 320px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* Content Styling */
+.severity-indicator {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+
+.severity-indicator.medium {
+    background-color: #ffc10720; /* Yellow background */
+    color: #ffc107; /* Yellow text */
+}
+
+.flagged-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    color: var(--foreground);
+}
+
+.flagged-preview {
+    font-family: monospace;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.author-details {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin-bottom: 0.25rem;
+}
+
+.author-avatar-small {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.author-details strong {
+    color: var(--foreground);
+}
+
+.flagged-reason,
+.metadata,
+.user-reports {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin: 0;
+}
+
+.flagged-reason strong,
+.metadata strong,
+.user-reports strong {
+    color: var(--foreground);
+}
+
+.user-reports {
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 350px; /* Prevent long reports from breaking layout */
+}
+
+
+/* Action Buttons & Links */
+.primary-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.view-context-link {
+    font-size: 0.875rem;
+    color: var(--primary);
+    text-decoration: none;
+    white-space: nowrap;
+}
+.view-context-link:hover {
+    text-decoration: underline;
+}
+
+.action-dropdown {
+    background: #0f0f0f;
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/*
+ * Banned User Management Card Styles
+ * (Add to cards.css)
+ */
+
+.banned-user-card {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    align-items: center;
+    padding: 1rem 1.5rem;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1200px;
+}
+
+/* Cell-like containers for structure */
+.user-info-cell       { flex: 2; min-width: 200px; }
+.ban-details-cell     { flex: 3; min-width: 250px; }
+.ban-timing-cell      { flex: 2.5; min-width: 220px; }
+.offense-history-cell { flex: 1; min-width: 120px; }
+.moderator-actions-cell { flex: 1.5; min-width: 180px; }
+
+
+/* User Info Cell */
+.user-info-cell {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar-medium {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.banned-username {
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: var(--foreground);
+}
+
+.banned-email {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+/* Details and Timing Cells */
+.ban-details-cell p,
+.ban-timing-cell p {
+    font-size: 0.875rem;
+    margin: 0.25rem 0;
+    color: var(--muted-foreground);
+}
+
+.ban-details-cell p strong,
+.ban-timing-cell p strong,
+.offense-history-cell strong {
+    color: var(--foreground);
+    font-weight: 500;
+}
+
+.ban-duration {
+    display: inline-block;
+    background-color: #dc3545; /* Red */
+    color: white;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Offense History Cell */
+.offense-history-cell {
+    text-align: center;
+    font-size: 1rem;
+}
+
+/* Moderator Actions Cell */
+.moderator-actions-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.view-history-link {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    text-decoration: none;
+}
+.view-history-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+/* New Button Style */
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+.btn-success:hover {
+    background-color: #218838;
+}
