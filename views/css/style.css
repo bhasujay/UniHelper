@@ -17,7 +17,7 @@
   :root {
     --primary: rgb(102, 189, 255);
     --accent: rgb(247, 207, 234);
-    --background: hsl(300, 81%, 87%);
+    --background: hsl(94, 100%, 66%);
     --foreground: hsl(0, 0%, 98%);
     --muted-foreground: hsl(0, 0%, 65%);
     --border: hsl(0, 0%, 15%);
@@ -266,68 +266,7 @@
     color: var(--primary);
   }
   
-  .newsletter-section {
-    background: rgba(164, 109, 255, 0.05);
-    border: 1px solid rgba(164, 109, 255, 0.2);
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-  }
-  
-  .newsletter-content {
-    text-align: center;
-  }
-  
-  .newsletter-content h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--foreground);
-    margin-bottom: 0.5rem;
-  }
-  
-  .newsletter-content p {
-    color: var(--muted-foreground);
-    margin-bottom: 1.5rem;
-  }
-  
-  .newsletter-form {
-    display: flex;
-    gap: 1rem;
-    max-width: 400px;
-    margin: 0 auto;
-  }
-  
-  .newsletter-input {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    background: rgba(8, 8, 8, 0.5);
-    border: 1px solid rgba(164, 109, 255, 0.2);
-    border-radius: 0.5rem;
-    color: var(--foreground);
-    font-size: 0.875rem;
-  }
-  
-  .newsletter-input:focus {
-    outline: none;
-    border-color: var(--primary);
-  }
-  
-  .newsletter-btn {
-    padding: 0.75rem 1.5rem;
-    background: var(--gradient-primary);
-    color: white;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .newsletter-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(164, 109, 255, 0.3);
-  }
-  
+
   .footer-bottom {
   border-top: 1px solid var(--border);
   padding: 1rem 0;
@@ -351,4 +290,8 @@
   
   .footer-bottom-links a:hover {
     color: var(--primary);
+  }
+
+  .nav-right .btn-primary {
+    color: rgb(0, 0, 0) !important;  /* Force black text color for nav buttons */
   }
