@@ -31,16 +31,18 @@ class Router
         $method = $this->request->getMethod();
         
         // First check for exact match
+        
         if (isset($this->routes[$method][$path])) {
             $callback = $this->routes[$method][$path];
             
-            if (is_string($callback))
+            if (is_string($callback)) {
                 return $this->render_view($callback);
+            }
                 
             if (is_array($callback)) {
                 $controller = new $callback[0]();
                 $method = $callback[1];
-                return $controller->$method();
+                return $controller->$method($this->request);
             }
             
             return call_user_func($callback);
@@ -79,6 +81,16 @@ class Router
 
     public function render_view($view)
     {
-        require_once Application::$ROOT_DIR . "/views/$view";
+        $viewPath = Application::$ROOT_DIR . "/views/$view";
+        
+        if (file_exists($viewPath)) {
+            // Capture the output
+            ob_start();
+            include $viewPath;
+            $content = ob_get_clean();
+            return $content;
+        } else {
+            return "<div class='error'>View '$view' not found</div>";
+        }
     }
 }

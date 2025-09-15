@@ -28,6 +28,9 @@
                         <span class="profile-role">Role</span>
                     </div>
                 </div>
+                <a href="/UniHelper/logout" class="logout-btn">
+                    <button class="btn btn-outline">Logout</button>
+                </a>
             </div>
         </div>
     </nav>

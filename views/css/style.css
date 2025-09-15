@@ -91,6 +91,15 @@
     align-items: center;
   }
   
+  .logout-btn {
+    text-decoration: none;
+  }
+  
+  .logout-btn .btn {
+    font-size: 0.9rem;
+    padding: 0.4rem 1rem;
+  }
+  
   /* Buttons */
   .btn {
     padding: 0.5rem 1.5rem;

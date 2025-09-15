@@ -5,6 +5,11 @@ $app->router->get('/', 'home.html');
 $app->router->get('/home', 'home.html');
 $app->router->get('/login', 'login.html');
 $app->router->get('/register', 'register.html');
+$app->router->get('/logout', [app\controllers\AuthController::class, 'logout']);
+
+// Authentication routes - POST (process forms)
+$app->router->post('/login', [app\controllers\AuthController::class, 'login']);
+$app->router->post('/register', [app\controllers\AuthController::class, 'register']);
 
 // Dashboard base routes - default component
 $app->router->get('/dashboard/applicant', [app\controllers\ApplicantDashController::class, 'index']);

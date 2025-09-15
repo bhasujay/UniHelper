@@ -18,4 +18,5 @@ class UndergradDashController extends DashboardController
     
     protected $dashboardTemplate = 'dashboard_und.php';
     protected $defaultComponent = 'qa-forum';
+    protected $requiredRole = 'role-undergrad';
 }

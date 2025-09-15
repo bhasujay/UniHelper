@@ -19,4 +19,9 @@ class Application
     {
         echo $this->router->resolve();
     }
+
+    public function getPythonResult($result)
+    {
+
+    }
 }
