@@ -15,4 +15,5 @@ class ProfileDashController extends DashboardController
     
     protected $dashboardTemplate = 'dashboard_pro.php';
     protected $defaultComponent = 'qa-forum';
+    protected $requiredRole = 'role-profile';
 }

@@ -19,4 +19,5 @@ class ApplicantDashController extends DashboardController
     
     protected $dashboardTemplate = 'dashboard_app.php';
     protected $defaultComponent = 'qa-forum';
+    protected $requiredRole = 'role-applicant';
 }
