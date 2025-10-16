@@ -15,8 +15,10 @@ $app->router->post('/register', [app\controllers\AuthController::class, 'registe
 $app->router->get('/dashboard/applicant', [app\controllers\ApplicantDashController::class, 'index']);
 $app->router->get('/dashboard/undergraduate', [app\controllers\UndergradDashController::class, 'index']);
 $app->router->get('/dashboard/profile', [app\controllers\ProfileDashController::class, 'index']);
+$app->router->get('/dashboard/admin', [app\controllers\AdminDashController::class, 'index']);
 
 // Dashboard component routes - dynamic paths
 $app->router->get('/dashboard/applicant/:component', [app\controllers\ApplicantDashController::class, 'renderComponent']);
 $app->router->get('/dashboard/undergraduate/:component', [app\controllers\UndergradDashController::class, 'renderComponent']);
 $app->router->get('/dashboard/profile/:component', [app\controllers\ProfileDashController::class, 'renderComponent']);
+$app->router->get('/dashboard/admin/:component', [app\controllers\AdminDashController::class, 'renderComponent']);

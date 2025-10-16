@@ -4,7 +4,7 @@
 /* Sidebar Styles */
 .sidebar {
     width: 280px;
-    background: rgba(8, 8, 8, 0.9);
+    background: -var(--key);
     backdrop-filter: blur(12px);
     border-right: 1px solid var(--border);
     position: fixed;

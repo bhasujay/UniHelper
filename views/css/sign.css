@@ -23,7 +23,7 @@
 }
 
 .auth-card {
-  background: rgba(8, 8, 8, 0.85);
+  background: -var(--key);
   border-radius: 1.25rem;
   box-shadow: var(--glow-primary), 0 8px 32px rgba(0,0,0,0.25);
   border: 1px solid var(--border);

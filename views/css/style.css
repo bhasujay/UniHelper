@@ -7,7 +7,7 @@
   
   body {
     font-family: 'Segoe UI', 'Arial', 'Helvetica Neue', sans-serif;
-    background: #080808;
+    background: #303030;
     color: #fafafa;
     overflow-x: hidden;
     line-height: 1.6;
@@ -15,21 +15,22 @@
   
   /* CSS Variables for design system */
   :root {
-    --primary: rgb(102, 189, 255);
-    --accent: rgb(247, 207, 234);
-    --background: hsl(94, 100%, 66%);
-    --foreground: hsl(0, 0%, 98%);
-    --muted-foreground: hsl(0, 0%, 65%);
+    --primary: rgb(255, 148, 102);
+    --accent: rgb(255, 156, 42);
+    --background: hsl(23, 100%, 63%);
     --border: hsl(0, 0%, 15%);
     --card: hsl(0, 0%, 8%);
+    --key-top: #2a2a2a;
+    --key: #303030;
+    --key-bottom: #000000;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(206, 100%, 70%), hsl(320, 80%, 93%));
-    --gradient-secondary: linear-gradient(135deg, hsl(206, 100%, 70%), hsl(320, 80%, 93%));
-    --gradient-accent: linear-gradient(135deg, hsl(320, 80%, 93%), hsl(206, 100%, 70%));
+    --gradient-primary: linear-gradient(135deg, hsl(21, 100%, 66%), hsl(15, 100%, 69%));
+    --gradient-secondary: linear-gradient(135deg, hsl(22, 100%, 70%), hsl(28, 100%, 64%));
+    --gradient-accent: linear-gradient(135deg, hsl(20, 100%, 64%), hwb(28 40% 0%));
     
     /* Glows */
-    --glow-primary: 0 0 60px hsla(264, 83%, 63%, 0.3);
+    --glow-primary: 0 0 60px hsla(0, 0%, 0%, 0.3);
     --glow-secondary: 0 0 40px hsla(195, 100%, 50%, 0.2);
   }
   
@@ -40,7 +41,7 @@
     left: 0;
     right: 0;
     z-index: 1000;
-    background: rgba(8, 8, 8, 0.8);
+    background: -var(--key-top);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     padding: 1rem 0;
@@ -123,7 +124,6 @@
   .btn-primary {
     background: var(--gradient-primary);
     color: rgb(0, 0, 0);
-    box-shadow: var(--glow-primary);
     justify-content: center;
   }
   
@@ -135,24 +135,28 @@
   .btn-outline {
     background: transparent;
     color: var(--foreground);
-    border: 1px solid rgba(164, 109, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.318);
   }
   
-  .btn-outline:hover {
-    border-color: var(--primary);
-    background: rgba(164, 109, 255, 0.1);
-  }
-
   .btn-text {
     color: #111 !important;
     font-weight: bold;
     font-size: 1.15rem;
   }
 
+
+  /* text colors */ 
+  .text1 {
+    color: rgb(255, 255, 255) !important;
+  }
+  .text2 {
+    color: rgb(0, 0, 0) !important;
+  }
+  
   
   /* Footer Section */
   .footer {
-  background: rgba(8, 8, 8, 0.8);
+  background: -var(--key-bottom);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--border);
   padding: 2rem 0 0;
