@@ -52,4 +52,9 @@ class Database
     {
         return $this->connection->lastInsertId();
     }
+
+    public function query($sql)
+    {
+        return $this->connection->query($sql);
+    }
 }

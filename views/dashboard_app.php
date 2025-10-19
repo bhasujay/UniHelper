@@ -29,7 +29,7 @@
                     </div>
                 </div>
                 <a href="/UniHelper/logout" class="logout-btn">
-                    <button class="btn btn-outline">Logout</button>
+                    <button class="btn btn-outline text1">Logout</button>
                 </a>
             </div>
         </div>

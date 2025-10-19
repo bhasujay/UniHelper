@@ -3,7 +3,6 @@
 namespace app\controllers;
 
 use app\core\Application;
-use app\core\Auth;
 
 abstract class DashboardController
 {
@@ -16,7 +15,6 @@ abstract class DashboardController
     public function index()
     {
         // Check authentication and role
-        $this->checkAccess();
         
         // Load default component
         $content = $this->loadComponent($this->defaultComponent . '.php');
@@ -27,7 +25,6 @@ abstract class DashboardController
     public function renderComponent($params)
     {
         // Check authentication and role
-        $this->checkAccess();
         
         $component = $params['component'] ?? $this->defaultComponent;
         
@@ -67,11 +64,5 @@ abstract class DashboardController
     protected function checkAccess()
     {
         // If no specific role is required, just check if user is logged in
-        if (empty($this->requiredRole)) {
-            Auth::requireAuth();
-        } else {
-            // Check if user has the required role
-            Auth::requireRole($this->requiredRole);
-        }
     }
 }

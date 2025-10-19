@@ -35,16 +35,19 @@ class Router
         if (isset($this->routes[$method][$path])) {
             $callback = $this->routes[$method][$path];
             
+            // if the callback is a string, render the view
             if (is_string($callback)) {
                 return $this->render_view($callback);
             }
-                
+
+            // if the callback is an array, instantiate the controller and call the method
             if (is_array($callback)) {
                 $controller = new $callback[0]();
                 $method = $callback[1];
                 return $controller->$method($this->request);
             }
             
+            // if the callback is a closure, call it directly
             return call_user_func($callback);
         }
         

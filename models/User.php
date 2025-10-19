@@ -22,9 +22,8 @@ class User
     public $password_hash;
     public $role;
     public $alYear;
-    public $undergradUniversity;
+    public $University;
     public $major;
-    public $profileUniversity;
     public $profileRole;
     public $profilePicture;
     public $createdAt;
@@ -33,9 +32,9 @@ class User
     public function save()
     {
         try {
-            $sql = "INSERT INTO users (first_name, last_name, email, phone, password_hash, role, al_year, undergrad_university, major, profile_university, profile_role,profile_picture, created_at) 
-                    VALUES (:firstName, :lastName, :email, :phone, :password_hash, :role, :alYear, :undergradUniversity, :major, :profileUniversity, :profileRole, :profilePicture, NOW())";
-            
+            $sql = "INSERT INTO users (first_name, last_name, email, phone, password_hash, role, al_year, university, major, profile_role, profile_picture, created_at) 
+                    VALUES (:firstName, :lastName, :email, :phone, :password_hash, :role, :alYear, :University, :major, :profileRole, :profilePicture, NOW())";
+
             $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':firstName', $this->firstName);
             $stmt->bindParam(':lastName', $this->lastName);
@@ -44,9 +43,8 @@ class User
             $stmt->bindParam(':password_hash', $this->password_hash);
             $stmt->bindParam(':role', $this->role);
             $stmt->bindParam(':alYear', $this->alYear);
-            $stmt->bindParam(':undergradUniversity', $this->undergradUniversity);
+            $stmt->bindParam(':University', $this->University);
             $stmt->bindParam(':major', $this->major);
-            $stmt->bindParam(':profileUniversity', $this->profileUniversity);
             $stmt->bindParam(':profileRole', $this->profileRole);
             $stmt->bindParam(':profilePicture', $this->profilePicture);
             
@@ -60,7 +58,7 @@ class User
             }
         } catch (\PDOException $e) {
             error_log("User save error: " . $e->getMessage());
-            return false;
+            return ['error' => 'Database error: ' . $e->getMessage()];
         }
     }
 
@@ -86,9 +84,8 @@ class User
                 $user->phone = $userData['phone'];
                 $user->profilePicture = $userData['profile_picture'];
                 $user->alYear = $userData['al_year'];
-                $user->undergradUniversity = $userData['undergrad_university'];
+                $user->University = $userData['university'];
                 $user->major = $userData['major'];
-                $user->profileUniversity = $userData['profile_university'];
                 $user->profileRole = $userData['profile_role'];
                 $user->createdAt = $userData['created_at'];
                 
@@ -148,6 +145,11 @@ class User
             $errors[] = "Role is required";
         }
 
+        // Add a line break to each error message
+        foreach ($errors as &$error) {
+            $error .= "<br>";
+        }
+
         return $errors;
     }
 
@@ -185,8 +187,7 @@ class User
                 $user->phone = $userData['phone'];
                 $user->profilePicture = $userData['profile_picture'];
                 $user->alYear = $userData['al_year'];
-                $user->undergradUniversity = $userData['undergrad_university'];
-                $user->profileUniversity = $userData['profile_university'];
+                $user->University = $userData['university'];
                 $user->profileRole = $userData['profile_role'];
                 $user->major = $userData['major'];
                 $user->createdAt = $userData['created_at'];

@@ -3,8 +3,8 @@
 // Base routes
 $app->router->get('/', 'home.html');
 $app->router->get('/home', 'home.html');
-$app->router->get('/login', 'login.html');
-$app->router->get('/register', 'register.html');
+$app->router->get('/login', 'login.php');
+$app->router->get('/register', [app\controllers\AuthController::class, 'populateRegisterForm']);
 $app->router->get('/logout', [app\controllers\AuthController::class, 'logout']);
 
 // Authentication routes - POST (process forms)
@@ -22,3 +22,10 @@ $app->router->get('/dashboard/applicant/:component', [app\controllers\ApplicantD
 $app->router->get('/dashboard/undergraduate/:component', [app\controllers\UndergradDashController::class, 'renderComponent']);
 $app->router->get('/dashboard/profile/:component', [app\controllers\ProfileDashController::class, 'renderComponent']);
 $app->router->get('/dashboard/admin/:component', [app\controllers\AdminDashController::class, 'renderComponent']);
+
+// Profile routes
+$app->router->get('/profile', [app\controllers\ProfileController::class, 'index']);
+$app->router->get('/profile/edit', [app\controllers\ProfileController::class, 'edit']);
+$app->router->post('/profile/update', [app\controllers\ProfileController::class, 'update']);
+$app->router->get('/profile/change-password', [app\controllers\ProfileController::class, 'changePassword']);
+$app->router->post('/profile/change-password', [app\controllers\ProfileController::class, 'changePassword']);
