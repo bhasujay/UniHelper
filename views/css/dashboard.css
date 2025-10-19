@@ -4,7 +4,7 @@
 /* Sidebar Styles */
 .sidebar {
     width: 280px;
-    background: -var(--key);
+    background: var(--key);
     backdrop-filter: blur(12px);
     border-right: 1px solid var(--border);
     position: fixed;
@@ -117,18 +117,17 @@
   
   /* Main Content Area - Part 3 */
   .main-content {
-    margin-left: 280px; /* Start after sidebar */
-    margin-top: 8%; /* 100px spacing from navigation bar */
-    margin-right: 2rem; /* Right margin */
+    margin-left: 280px;
+    margin-top: 8%;
+    margin-right: 2rem;
     padding: 2rem;
-    background: rgba(8, 8, 8, 0.9); /* Semi-transparent background */
-    border: 2px solid rgba(164, 109, 255, 0.5); /* Stronger border */
-    border-radius: 1rem; /* Rounded corners */
-    min-height: calc(100vh - 100px - 20px - 200px); /* Subtract nav + spacing + footer height */
-    overflow-y: auto; /* Independent scrolling */
-    backdrop-filter: blur(8px); /* Glass effect */
-    box-shadow: 0 4px 20px rgba(164, 109, 255, 0.2); /* Glow effect */
-    width: calc(100% - 280px - 4rem); /* Same width as footer */
+    background: var(--key);
+    border: none;
+    border-radius: 1rem;
+    min-height: calc(100vh - 100px - 20px - 200px);
+    overflow-y: auto;
+    backdrop-filter: blur(8px);
+    width: calc(100% - 280px - 4rem);
   }
   
   /* Dashboard Content */
@@ -137,20 +136,6 @@
     margin: 0 auto;
   }
   
-  .content-placeholder {
-    background: rgba(8, 8, 8, 0.5);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(164, 109, 255, 0.2);
-    border-radius: 1rem;
-    padding: 3rem;
-    text-align: center;
-    margin-top: 2rem;
-  }
-  
-  .content-placeholder p {
-    color: var(--muted-foreground);
-    font-size: 1.125rem;
-  }
   
   /* Dashboard Header */
   .dashboard-header {
@@ -190,7 +175,7 @@
     gap: 1rem;
     padding: 0rem 1rem;
     background: rgba(8, 8, 8, 0.5);
-    border: 1px solid rgba(164, 109, 255, 0.2);
+    border: 1px solid var(--gradient-accent);
     border-radius: 0.75rem;
     backdrop-filter: blur(8px);
   }
@@ -578,14 +563,14 @@ main .dashboard-card {
     margin-top: 20px; /* 20px spacing from main content */
     margin-left: 280px; /* Start after sidebar */
     margin-right: 2rem; /* Right margin to match main content */
-    background: rgba(8, 8, 8, 0.9);
+    background: var(--key);
     backdrop-filter: blur(12px);
-    border: 2px solid rgba(164, 109, 255, 0.5); /* Stronger border to match main content */
+    border: 2px solid var(--gradient-accent);
     border-radius: 1rem; /* Rounded corners */
     padding: 2rem 0 0;
     position: relative; /* Ensure it stays at bottom */
     width: calc(100% - 280px - 4rem); /* Same width as main content */
-    box-shadow: 0 4px 20px rgba(164, 109, 255, 0.2); /* Glow effect */
+    box-shadow: 0 4px 20px var(--glow-primary); /* Glow effect */
   }
   
   .dashboard-footer .footer-container {
@@ -635,8 +620,8 @@ main .dashboard-card {
   .dashboard-footer .social-link {
     width: 40px;
     height: 40px;
-    background: rgba(164, 109, 255, 0.1);
-    border: 1px solid rgba(164, 109, 255, 0.2);
+    background: var(--key);
+    border-top: 1px solid var(--border);
     border-radius: 50%;
     display: flex;
     align-items: center;
