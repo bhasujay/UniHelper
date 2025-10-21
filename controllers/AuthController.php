@@ -149,6 +149,8 @@ class AuthController
             case 'role-profile':
                 header('Location: /UniHelper/dashboard/profile');
                 break;
+            case 'role-admin':
+                header('Location: /UniHelper/dashboard/admin');
             default:
                 // Render an error view or message for unknown role
                 $this->render('register.php', ['error' => 'Unknown user role']);

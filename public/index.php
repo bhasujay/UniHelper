@@ -17,8 +17,9 @@ require_once dirname(__DIR__) . '/controllers/AuthController.php';
 require_once dirname(__DIR__) . '/controllers/DashboardController.php';
 require_once dirname(__DIR__) . '/controllers/ApplicantDashController.php';
 require_once dirname(__DIR__) . '/controllers/UndergradDashController.php';
-require_once dirname(__DIR__) . '/controllers/ProfileController.php';
 require_once dirname(__DIR__) . '/controllers/ProfileDashController.php';
+require_once dirname(__DIR__) . '/controllers/ProfileController.php';
+require_once dirname(__DIR__) . '/controllers/AdminDashController.php';
 
 
 // Require model files

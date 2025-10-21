@@ -256,7 +256,9 @@ class ProfileController
     // Determine dashboard template based on user role
     private function getDashboardByRole($role)
     {
-        if (strpos($role, 'applicant') !== false) {
+        if (strpos($role, 'admin') !== false) {
+            return 'dashboard_adm.php';
+        } elseif (strpos($role, 'applicant') !== false) {
             return 'dashboard_app.php';
         } elseif (strpos($role, 'undergrad') !== false) {
             return 'dashboard_und.php';
