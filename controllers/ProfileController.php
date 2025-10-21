@@ -5,6 +5,8 @@ namespace app\controllers;
 use app\core\Application;
 use app\core\Request;
 use app\models\User;
+use app\models\University;
+use app\models\Major;
 
 class ProfileController
 {
@@ -13,7 +15,6 @@ class ProfileController
     public function __construct()
     {
         // Check if user is logged in
-        session_start();
         if (!isset($_SESSION['user_id'])) {
             header('Location: /UniHelper/login');
             exit;
@@ -30,19 +31,58 @@ class ProfileController
         }
     }
 
-    // Show profile page
+    // Load profile as a component
+    public function component()
+    {
+        // Return the content to be loaded into the dashboard
+        return $this->loadComponent('profile/profile-component.php', [
+            'user' => $this->user
+        ]);
+    }
+    
+    // Load edit profile as a component
+    public function editComponent()
+    {
+        // Get all universities and majors for dropdowns
+        $universityModel = new University();
+        $universities = $universityModel->getAll();
+        
+        $majorModel = new Major();
+        $majors = $majorModel->getAll();
+        
+        return $this->loadComponent('profile/edit-component.php', [
+            'user' => $this->user,
+            'universities' => $universities,
+            'majors' => $majors
+        ]);
+    }
+
+    // Show profile page (for direct access)
     public function index()
     {
-        return $this->render('profile/index.php', [
+        // Determine which dashboard to use based on user role
+        $dashboardTemplate = $this->getDashboardByRole($this->user->role);
+        return $this->renderInDashboard($dashboardTemplate, 'profile/profile-component.php', [
             'user' => $this->user
         ]);
     }
 
-    // Show edit profile form
+    // Show edit profile form (for direct access)
     public function edit()
     {
-        return $this->render('profile/edit.php', [
-            'user' => $this->user
+        // Get all universities and majors for dropdowns
+        $universityModel = new University();
+        $universities = $universityModel->getAll();
+        
+        $majorModel = new Major();
+        $majors = $majorModel->getAll();
+        
+        // Determine which dashboard to use based on user role
+        $dashboardTemplate = $this->getDashboardByRole($this->user->role);
+        return $this->renderInDashboard($dashboardTemplate, 'profile/edit-component.php', [
+            'user' => $this->user,
+            'universities' => $universities,
+            'majors' => $majors
         ]);
     }
 
@@ -59,44 +99,57 @@ class ProfileController
             // Role-specific fields
             if ($this->user->role === 'role-applicant') {
                 $this->user->alYear = $request->get('alYear');
+                $this->user->University = null; // Reset these fields for applicants
+                $this->user->major = null;
+                $this->user->profileRole = null;
             } elseif ($this->user->role === 'role-undergrad') {
-                $this->user->undergradUniversity = $request->get('undergradUniversity');
-                $this->user->major = $request->get('major');
+                $this->user->University = $request->get('undergradUniversity') ?: null;
+                $this->user->major = $request->get('major') ?: null;
+                $this->user->profileRole = null;
             } elseif ($this->user->role === 'role-profile') {
-                $this->user->profileUniversity = $request->get('profileUniversity');
+                $this->user->University = $request->get('profileUniversity') ?: null;
                 $this->user->profileRole = $request->get('profileRole');
+                $this->user->major = null;
             }
 
             // Handle profile picture upload
             $this->handleProfilePicture($request);
 
             // Validate data
-            $errors = $this->user->validate();
+            $errors = $this->user->validateProfileUpdate();
+            
+            // Get fresh university and major data for re-rendering the form
+            $universityModel = new University();
+            $universities = $universityModel->getAll();
+            
+            $majorModel = new Major();
+            $majors = $majorModel->getAll();
             
             if (!empty($errors)) {
-                return $this->render('profile/edit.php', [
-                    'user' => $this->user,
-                    'error' => implode(', ', $errors)
+                return $this->edit([
+                    'error' => implode(', ', $errors),
+                    'universities' => $universities,
+                    'majors' => $majors
                 ]);
             }
 
             // Update user
             if ($this->user->update()) {
-                return $this->render('profile/edit.php', [
-                    'user' => $this->user,
-                    'success' => 'Profile updated successfully'
+                return $this->edit([
+                    'success' => 'Profile updated successfully',
+                    'universities' => $universities,
+                    'majors' => $majors
                 ]);
             } else {
-                return $this->render('profile/edit.php', [
-                    'user' => $this->user,
-                    'error' => 'Failed to update profile'
+                return $this->edit([
+                    'error' => 'Failed to update profile',
+                    'universities' => $universities,
+                    'majors' => $majors
                 ]);
             }
         }
 
-        return $this->render('profile/edit.php', [
-            'user' => $this->user
-        ]);
+        return $this->edit();
     }
 
     // Change password
@@ -179,27 +232,62 @@ class ProfileController
                 
                 // Create directory if it doesn't exist
                 if (!is_dir($uploadPath)) {
-                    mkdir($uploadPath, 0777, true);
+                    mkdir($uploadPath, 0755, true);
                 }
                 
-                // Upload file
-                $destination = $uploadPath . $newFileName;
-                if (move_uploaded_file($fileTmpName, $destination)) {
-                    // Remove existing file if it exists
+                // Move uploaded file to target directory
+                if (move_uploaded_file($fileTmpName, $uploadPath . $newFileName)) {
+                    // Delete old file if it exists
                     if ($this->user->profilePicture && file_exists(Application::$ROOT_DIR . '/public' . $this->user->profilePicture)) {
                         unlink(Application::$ROOT_DIR . '/public' . $this->user->profilePicture);
                     }
-                    
-                    // Update user profile picture path
                     $this->user->profilePicture = $uploadDir . $newFileName;
+                } else {
+                    // Handle error in moving uploaded file
+                    throw new \Exception('Error in moving uploaded file');
                 }
+            } else {
+                // Handle invalid file extension
+                throw new \Exception('Invalid file type. Only JPG, JPEG, PNG, and GIF files are allowed.');
             }
         }
     }
 
-    protected function render($view, $data = [])
+    // Determine dashboard template based on user role
+    private function getDashboardByRole($role)
+    {
+        if (strpos($role, 'applicant') !== false) {
+            return 'dashboard_app.php';
+        } elseif (strpos($role, 'undergrad') !== false) {
+            return 'dashboard_und.php';
+        } elseif (strpos($role, 'profile') !== false) {
+            return 'dashboard_pro.php';
+        } else {
+            return 'dashboard_app.php'; // Default fallback
+        }
+    }
+    
+    // Load component content
+    private function loadComponent($view, $data = [])
     {
         // Extract data array to variables
+        extract($data);
+        ob_start();
+        require Application::$ROOT_DIR . "/views/$view";
+        return ob_get_clean();
+    }
+    
+    // Render a component within the dashboard template
+    private function renderInDashboard($dashboardTemplate, $componentView, $data = [])
+    {
+        $content = $this->loadComponent($componentView, $data);
+        extract($data);
+        require Application::$ROOT_DIR . "/views/$dashboardTemplate";
+    }
+
+    // For backward compatibility
+    protected function render($view, $data = [])
+    {
         extract($data);
         require Application::$ROOT_DIR . "/views/$view";
     }

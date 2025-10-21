@@ -52,7 +52,7 @@ class University
 
             $universities = [];
             while ($row = $result->fetch()) {
-                $university = new University();
+                $university = new \stdClass();
                 $university->id = $row['id'];
                 $university->name = $row['name'];
                 $universities[] = $university;

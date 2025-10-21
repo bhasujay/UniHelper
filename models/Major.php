@@ -52,7 +52,7 @@ class Major
 
             $majors = [];
             while ($row = $result->fetch()) {
-                $major = new Major();
+                $major = new \stdClass();
                 $major->id = $row['id'];
                 $major->name = $row['name'];
                 $majors[] = $major;

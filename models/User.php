@@ -200,4 +200,105 @@ class User
             return null;
         }
     }
+
+    // Update user information in database
+    public function update()
+    {
+        try {
+            $sql = "UPDATE users SET 
+                    first_name = :firstName,
+                    last_name = :lastName,
+                    email = :email,
+                    phone = :phone,
+                    al_year = :alYear,
+                    university = :University,
+                    major = :major,
+                    profile_role = :profileRole,
+                    profile_picture = :profilePicture
+                    WHERE id = :id";
+                    
+            $stmt = $this->db->prepare($sql);
+            
+            // Bind parameters
+            $stmt->bindParam(':firstName', $this->firstName);
+            $stmt->bindParam(':lastName', $this->lastName);
+            $stmt->bindParam(':email', $this->email);
+            $stmt->bindParam(':phone', $this->phone);
+            $stmt->bindParam(':alYear', $this->alYear);
+            $stmt->bindParam(':University', $this->University);
+            $stmt->bindParam(':major', $this->major);
+            $stmt->bindParam(':profileRole', $this->profileRole);
+            $stmt->bindParam(':profilePicture', $this->profilePicture);
+            $stmt->bindParam(':id', $this->id);
+            
+            return $stmt->execute();
+        } catch (\PDOException $e) {
+            error_log("User update error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Update password
+    public function updatePassword()
+    {
+        try {
+            $sql = "UPDATE users SET password_hash = :password_hash WHERE id = :id";
+            $stmt = $this->db->prepare($sql);
+            
+            $stmt->bindParam(':password_hash', $this->password_hash);
+            $stmt->bindParam(':id', $this->id);
+            
+            return $stmt->execute();
+        } catch (\PDOException $e) {
+            error_log("Password update error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Validate updated profile data without requiring password
+    public function validateProfileUpdate()
+    {
+        $errors = [];
+
+        if (empty($this->firstName)) {
+            $errors[] = "First name is required";
+        }
+
+        if (empty($this->lastName)) {
+            $errors[] = "Last name is required";
+        }
+
+        if (empty($this->email)) {
+            $errors[] = "Email is required";
+        } elseif (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Invalid email format";
+        }
+
+        if (empty($this->phone)) {
+            $errors[] = "Phone number is required";
+        }
+
+        // Check if email already exists for another user
+        try {
+            $sql = "SELECT COUNT(*) FROM users WHERE email = :email AND id != :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':email', $this->email);
+            $stmt->bindParam(':id', $this->id);
+            $stmt->execute();
+            
+            if ($stmt->fetchColumn() > 0) {
+                $errors[] = "Email is already in use by another account";
+            }
+        } catch (\PDOException $e) {
+            error_log("Email validation error: " . $e->getMessage());
+            $errors[] = "Error validating email";
+        }
+
+        // Add a line break to each error message
+        foreach ($errors as &$error) {
+            $error .= "<br>";
+        }
+
+        return $errors;
+    }
 }

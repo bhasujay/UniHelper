@@ -23,9 +23,7 @@ $app->router->get('/dashboard/undergraduate/:component', [app\controllers\Underg
 $app->router->get('/dashboard/profile/:component', [app\controllers\ProfileDashController::class, 'renderComponent']);
 $app->router->get('/dashboard/admin/:component', [app\controllers\AdminDashController::class, 'renderComponent']);
 
-// Profile routes
+// Add these routes for profile components
 $app->router->get('/profile', [app\controllers\ProfileController::class, 'index']);
 $app->router->get('/profile/edit', [app\controllers\ProfileController::class, 'edit']);
 $app->router->post('/profile/update', [app\controllers\ProfileController::class, 'update']);
-$app->router->get('/profile/change-password', [app\controllers\ProfileController::class, 'changePassword']);
-$app->router->post('/profile/change-password', [app\controllers\ProfileController::class, 'changePassword']);

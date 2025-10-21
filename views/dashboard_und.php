@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/unihelper/views/css/dashboard.css">
     <link rel="stylesheet" href="/unihelper/views/css/components/cards.css">
     <link rel="stylesheet" href="/unihelper/views/css/components/und-cards.css">
+    <link rel="stylesheet" href="/unihelper/views/css/profile.css">
 </head>
 <body>
     <nav class="nav">
@@ -21,16 +22,53 @@
                 </div>
             </div>
             <div class="nav-right">
-                <div class="profile-container">
-                    <div class="profile-picture">U</div>
+                <div class="profile-container" id="profileDropdownTrigger">
+                    <div class="profile-picture"><?= substr($user->firstName, 0, 1) ?></div>
                     <div class="profile-info">
-                        <span class="profile-name">User</span>
-                        <span class="profile-role">Role</span>
+                        <span class="profile-name"><?= htmlspecialchars($user->firstName) ?></span>
+                        <span class="profile-role"><?= htmlspecialchars(substr($user->role, 5)) ?></span>
+                    </div>
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-user-info">
+                                <span class="dropdown-name"><?= htmlspecialchars($user->firstName . ' ' . $user->lastName) ?></span>
+                                <span class="dropdown-email"><?= htmlspecialchars($user->email) ?></span>
+                            </div>
+                        </div>
+                        <div class="dropdown-body">
+                            <a href="profile" class="dropdown-item">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                My Profile
+                            </a>
+                            <a href="profile/edit" class="dropdown-item">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                                Edit Profile
+                            </a>
+                            <a href="profile/change-password" class="dropdown-item">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                Change Password
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="/UniHelper/logout" class="dropdown-item">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                Logout
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <a href="/UniHelper/logout" class="logout-btn">
-                    <button class="btn btn-outline text1">Logout</button>
-                </a>
             </div>
         </div>
     </nav>
@@ -40,28 +78,28 @@
             <!-- Undergraduate Features -->
             <div class="sidebar-section">
                 <div class="sidebar-section-title">Undergraduate</div>
-                <li><a href="dashboard/undergraduate/qa-forum" class="sidebar-link">
+                <li><a href="dashboard/undergraduate/qa-forum" class="sidebar-link <?= $activeComponent === 'qa-forum' ? 'active' : '' ?>">
                     <i class="fas fa-question-circle"></i>
                     <span>Q&A Forum</span>
                 </a></li>
-                <li><a href="dashboard/undergraduate/create-session" class="sidebar-link">
+                <li><a href="dashboard/undergraduate/create-session" class="sidebar-link <?= $activeComponent === 'create-session' ? 'active' : '' ?>">
                     <i class="fas fa-plus-circle"></i>
                     <span>Create Session</span>
                 </a></li>
-                <li><a href="dashboard/undergraduate/my-sessions" class="sidebar-link">
+                <li><a href="dashboard/undergraduate/my-sessions" class="sidebar-link <?= $activeComponent === 'my-sessions' ? 'active' : '' ?>">
                     <i class="fas fa-calendar-alt"></i>
                     <span>My Sessions</span>
                 </a></li>
-                <li><a href="dashboard/undergraduate/join-sessions" class="sidebar-link">
+                <li><a href="dashboard/undergraduate/join-sessions" class="sidebar-link <?= $activeComponent === 'join-sessions' ? 'active' : '' ?>">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Join Sessions</span>
                 </a></li>
                 <div class="sidebar-section-subtitle">Moderator Features</div>
-                <li><a href="dashboard/undergraduate/flagged-content" class="sidebar-link">
+                <li><a href="dashboard/undergraduate/flagged-content" class="sidebar-link <?= $activeComponent === 'flagged-content' ? 'active' : '' ?>">
                     <i class="fas fa-book"></i>
                     <span>Flagged Content</span>
                 </a></li>
-                <li><a href="dashboard/undergraduate/banned-users" class="sidebar-link">
+                <li><a href="dashboard/undergraduate/banned-users" class="sidebar-link <?= $activeComponent === 'banned-users' ? 'active' : '' ?>">
                     <i class="fas fa-tools"></i>
                     <span>Banned Users</span>
                 </a></li>
@@ -139,20 +177,40 @@
     </footer>
 
     <script>
-        // Mobile menu toggle
-        document.getElementById('mobileMenuToggle').addEventListener('click', function() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('open');
-        });
-
-        // Sidebar link active state
-        document.querySelectorAll('.sidebar-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                // Remove active class from all links
-                document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                // Add active class to clicked link
-                this.classList.add('active');
-            });
+        // Profile dropdown functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileTrigger = document.getElementById('profileDropdownTrigger');
+            const profileDropdown = document.getElementById('profileDropdown');
+            
+            if (profileTrigger && profileDropdown) {
+                // Toggle dropdown visibility when clicking the trigger
+                profileTrigger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    profileDropdown.classList.toggle('show');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (profileDropdown.classList.contains('show') && 
+                        !profileTrigger.contains(e.target) && 
+                        !profileDropdown.contains(e.target)) {
+                        profileDropdown.classList.remove('show');
+                    }
+                });
+                
+                // Prevent dropdown from closing when clicking inside it
+                profileDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+                
+                // Close dropdown when pressing Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && profileDropdown.classList.contains('show')) {
+                        profileDropdown.classList.remove('show');
+                    }
+                });
+            }
         });
     </script>
 </body>
