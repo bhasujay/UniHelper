@@ -26,6 +26,11 @@ require_once dirname(__DIR__) . '/controllers/AdminDashController.php';
 require_once dirname(__DIR__) . '/models/User.php';
 require_once dirname(__DIR__) . '/models/University.php';
 require_once dirname(__DIR__) . '/models/Major.php';
+require_once dirname(__DIR__) . '/models/QnaPost.php';
+require_once dirname(__DIR__) . '/models/Tag.php';
+require_once dirname(__DIR__) . '/models/QnaPostTag.php';
+require_once dirname(__DIR__) . '/models/QnaHierarchy.php';
+
 
 use app\core\Application;
 

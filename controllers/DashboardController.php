@@ -3,7 +3,12 @@
 namespace app\controllers;
 
 use app\core\Application;
+use app\core\Request;
 use app\models\User;
+use app\models\QnaPost;
+use app\models\Tag;
+use app\models\QnaPostTag;
+use app\models\QnaHierarchy;
 
 abstract class DashboardController
 {
@@ -66,6 +71,67 @@ abstract class DashboardController
         // Load the requested component
         $content = $this->loadComponent($component . '.php');
         return $this->renderDashboard($content);
+    }
+
+    // Handle component actions (POST requests from components)
+    public function handleComponentAction(Request $request)
+    {
+        $action = $request->getBody()['action'] ?? '';
+        
+        // Based on the action, call the appropriate handler
+        switch ($action) {
+            case 'ask_question':
+                return $this->handleAskQuestion($request);
+            default:
+                // Unknown action, redirect to dashboard
+                $redirectPath = '/UniHelper/dashboard/' . $this->getDashboardType();
+                header('Location: ' . $redirectPath);
+                exit;
+        }
+    }
+    
+    // Handle the ask question action for QA forum
+    protected function handleAskQuestion(Request $request)
+    {
+        // Get unsanitized data directly from $_POST for database storage
+        $title = $_POST['title'] ?? '';
+        $body = $_POST['body'] ?? '';
+        
+        $tagsJson = $_POST['tags'] ?? '[]';
+        $tagNames = json_decode($tagsJson, true);
+        if (!is_array($tagNames)) {
+            $tagNames = [];
+        }
+        
+        // Use prepared statements in your model to prevent SQL injection
+        // rather than using htmlspecialchars() for database storage
+        $qnaModel = new QnaPost();
+        $postId = $qnaModel->createQuestion($_SESSION['user_id'], $title, $body, $tagNames);
+        
+        // Redirect back to the QA forum
+        $redirectPath = '/UniHelper/dashboard/' . $this->getDashboardType() . '/qa-forum';
+        
+        if ($postId) {
+            header('Location: ' . $redirectPath . '?success=question_posted');
+        } else {
+            header('Location: ' . $redirectPath . '?error=post_failed');
+        }
+        exit;
+    }
+    
+    // Get the dashboard type based on role
+    protected function getDashboardType()
+    {
+        switch ($this->requiredRole) {
+            case 'role-applicant':
+                return 'applicant';
+            case 'role-undergrad':
+                return 'undergraduate';
+            case 'role-profile':
+                return 'profile';
+            default:
+                return 'applicant';
+        }
     }
 
     // Loads a component file

@@ -23,6 +23,11 @@ $app->router->get('/dashboard/undergraduate/:component', [app\controllers\Underg
 $app->router->get('/dashboard/profile/:component', [app\controllers\ProfileDashController::class, 'renderComponent']);
 $app->router->get('/dashboard/admin/:component', [app\controllers\AdminDashController::class, 'renderComponent']);
 
+// Dashboard POST routes for component actions
+$app->router->post('/dashboard/applicant/qa-forum/post', [app\controllers\ApplicantDashController::class, 'handleComponentAction']);
+$app->router->post('/dashboard/undergraduate/qa-forum/post', [app\controllers\UndergradDashController::class, 'handleComponentAction']);
+$app->router->post('/dashboard/profile/qa-forum/post', [app\controllers\ProfileDashController::class, 'handleComponentAction']);
+
 // Add these routes for profile components
 $app->router->get('/profile', [app\controllers\ProfileController::class, 'index']);
 $app->router->get('/profile/edit', [app\controllers\ProfileController::class, 'edit']);
