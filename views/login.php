@@ -169,5 +169,24 @@
   </footer>
 
   <script src="views/js/login.js"></script>
+
+  <!-- Error Modal Script -->
+  <?php if (isset($error) && !empty($error)): ?>
+    <script>
+        // Wait for the page (and register.js) to load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the modal elements created by register.js
+            const modalErrorBox = document.getElementById('modalErrorBox');
+            const modalErrorMsg = document.getElementById('modalErrorMsg');
+            
+            if (modalErrorBox && modalErrorMsg) {
+                // Set the error message from PHP and show the modal
+                modalErrorMsg.innerHTML = '<?php echo htmlspecialchars($error); ?>';
+                modalErrorBox.style.display = 'flex';
+            }
+        });
+    </script>
+  <?php endif; ?>
+
 </body>
 </html>

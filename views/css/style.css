@@ -15,24 +15,35 @@
   
   /* CSS Variables for design system */
   :root {
-    --primary: rgb(255, 148, 102);
-    --accent: rgb(255, 156, 42);
-    --background: hsl(23, 100%, 63%);
-    --border: hsl(0, 0%, 15%);
-    --card: hsl(0, 0%, 8%);
-    --key-top: #2a2a2a;
+    --primary: #ff9550;
+    --accent: #ee9338ab;
+    --background: #ff9550;
+    --border: #1f1f1f;
+    --card: #404040;
+    --text: #ffffff;
     --key: #303030;
     --key-bottom: #000000;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(21, 100%, 66%), hsl(15, 100%, 69%));
-    --gradient-secondary: linear-gradient(135deg, hsl(22, 100%, 70%), hsl(28, 100%, 64%));
-    --gradient-accent: linear-gradient(135deg, hsl(20, 100%, 64%), hwb(28 40% 0%));
+    --gradient-primary: linear-gradient(135deg, #ff7f3a, #ff9550);
+    
+    --gradient-secondary: linear-gradient(135deg, #ff853e52, #ff9d4746);
+    --gradient-accent: linear-gradient(135deg, #ff844752, #ff844752);
     
     /* Glows */
-    --glow-primary: 0 0 60px hsla(0, 0%, 0%, 0.3);
-    --glow-secondary: 0 0 40px hsla(195, 100%, 50%, 0.2);
+    --glow-primary: 0 0 60px #ff823541;
+    --glow-secondary: 0 0 40px #ff7c1f1c;
   }
+
+    /* text colors */ 
+  .text1 {
+    color: rgb(255, 255, 255) !important;
+  }
+  .text2 {
+    color: rgb(0, 0, 0) !important;
+  }
+  
+
   
   /* Navigation */
   .nav {
@@ -41,7 +52,7 @@
     left: 0;
     right: 0;
     z-index: 1000;
-    background: -var(--key-top);
+    background: -var(--key);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     padding: 1rem 0;
@@ -144,15 +155,6 @@
     font-size: 1.15rem;
   }
 
-
-  /* text colors */ 
-  .text1 {
-    color: rgb(255, 255, 255) !important;
-  }
-  .text2 {
-    color: rgb(0, 0, 0) !important;
-  }
-  
   
   /* Footer Section */
   .footer {
@@ -307,4 +309,11 @@
 
   .nav-right .btn-primary {
     color: rgb(0, 0, 0) !important;  /* Force black text color for nav buttons */
+  }
+
+  /* Update the nav-right button styles */
+  .nav-right .btn {
+    font-size: 1.05rem;  /* Bigger text */
+    padding: 0.5rem 1rem;  /* Smaller button size */
+    font-weight: 500;  /* Slightly bolder text */
   }

@@ -3,8 +3,8 @@
 // Base routes
 $app->router->get('/', 'home.html');
 $app->router->get('/home', 'home.html');
-$app->router->get('/login', 'login.html');
-$app->router->get('/register', 'register.html');
+$app->router->get('/login', 'login.php');
+$app->router->get('/register', [app\controllers\AuthController::class, 'populateRegisterForm']);
 $app->router->get('/logout', [app\controllers\AuthController::class, 'logout']);
 
 // Authentication routes - POST (process forms)
@@ -33,3 +33,7 @@ $app->router->delete('/api/z-score/delete', [app\controllers\ApplicantDashContro
 $app->router->get('/api/programs/search', [app\controllers\ApplicantDashController::class, 'searchPrograms']);
 $app->router->get('/api/programs/filters', [app\controllers\ApplicantDashController::class, 'getSearchFilters']);
 $app->router->get('/api/programs/autocomplete', [app\controllers\ApplicantDashController::class, 'getAutocomplete']);
+// Add these routes for profile components
+$app->router->get('/profile', [app\controllers\ProfileController::class, 'index']);
+$app->router->get('/profile/edit', [app\controllers\ProfileController::class, 'edit']);
+$app->router->post('/profile/update', [app\controllers\ProfileController::class, 'update']);

@@ -70,44 +70,25 @@
                     </div>
                 </div>
             </div>
-            <!-- Mobile Menu Toggle Button -->
-            <button id="mobileMenuToggle" class="mobile-menu-toggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
         </div>
     </nav>
 
     <aside class="sidebar">
         <ul class="sidebar-menu">
-            <!-- Undergraduate Features -->
+            <!-- University Admin Features -->
             <div class="sidebar-section">
-                <div class="sidebar-section-title">Undergraduate</div>
-                <li><a href="dashboard/undergraduate/qa-forum" class="sidebar-link <?= $activeComponent === 'qa-forum' ? 'active' : '' ?>">
-                    <i class="fas fa-question-circle"></i>
-                    <span>Q&A Forum</span>
+                <div class="sidebar-section-title">System Admin</div>
+                <li><a href="dashboard/admin/content-review-queue" class="sidebar-link <?= $activeComponent === 'content-review-queue' ? 'active' : '' ?>">
+                    <i class="fas fa-tasks"></i>
+                    <span>Content Review Queue</span>
                 </a></li>
-                <li><a href="dashboard/undergraduate/create-session" class="sidebar-link <?= $activeComponent === 'create-session' ? 'active' : '' ?>">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Create Session</span>
+                <li><a href="dashboard/admin/role-applications" class="sidebar-link <?= $activeComponent === 'role-applications' ? 'active' : '' ?>">
+                    <i class="fas fa-user-check"></i>
+                    <span>Role Applications</span>
                 </a></li>
-                <li><a href="dashboard/undergraduate/my-sessions" class="sidebar-link <?= $activeComponent === 'my-sessions' ? 'active' : '' ?>">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>My Sessions</span>
-                </a></li>
-                <li><a href="dashboard/undergraduate/join-sessions" class="sidebar-link <?= $activeComponent === 'join-sessions' ? 'active' : '' ?>">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span>Join Sessions</span>
-                </a></li>
-                <div class="sidebar-section-subtitle">Moderator Features</div>
-                <li><a href="dashboard/undergraduate/flagged-content" class="sidebar-link <?= $activeComponent === 'flagged-content' ? 'active' : '' ?>">
-                    <i class="fas fa-book"></i>
-                    <span>Flagged Content</span>
-                </a></li>
-                <li><a href="dashboard/undergraduate/banned-users" class="sidebar-link <?= $activeComponent === 'banned-users' ? 'active' : '' ?>">
-                    <i class="fas fa-tools"></i>
-                    <span>Banned Users</span>
+                <li><a href="dashboard/admin/degree-programs-management" class="sidebar-link <?= $activeComponent === 'degree-programs-management' ? 'active' : '' ?>">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Degree Programs</span>
                 </a></li>
             </div>
         </ul>
@@ -183,30 +164,6 @@
     </footer>
 
     <script>
-        // Mobile menu toggle - Safe implementation
-        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-        if (mobileMenuToggle) {
-            mobileMenuToggle.addEventListener('click', function() {
-                const sidebar = document.querySelector('.sidebar');
-                if (sidebar) {
-                    sidebar.classList.toggle('open');
-                    this.classList.toggle('active');
-                }
-            });
-        }
-
-        // Sidebar link active state - Safe implementation
-        const sidebarLinks = document.querySelectorAll('.sidebar-link');
-        if (sidebarLinks.length > 0) {
-            sidebarLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    // Remove active class from all links
-                    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                    // Add active class to clicked link
-                    this.classList.add('active');
-                });
-            });
-        }
         // Profile dropdown functionality
         document.addEventListener('DOMContentLoaded', function() {
             const profileTrigger = document.getElementById('profileDropdownTrigger');
