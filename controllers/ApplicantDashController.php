@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\models\ZScoreModel;
 use app\models\ProgramModel;
+use app\models\WishlistModel;
 
 /**
  * Controller for the university applicant dashboard
@@ -26,10 +27,12 @@ class ApplicantDashController extends DashboardController
     
     private $zScoreModel;
     private $programModel;
+    private $wishlistModel;
     
     public function __construct() {
         $this->zScoreModel = new ZScoreModel();
         $this->programModel = new ProgramModel();
+        $this->wishlistModel = new WishlistModel();
     }
     
     /**
@@ -297,6 +300,129 @@ class ApplicantDashController extends DashboardController
             $this->sendJsonResponse(true, 'Suggestions retrieved', $suggestions);
             
         } catch (Exception $e) {
+            $this->sendJsonResponse(false, 'Server error: ' . $e->getMessage(), null, 500);
+        }
+    }
+
+    /**
+     * Check if a program is in the user's wishlist
+     * GET /api/wishlist/check?program_id=ID
+     */
+    public function checkWishlist() {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                $this->sendJsonResponse(false, 'User not authenticated', null, 401);
+                return;
+            }
+            if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+                $this->sendJsonResponse(false, 'Method not allowed', null, 405);
+                return;
+            }
+            $userId = $_SESSION['user_id'];
+            $programId = isset($_GET['program_id']) ? intval($_GET['program_id']) : 0;
+            if ($programId <= 0) {
+                $this->sendJsonResponse(false, 'Invalid program_id', null, 400);
+                return;
+            }
+            $inWishlist = $this->wishlistModel->isInWishlist($userId, $programId);
+            $this->sendJsonResponse(true, 'Wishlist status retrieved', [ 'isInWishlist' => $inWishlist ]);
+        } catch (\Exception $e) {
+            $this->sendJsonResponse(false, 'Server error: ' . $e->getMessage(), null, 500);
+        }
+    }
+
+    /**
+     * Add a program to the user's wishlist
+     * POST /api/wishlist/add
+     */
+    public function addToWishlist() {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                $this->sendJsonResponse(false, 'User not authenticated', null, 401);
+                return;
+            }
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                $this->sendJsonResponse(false, 'Method not allowed', null, 405);
+                return;
+            }
+            $input = json_decode(file_get_contents('php://input'), true) ?? [];
+            $programId = isset($input['program_id']) ? intval($input['program_id']) : 0;
+            if ($programId <= 0) {
+                $this->sendJsonResponse(false, 'Invalid program_id', null, 400);
+                return;
+            }
+            $userId = $_SESSION['user_id'];
+            $this->wishlistModel->addToWishlist($userId, $programId);
+            $this->sendJsonResponse(true, 'Added to wishlist');
+        } catch (\Exception $e) {
+            $this->sendJsonResponse(false, 'Server error: ' . $e->getMessage(), null, 500);
+        }
+    }
+
+    /**
+     * Remove a program from the user's wishlist
+     * DELETE /api/wishlist/remove
+     */
+    public function removeFromWishlist() {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                $this->sendJsonResponse(false, 'User not authenticated', null, 401);
+                return;
+            }
+            if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+                $this->sendJsonResponse(false, 'Method not allowed', null, 405);
+                return;
+            }
+            $input = json_decode(file_get_contents('php://input'), true) ?? [];
+            $programId = isset($input['program_id']) ? intval($input['program_id']) : 0;
+            if ($programId <= 0) {
+                $this->sendJsonResponse(false, 'Invalid program_id', null, 400);
+                return;
+            }
+            $userId = $_SESSION['user_id'];
+            $removed = $this->wishlistModel->removeFromWishlist($userId, $programId);
+            if ($removed) {
+                $this->sendJsonResponse(true, 'Removed from wishlist');
+            } else {
+                $this->sendJsonResponse(false, 'Item not found in wishlist', null, 404);
+            }
+        } catch (\Exception $e) {
+            $this->sendJsonResponse(false, 'Server error: ' . $e->getMessage(), null, 500);
+        }
+    }
+
+    /**
+     * Get wishlist count for the current user
+     * GET /api/wishlist/count
+     */
+    public function getWishlistCount() {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                $this->sendJsonResponse(false, 'User not authenticated', null, 401);
+                return;
+            }
+            $userId = $_SESSION['user_id'];
+            $count = $this->wishlistModel->getWishlistCount($userId);
+            $this->sendJsonResponse(true, 'Wishlist count retrieved', ['count' => $count]);
+        } catch (\Exception $e) {
+            $this->sendJsonResponse(false, 'Server error: ' . $e->getMessage(), null, 500);
+        }
+    }
+
+    /**
+     * Get wishlist items for the current user
+     * GET /api/wishlist/items
+     */
+    public function getWishlistItems() {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                $this->sendJsonResponse(false, 'User not authenticated', null, 401);
+                return;
+            }
+            $userId = $_SESSION['user_id'];
+            $items = $this->wishlistModel->getUserWishlist($userId);
+            $this->sendJsonResponse(true, 'Wishlist items retrieved', $items);
+        } catch (\Exception $e) {
             $this->sendJsonResponse(false, 'Server error: ' . $e->getMessage(), null, 500);
         }
     }

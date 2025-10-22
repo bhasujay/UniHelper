@@ -33,3 +33,10 @@ $app->router->delete('/api/z-score/delete', [app\controllers\ApplicantDashContro
 $app->router->get('/api/programs/search', [app\controllers\ApplicantDashController::class, 'searchPrograms']);
 $app->router->get('/api/programs/filters', [app\controllers\ApplicantDashController::class, 'getSearchFilters']);
 $app->router->get('/api/programs/autocomplete', [app\controllers\ApplicantDashController::class, 'getAutocomplete']);
+
+// Wishlist API routes
+$app->router->get('/api/wishlist/check', [app\controllers\ApplicantDashController::class, 'checkWishlist']);
+$app->router->post('/api/wishlist/add', [app\controllers\ApplicantDashController::class, 'addToWishlist']);
+$app->router->delete('/api/wishlist/remove', [app\controllers\ApplicantDashController::class, 'removeFromWishlist']);
+$app->router->get('/api/wishlist/count', [app\controllers\ApplicantDashController::class, 'getWishlistCount']);
+$app->router->get('/api/wishlist/items', [app\controllers\ApplicantDashController::class, 'getWishlistItems']);
