@@ -71,6 +71,12 @@
                     </div>
                 </div>
             </div>
+            <!-- Mobile Menu Toggle Button -->
+            <button id="mobileMenuToggle" class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 

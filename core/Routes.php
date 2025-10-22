@@ -42,3 +42,21 @@ $app->router->get('/dashboard/profile/qa-forum/delete/:id', [app\controllers\Pro
 $app->router->get('/profile', [app\controllers\ProfileController::class, 'index']);
 $app->router->get('/profile/edit', [app\controllers\ProfileController::class, 'edit']);
 $app->router->post('/profile/update', [app\controllers\ProfileController::class, 'update']);
+
+// Z-Score API routes
+$app->router->post('/api/z-score/save', [app\controllers\ApplicantDashController::class, 'saveZScore']);
+$app->router->post('/api/z-score/update', [app\controllers\ApplicantDashController::class, 'saveZScore']); // Use Post method for both create and update
+$app->router->get('/api/z-score/get', [app\controllers\ApplicantDashController::class, 'getZScore']);
+$app->router->delete('/api/z-score/delete', [app\controllers\ApplicantDashController::class, 'deleteZScore']);
+
+// Program search API routes
+$app->router->get('/api/programs/search', [app\controllers\ApplicantDashController::class, 'searchPrograms']);
+$app->router->get('/api/programs/filters', [app\controllers\ApplicantDashController::class, 'getSearchFilters']);
+$app->router->get('/api/programs/autocomplete', [app\controllers\ApplicantDashController::class, 'getAutocomplete']);
+
+// Wishlist API routes
+$app->router->get('/api/wishlist/check', [app\controllers\ApplicantDashController::class, 'checkWishlist']);
+$app->router->post('/api/wishlist/add', [app\controllers\ApplicantDashController::class, 'addToWishlist']);
+$app->router->delete('/api/wishlist/remove', [app\controllers\ApplicantDashController::class, 'removeFromWishlist']);
+$app->router->get('/api/wishlist/count', [app\controllers\ApplicantDashController::class, 'getWishlistCount']);
+$app->router->get('/api/wishlist/items', [app\controllers\ApplicantDashController::class, 'getWishlistItems']);
