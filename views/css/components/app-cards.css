@@ -1,4 +1,3 @@
-
 /* Z-Score Card Specific Styles */
 .z-score-card .card-main-action {
     display: flex;
@@ -473,4 +472,85 @@
 .card-actions {
     display: flex;
     gap: 0.5rem;
+}
+
+/* Connect Undergrads Card Styles */
+.card-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.connect-card-horizontal {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 550px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.connect-card-horizontal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.undergrad-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNTAiIGZpbGw9IiMyQzJDMkMiLz4KICA8cGF0aCBkPSJNNzUgNzBDNzUgNTYgNjQgNTAgNTAgNTBDMzYgNTAgMjUgNTYgMjUgNzBaIiBmaWxsPSIjNEM0QzRDIi8+CiAgPGNpcmNsZSBjeD0iNTAiIGN5PSI0MCIgcj0iMTUiIGZpbGw9IiM0QzRDRDIiLz4KPC9zdmc+");
+    background-size: cover;
+    border: 2px solid var(--primary);
+    flex-shrink: 0;
+}
+
+.undergrad-info {
+    flex-grow: 1;
+}
+
+.undergrad-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+
+.undergrad-degree {
+    font-size: 1rem;
+    color: var(--primary);
+    margin: 0.1rem 0;
+    font-weight: 500;
+}
+
+.undergrad-university {
+    font-size: 0.875rem;
+    color: var(--muted-foreground, #a1a1a1);
+    margin: 0;
+}
+
+.connect-button {
+    background-color: var(--primary);
+    color: var(--key);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.connect-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glow-primary);
 }
