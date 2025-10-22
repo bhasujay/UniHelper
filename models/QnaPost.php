@@ -114,4 +114,150 @@ class QnaPost
     {
         return $this->tagModel->getAll();
     }
+    
+    /**
+     * Edit an existing question post
+     * 
+     * @param int $postId ID of the post to edit
+     * @param string $title Updated question title
+     * @param string $body Updated question content
+     * @param array $tagNames Array of tag names
+     * @return bool True if successful, false otherwise
+     */
+    public function editQuestion($postId, $title, $body, $tagNames = [])
+    {
+        try {
+            // First verify the post exists
+            $checkSql = "SELECT post_id FROM qna_posts WHERE post_id = ? AND title IS NOT NULL";
+            $checkStmt = $this->db->prepare($checkSql);
+            $checkStmt->execute([$postId]);
+            
+            if ($checkStmt->rowCount() === 0) {
+                return false; // Post doesn't exist or isn't a question
+            }
+            
+            $this->db->getConnection()->beginTransaction();
+            
+            // Update post
+            $sql = "UPDATE qna_posts SET title = ?, body = ?, updated_at = NOW() WHERE post_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$title, $body, $postId]);
+            
+            // Remove existing tag associations
+            $this->postTagModel->deleteByPostId($postId);
+            
+            // Process new tags
+            foreach ($tagNames as $tagName) {
+                if (empty($tagName)) continue;
+                
+                // Get or create tag
+                $tagId = $this->tagModel->getOrCreate($tagName);
+                
+                if ($tagId) {
+                    // Associate tag with post
+                    $this->postTagModel->create($postId, $tagId);
+                }
+            }
+            
+            $this->db->getConnection()->commit();
+            return true;
+        } catch (\Exception $e) {
+            $this->db->getConnection()->rollBack();
+            error_log("QnaPost model error: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Get a specific question by ID
+     * 
+     * @param int $postId The post ID to fetch
+     * @return array|false Question data or false if not found
+     */
+    public function getQuestionById($postId)
+    {
+        try {
+            // Get the question with basic user info
+            $sql = "SELECT 
+                      p.*, 
+                      u.first_name,
+                      u.last_name,
+                      u.profile_picture
+                    FROM 
+                      qna_posts p
+                      LEFT JOIN users u ON p.user_id = u.id
+                    WHERE
+                      p.post_id = ? AND p.title IS NOT NULL";
+                    
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$postId]);
+            
+            $question = $stmt->fetch();
+            
+            if (!$question) {
+                return false;
+            }
+            
+            // Get the tags for this question
+            $question['tags'] = $this->postTagModel->getTagsByPost($question['post_id']);
+            $question['answer_count'] = $this->hierarchyModel->countAnswers($question['post_id']);
+            
+            return $question;
+        } catch (\Exception $e) {
+            error_log("QnaPost model error: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Update an existing question
+     * 
+     * @param int $postId ID of the post to update
+     * @param string $title Updated question title
+     * @param string $body Updated question content
+     * @param array $tagNames Array of tag names
+     * @return bool True if successful, false otherwise
+     */
+    public function updateQuestion($postId, $title, $body, $tagNames = [])
+    {
+        // This function already exists in your model as editQuestion
+        return $this->editQuestion($postId, $title, $body, $tagNames);
+    }
+    
+    /**
+     * Delete a question
+     * 
+     * @param int $postId ID of the post to delete
+     * @return bool True if successful, false otherwise
+     */
+    public function deleteQuestion($postId)
+    {
+        try {
+            // First verify the post exists
+            $checkSql = "SELECT post_id FROM qna_posts WHERE post_id = ? AND title IS NOT NULL";
+            $checkStmt = $this->db->prepare($checkSql);
+            $checkStmt->execute([$postId]);
+            
+            if ($checkStmt->rowCount() === 0) {
+                return false; // Post doesn't exist or isn't a question
+            }
+            
+            $this->db->getConnection()->beginTransaction();
+            
+            // Remove tag associations
+            $this->postTagModel->deleteByPostId($postId);
+            
+            // Delete the post
+            $sql = "DELETE FROM qna_posts WHERE post_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$postId]);
+            
+            $this->db->getConnection()->commit();
+            return true;
+        } catch (\Exception $e) {
+            $this->db->getConnection()->rollBack();
+            error_log("QnaPost model error: " . $e->getMessage());
+            return false;
+        }
+    }
 }

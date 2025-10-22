@@ -82,6 +82,10 @@ abstract class DashboardController
         switch ($action) {
             case 'ask_question':
                 return $this->handleAskQuestion($request);
+            case 'update_question':
+                return $this->handleUpdateQuestion($request);
+            case 'delete_question':
+                return $this->handleDeleteQuestion($request);
             default:
                 // Unknown action, redirect to dashboard
                 $redirectPath = '/UniHelper/dashboard/' . $this->getDashboardType();
@@ -106,8 +110,27 @@ abstract class DashboardController
         }
         
         // Process the tags
-        $tagNames = json_decode($tagsJson, true);
+        $tagsJson = $request->getBody()['tags'] ?? '[]';
+        error_log("Raw tags JSON: " . $tagsJson);
+
+        // Add HTML entity decoding before JSON parsing
+        $tagsJson = html_entity_decode($tagsJson);
+        error_log("After HTML decode: " . $tagsJson);
+
+        try {
+            $tagNames = json_decode($tagsJson, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log("JSON decode error: " . json_last_error_msg());
+                $tagNames = [];
+            }
+        } catch (Exception $e) {
+            error_log("Exception processing tags: " . $e->getMessage());
+            $tagNames = [];
+        }
+
+        error_log("Processed tag names: " . print_r($tagNames, true));
         if (!is_array($tagNames)) {
+            error_log("Tags not an array, type: " . gettype($tagNames));
             $tagNames = [];
         }
         
@@ -122,6 +145,148 @@ abstract class DashboardController
             header('Location: ' . $redirectPath . '?success=question_posted');
         } else {
             header('Location: ' . $redirectPath . '?error=post_failed');
+        }
+        exit;
+    }
+    
+    // Handle the update question action for QA forum
+    protected function handleUpdateQuestion(Request $request)
+    {
+        $postId = $request->getBody()['post_id'] ?? '';
+        $title = $request->getBody()['title'] ?? '';
+        $body = $request->getBody()['body'] ?? '';
+        $tagsJson = $request->getBody()['tags'] ?? '[]';
+        
+        // Basic validation
+        if (empty($postId) || empty($title) || empty($body)) {
+            // Redirect back with error message
+            $redirectPath = '/UniHelper/dashboard/' . $this->getDashboardType() . '/qa-forum';
+            header('Location: ' . $redirectPath . '?error=empty_fields&action=edit');
+            exit;
+        }
+        
+        // Process the tags
+        $tagsJson = $request->getBody()['tags'] ?? '[]';
+        error_log("Update question - Raw tags JSON: " . $tagsJson);
+
+        // Add HTML entity decoding before JSON parsing
+        $tagsJson = html_entity_decode($tagsJson);
+        error_log("Update question - After HTML decode: " . $tagsJson);
+
+        try {
+            $tagNames = json_decode($tagsJson, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log("JSON decode error: " . json_last_error_msg());
+                $tagNames = [];
+            }
+        } catch (Exception $e) {
+            error_log("Exception processing tags: " . $e->getMessage());
+            $tagNames = [];
+        }
+
+        error_log("Update question - Processed tag names: " . print_r($tagNames, true));
+        if (!is_array($tagNames)) {
+            error_log("Tags not an array, type: " . gettype($tagNames));
+            $tagNames = [];
+        }
+        
+        // Verify ownership of the question
+        $qnaModel = new QnaPost();
+        $question = $qnaModel->getQuestionById($postId);
+        
+        if (!$question || $question['user_id'] != $_SESSION['user_id']) {
+            // Unauthorized attempt to edit someone else's question
+            $redirectPath = '/UniHelper/dashboard/' . $this->getDashboardType() . '/qa-forum';
+            header('Location: ' . $redirectPath . '?error=unauthorized');
+            exit;
+        }
+        
+        // Update the question
+        $success = $qnaModel->updateQuestion($postId, $title, $body, $tagNames);
+        
+        // Redirect back to the QA forum
+        $redirectPath = '/UniHelper/dashboard/' . $this->getDashboardType() . '/qa-forum';
+        
+        if ($success) {
+            header('Location: ' . $redirectPath . '?success=question_updated');
+        } else {
+            header('Location: ' . $redirectPath . '?error=update_failed');
+        }
+        exit;
+    }
+    
+    // Handle the delete question action for QA forum
+    protected function handleDeleteQuestion(Request $request)
+    {
+        $postId = $request->getBody()['post_id'] ?? '';
+        
+        // Basic validation
+        if (empty($postId)) {
+            // Redirect back with error message
+            $redirectPath = '/UniHelper/dashboard/' . $this->getDashboardType() . '/qa-forum';
+            header('Location: ' . $redirectPath . '?error=invalid_request');
+            exit;
+        }
+        
+        // Verify ownership of the question
+        $qnaModel = new QnaPost();
+        $question = $qnaModel->getQuestionById($postId);
+        
+        if (!$question || $question['user_id'] != $_SESSION['user_id']) {
+            // Unauthorized attempt to delete someone else's question
+            $redirectPath = '/UniHelper/dashboard/' . $this->getDashboardType() . '/qa-forum';
+            header('Location: ' . $redirectPath . '?error=unauthorized');
+            exit;
+        }
+        
+        // Delete the question
+        $success = $qnaModel->deleteQuestion($postId);
+        
+        // Redirect back to the QA forum
+        $redirectPath = '/UniHelper/dashboard/' . $this->getDashboardType() . '/qa-forum';
+        
+        if ($success) {
+            header('Location: ' . $redirectPath . '?success=question_deleted');
+        } else {
+            header('Location: ' . $redirectPath . '?error=delete_failed');
+        }
+        exit;
+    }
+    
+    // Handle deletion of a question via direct GET request
+    public function deleteQuestion($params)
+    {
+        // Check if question ID is provided
+        if (!isset($params['id'])) {
+            // Redirect to QA forum with error
+            $redirectPath = '/unihelper/dashboard/' . $this->getDashboardType() . '/qa-forum';
+            header('Location: ' . $redirectPath . '?error=invalid_request');
+            exit;
+        }
+        
+        $questionId = $params['id'];
+        
+        // Verify ownership of the question
+        $qnaModel = new QnaPost();
+        $question = $qnaModel->getQuestionById($questionId);
+        
+        if (!$question || $question['user_id'] != $_SESSION['user_id']) {
+            // Unauthorized attempt to delete someone else's question
+            $redirectPath = '/unihelper/dashboard/' . $this->getDashboardType() . '/qa-forum';
+            header('Location: ' . $redirectPath . '?error=unauthorized');
+            exit;
+        }
+        
+        // Delete the question
+        $success = $qnaModel->deleteQuestion($questionId);
+        
+        // Redirect back to the QA forum
+        $redirectPath = '/unihelper/dashboard/' . $this->getDashboardType() . '/qa-forum';
+        
+        if ($success) {
+            header('Location: ' . $redirectPath . '?success=question_deleted');
+        } else {
+            header('Location: ' . $redirectPath . '?error=delete_failed');
         }
         exit;
     }
@@ -170,5 +335,40 @@ abstract class DashboardController
         
         // Make content available to the dashboard template
         include Application::$ROOT_DIR . "/views/{$this->dashboardTemplate}";
+    }
+    
+    // Get question data for editing
+    public function getQuestionData($params)
+    {
+        // Check if question ID is provided
+        if (!isset($params['id'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Question ID is required']);
+            return;
+        }
+        
+        $questionId = $params['id'];
+        
+        // Get question data
+        $qnaModel = new QnaPost();
+        $question = $qnaModel->getQuestionById($questionId);
+        
+        // Check if question exists
+        if (!$question) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Question not found']);
+            return;
+        }
+        
+        // Check if the current user is the author of the question
+        if ($question['user_id'] != $_SESSION['user_id']) {
+            http_response_code(403);
+            echo json_encode(['error' => 'You are not authorized to edit this question']);
+            return;
+        }
+        
+        // Return question data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($question);
     }
 }

@@ -31,7 +31,6 @@ class Router
         $method = $this->request->getMethod();
         
         // First check for exact match
-        
         if (isset($this->routes[$method][$path])) {
             $callback = $this->routes[$method][$path];
             
@@ -58,20 +57,25 @@ class Router
                 $routePattern = "#^$routePattern$#";
                 
                 if (preg_match($routePattern, $path, $matches)) {
-                    // Extract parameters
+                    // Extract parameters - only keep named captures (non-numeric keys)
                     $params = array_filter($matches, function($key) {
                         return !is_numeric($key);
                     }, ARRAY_FILTER_USE_KEY);
                     
-                    if (is_string($callback))
+                    // Check callback type and handle appropriately
+                    if (is_string($callback)) {
                         return $this->render_view($callback);
+                    }
                         
                     if (is_array($callback)) {
                         $controller = new $callback[0]();
                         $method = $callback[1];
+                        
+                        // Pass the params to the controller method
                         return $controller->$method($params);
                     }
                     
+                    // For closure callbacks
                     return call_user_func_array($callback, [$params]);
                 }
             }

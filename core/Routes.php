@@ -28,6 +28,16 @@ $app->router->post('/dashboard/applicant/qa-forum/post', [app\controllers\Applic
 $app->router->post('/dashboard/undergraduate/qa-forum/post', [app\controllers\UndergradDashController::class, 'handleComponentAction']);
 $app->router->post('/dashboard/profile/qa-forum/post', [app\controllers\ProfileDashController::class, 'handleComponentAction']);
 
+// Dashboard GET routes for fetching question data
+$app->router->get('/dashboard/applicant/qa-forum/question/:id', [app\controllers\ApplicantDashController::class, 'getQuestionData']);
+$app->router->get('/dashboard/undergraduate/qa-forum/question/:id', [app\controllers\UndergradDashController::class, 'getQuestionData']);
+$app->router->get('/dashboard/profile/qa-forum/question/:id', [app\controllers\ProfileDashController::class, 'getQuestionData']);
+
+// Dashboard GET routes for deleting questions
+$app->router->get('/dashboard/applicant/qa-forum/delete/:id', [app\controllers\ApplicantDashController::class, 'deleteQuestion']);
+$app->router->get('/dashboard/undergraduate/qa-forum/delete/:id', [app\controllers\UndergradDashController::class, 'deleteQuestion']);
+$app->router->get('/dashboard/profile/qa-forum/delete/:id', [app\controllers\ProfileDashController::class, 'deleteQuestion']);
+
 // Add these routes for profile components
 $app->router->get('/profile', [app\controllers\ProfileController::class, 'index']);
 $app->router->get('/profile/edit', [app\controllers\ProfileController::class, 'edit']);
