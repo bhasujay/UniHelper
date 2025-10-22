@@ -350,7 +350,7 @@
   .dashboard-card {
     background: rgba(8, 8, 8, 0.5);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(164, 109, 255, 0.2);
+    border: 1px solid var(--glow-secondary);
     border-radius: 1rem;
     padding: 2rem;
     transition: all 0.3s ease;
@@ -365,7 +365,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--gradient-primary);
+    background: var(--gradient-secondary);
     opacity: 0;
     transition: all 0.3s ease;
     z-index: 1;
@@ -378,7 +378,7 @@
   .dashboard-card:hover {
     transform: translateY(-5px);
     border-color: var(--border);
-    box-shadow: 0 10px 30px rgba(164, 109, 255, 0.1);
+    box-shadow: 0 10px 30px var(--glow-primary);
   }
   
   .card-content {

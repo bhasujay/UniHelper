@@ -22,7 +22,7 @@
     left: 25%;
     width: 24rem;
     height: 24rem;
-    background: rgba(164, 109, 255, 0.1);
+    background: var(--bg-blur1);
   }
   
   .bg-blur-2 {
@@ -30,7 +30,7 @@
     right: 25%;
     width: 20rem;
     height: 20rem;
-    background: rgba(164, 109, 255, 0.1);
+    background: var(--bg-blur2);
   }
   
   /* Hero section */
@@ -68,7 +68,7 @@
     inset: 0;
     width: 8rem;
     height: 8rem;
-    background: rgba(164, 109, 255, 0.2);
+    background: var(--glow-primary);
     border-radius: 50%;
     filter: blur(40px);
   }
@@ -216,7 +216,7 @@
   /* Testimonials Section */
   .testimonials-section {
     padding: 6rem 0;
-    background: rgba(8, 8, 8, 0.2);
+    background: var(--key-bottom);
     backdrop-filter: blur(8px);
     position: relative;
     overflow: hidden;
@@ -387,7 +387,7 @@
   /* University Logos Section */
   .university-logos {
     padding: 4rem 0;
-    background: rgba(8, 8, 8, 0.3);
+    background: var(--key);
     backdrop-filter: blur(8px);
     overflow: hidden;
   }

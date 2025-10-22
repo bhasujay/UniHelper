@@ -60,3 +60,10 @@ $app->router->post('/api/wishlist/add', [app\controllers\ApplicantDashController
 $app->router->delete('/api/wishlist/remove', [app\controllers\ApplicantDashController::class, 'removeFromWishlist']);
 $app->router->get('/api/wishlist/count', [app\controllers\ApplicantDashController::class, 'getWishlistCount']);
 $app->router->get('/api/wishlist/items', [app\controllers\ApplicantDashController::class, 'getWishlistItems']);
+
+// Degree programs routes
+$app->router->post('/dashboard/admin/degreemanage/add', [app\controllers\AdminDashController::class, 'addDegreeProgram']);
+$app->router->get('/dashboard/admin/degreemanage/remove/:id', [app\controllers\AdminDashController::class, 'removeDegreeProgram']);
+$app->router->post('/dashboard/admin/degreemanage/update/:id', [app\controllers\AdminDashController::class, 'updateDegreeProgramForm']);
+$app->router->get('/dashboard/admin/degreemanage/get/:id', [app\controllers\AdminDashController::class, 'getDegreeProgramData']);
+$app->router->get('/dashboard/admin/degreemanage/get/all', [app\controllers\AdminDashController::class, 'getDegreePrograms']);

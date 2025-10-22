@@ -83,8 +83,14 @@ class Router
                         $controller = new $callback[0]();
                         $method = $callback[1];
                         
-                        // Pass the params to the controller method
-                        return $controller->$method($params);
+                        // Handle differently for POST requests
+                        if ($this->request->getMethod() === 'POST') {
+                            // Pass both params and request to the controller method
+                            return $controller->$method($params, $this->request);
+                        } else {
+                            // For GET requests, maintain the existing behavior
+                            return $controller->$method($params);
+                        }
                     }
                     
                     // For closure callbacks

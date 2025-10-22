@@ -159,11 +159,11 @@ if (isset($_GET['error'])) {
                         <?php endif; ?>
                         
                         <div class="qa-main">
-                            <h3><?= htmlspecialchars($question['title']) ?></h3>
-                            <p class="question-snippet"><?= htmlspecialchars(substr($question['body'], 0, 150)) . (strlen($question['body']) > 150 ? '...' : '') ?></p>
+                            <h3><?= htmlspecialchars_decode($question['title'], ENT_QUOTES) ?></h3>
+                            <p class="question-snippet"><?= htmlspecialchars_decode(substr($question['body'], 0, 450), ENT_QUOTES) . (strlen($question['body']) > 450 ? '...' : '') ?></p>
                             <div class="qa-tags">
                                 <?php foreach ($question['tags'] as $tag): ?>
-                                    <span class="tag"><?= htmlspecialchars($tag['tag_name']) ?></span>
+                                    <span class="tag"><?= htmlspecialchars_decode($tag['tag_name'], ENT_QUOTES) ?></span>
                                 <?php endforeach; ?>
                             </div>
                         </div>
@@ -297,11 +297,98 @@ if (isset($_GET['error'])) {
     margin-top: 1rem;
 }
 
+/* Make Q&A cards MUCH MORE COMPACT - VERTICALLY SHORTER */
+.q-and-a-card {
+    padding: 0.5rem 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.qa-stats {
+    gap: 0.5rem !important;
+    margin-right: 0.75rem !important;
+}
+
+.qa-stats .stat-item {
+    padding: 0.25rem 0 !important;
+}
+
+.qa-stats .stat-number {
+    font-size: 1rem !important;
+    margin-bottom: 0 !important;
+    line-height: 1.2 !important;
+}
+
+.qa-stats .stat-label {
+    font-size: 0.65rem !important;
+    line-height: 1 !important;
+}
+
+.qa-main h3 {
+    font-size: 1rem !important;
+    margin-bottom: 0.25rem !important;
+    line-height: 1.3 !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    max-width: 100%;
+}
+
+.qa-main .question-snippet {
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0.25rem !important;
+    color: var(--muted-foreground);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    max-width: 100%;
+    white-space: pre-wrap;
+}
+
+.qa-tags {
+    margin-bottom: 0.25rem !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.qa-tags .tag {
+    padding: 0.15rem 0.5rem !important;
+    font-size: 0.7rem !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+.qa-footer {
+    margin-top: 0.5rem !important;
+    padding-top: 0.5rem !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.qa-author {
+    font-size: 0.75rem !important;
+}
+
+.qa-author img,
+.qa-author .author-initial {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.75rem !important;
+}
+
 /* Three-dot menu styling */
 .three-dot-menu {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 0.5rem;
+    right: 0.5rem;
     z-index: 10;
 }
 
@@ -309,7 +396,7 @@ if (isset($_GET['error'])) {
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 0.25rem;
+    padding: 0.2rem;
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -357,29 +444,33 @@ if (isset($_GET['error'])) {
 
 /* Action buttons styling */
 .qa-content {
-    position: relative; /* For absolute positioning of three-dot menu */
+    position: relative;
 }
 
 .qa-action-buttons {
     display: flex;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
+    gap: 0.4rem;
+    margin-top: 0;
+    flex-wrap: wrap;
 }
 
 .qa-action-buttons .btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
+    gap: 0.3rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 0.4rem;
     font-weight: 500;
     transition: all 0.3s ease;
     text-decoration: none;
+    font-size: 0.8rem;
 }
 
 .qa-action-buttons .btn svg {
     stroke: currentColor;
+    width: 13px;
+    height: 13px;
 }
 
 .qa-action-buttons .btn-outline {
@@ -406,22 +497,12 @@ if (isset($_GET['error'])) {
 
 .qa-action-buttons .btn-text {
     color: inherit !important;
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     font-weight: 600;
 }
 
 .qa-action-buttons .btn-primary .btn-text {
     color: #111 !important;
-}
-
-/* Make sure the footer aligns the items properly */
-.qa-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 1rem;
 }
 
 /* Loading indicator */

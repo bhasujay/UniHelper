@@ -31,6 +31,7 @@ require_once dirname(__DIR__) . '/models/QnaPost.php';
 require_once dirname(__DIR__) . '/models/Tag.php';
 require_once dirname(__DIR__) . '/models/QnaPostTag.php';
 require_once dirname(__DIR__) . '/models/QnaHierarchy.php';
+require_once dirname(__DIR__) . '/models/DegreeProgram.php';
 
 require_once dirname(__DIR__) . '/models/ZScore_model.php';
 require_once dirname(__DIR__) . '/models/ProgramModel.php';

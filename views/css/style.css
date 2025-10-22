@@ -22,7 +22,10 @@
     --card: #404040;
     --text: #ffffff;
     --key: #303030;
-    --key-bottom: #000000;
+    --key-bottom: #54545448;
+
+    --bg-blur1: #e9edb011;
+    --bg-blur2: #ff84472f;
     
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, #ff7f3a, #ff9550);

@@ -9,6 +9,9 @@ use app\models\QnaPost;
 use app\models\Tag;
 use app\models\QnaPostTag;
 use app\models\QnaHierarchy;
+use app\models\Major;
+use app\models\University;
+use app\models\DegreeProgram;
 
 abstract class DashboardController
 {

@@ -8,9 +8,7 @@
 
     <link rel="stylesheet" href="/unihelper/views/css/style.css">
     <link rel="stylesheet" href="/unihelper/views/css/dashboard.css">
-    <link rel="stylesheet" href="/unihelper/views/css/components/cards.css">
-    <link rel="stylesheet" href="/unihelper/views/css/components/und-cards.css">
-    <link rel="stylesheet" href="/unihelper/views/css/profile.css">
+    <link rel="stylesheet" href="/unihelper/views/css/admin.css">
 </head>
 <body>
     <nav class="nav">
@@ -78,6 +76,10 @@
             <!-- University Admin Features -->
             <div class="sidebar-section">
                 <div class="sidebar-section-title">System Admin</div>
+                <li><a href="dashboard/admin/degree-programs-management" class="sidebar-link <?= $activeComponent === 'degree-programs-management' ? 'active' : '' ?>">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Degree Programs</span>
+                </a></li>
                 <li><a href="dashboard/admin/content-review-queue" class="sidebar-link <?= $activeComponent === 'content-review-queue' ? 'active' : '' ?>">
                     <i class="fas fa-tasks"></i>
                     <span>Content Review Queue</span>
@@ -85,10 +87,6 @@
                 <li><a href="dashboard/admin/role-applications" class="sidebar-link <?= $activeComponent === 'role-applications' ? 'active' : '' ?>">
                     <i class="fas fa-user-check"></i>
                     <span>Role Applications</span>
-                </a></li>
-                <li><a href="dashboard/admin/degree-programs-management" class="sidebar-link <?= $activeComponent === 'degree-programs-management' ? 'active' : '' ?>">
-                    <i class="fas fa-graduation-cap"></i>
-                    <span>Degree Programs</span>
                 </a></li>
             </div>
         </ul>
