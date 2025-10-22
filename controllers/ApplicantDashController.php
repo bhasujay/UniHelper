@@ -14,7 +14,6 @@ class ApplicantDashController extends DashboardController
     protected $validComponents = [
         'z-score-checker',
         'degree-programs',
-        'wishlist',
         'find-applicant',
         'unicode-generator',
         'qa-forum',
@@ -30,6 +29,7 @@ class ApplicantDashController extends DashboardController
     private $wishlistModel;
     
     public function __construct() {
+        parent::__construct();
         $this->zScoreModel = new ZScoreModel();
         $this->programModel = new ProgramModel();
         $this->wishlistModel = new WishlistModel();

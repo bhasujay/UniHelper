@@ -345,12 +345,12 @@
 
 /* Page Search Section - Always visible at top */
 .page-search-section {
-    background: #fff;
+    background: var(--card);
     border-radius: 12px;
     padding: 40px;
     margin-bottom: 40px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border);
 }
 
 .search-header {
@@ -358,14 +358,14 @@
 }
 
 .search-header h2 {
-    color: #1a1a1a;
+    color: var(--text);
     font-size: 28px;
     font-weight: 600;
     margin: 0 0 12px 0;
 }
 
 .search-header p {
-    color: #666;
+    color: var(--text);
     font-size: 16px;
     margin: 0;
 }

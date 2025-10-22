@@ -13,7 +13,7 @@
 .z-score-card .card-main-action h2 {
     font-size: 1.75rem;
     font-weight: 600;
-    color: var(--key);
+    color: var(--text);
     margin: 0;
 }
 

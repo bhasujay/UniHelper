@@ -187,3 +187,5 @@ if (isset($_SESSION['user_id'])) {
         <?php endif; ?>
     </div>
 </div>
+
+<script src="views/js/degree-programs.js"></script>

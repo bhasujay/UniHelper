@@ -100,10 +100,6 @@
                     <i class="fas fa-graduation-cap"></i>
                     <span>Degree Programs</span>
                 </a></li>
-                <li><a href="dashboard/applicant/wishlist" class="sidebar-link <?= $activeComponent === 'wishlist' ? 'active' : '' ?>">
-                    <i class="fas fa-heart"></i>
-                    <span>Wishlist</span>
-                </a></li>
                 <li><a href="dashboard/applicant/find-applicant" class="sidebar-link <?= $activeComponent === 'find-applicant' ? 'active' : '' ?>">
                     <i class="fas fa-users"></i>
                     <span>Find Applicants</span>

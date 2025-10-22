@@ -525,7 +525,7 @@ main {
 
 /* Dashboard cards container */
 main .dashboard-card {
-    background: rgba(8, 8, 8, 0.9);
+    background: var(--card);
     backdrop-filter: blur(8px);
     border: 1px solid var(--border);
     border-radius: 1rem;
