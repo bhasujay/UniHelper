@@ -93,18 +93,25 @@ abstract class DashboardController
     // Handle the ask question action for QA forum
     protected function handleAskQuestion(Request $request)
     {
-        // Get unsanitized data directly from $_POST for database storage
-        $title = $_POST['title'] ?? '';
-        $body = $_POST['body'] ?? '';
+        $title = $request->getBody()['title'] ?? '';
+        $body = $request->getBody()['body'] ?? '';
+        $tagsJson = $request->getBody()['tags'] ?? '[]';
         
-        $tagsJson = $_POST['tags'] ?? '[]';
+        // Basic validation
+        if (empty($title) || empty($body)) {
+            // Redirect back with error message
+            $redirectPath = '/UniHelper/dashboard/' . $this->getDashboardType() . '/qa-forum';
+            header('Location: ' . $redirectPath . '?error=empty_fields');
+            exit;
+        }
+        
+        // Process the tags
         $tagNames = json_decode($tagsJson, true);
         if (!is_array($tagNames)) {
             $tagNames = [];
         }
         
-        // Use prepared statements in your model to prevent SQL injection
-        // rather than using htmlspecialchars() for database storage
+        // Create the question
         $qnaModel = new QnaPost();
         $postId = $qnaModel->createQuestion($_SESSION['user_id'], $title, $body, $tagNames);
         
