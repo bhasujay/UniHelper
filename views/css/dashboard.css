@@ -1,72 +1,39 @@
 /* Dashboard Layout - 4 Separate Parts */
 /* No container needed - each part is completely separate */
 
-/* Mobile Menu Toggle Button */
-.mobile-menu-toggle {
-    display: none;
-    flex-direction: column;
-    justify-content: space-around;
-    width: 30px;
-    height: 30px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    z-index: 1002;
-    position: relative;
+/* Reduced Nav Bar Height */
+.nav {
+  width: 100%;
+  background: var(--key);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  height: 60px; /* Reduced from default value (likely 80px) */
 }
 
-.mobile-menu-toggle span {
-    width: 25px;
-    height: 3px;
-    background: var(--foreground);
-    border-radius: 3px;
-    transition: all 0.3s ease;
-    transform-origin: 1px;
-}
-
-.mobile-menu-toggle:hover span {
-    background: var(--primary);
-}
-
-/* Mobile Menu Toggle Animation */
-.mobile-menu-toggle.active span:first-child {
-    transform: rotate(45deg);
-}
-
-.mobile-menu-toggle.active span:nth-child(2) {
-    opacity: 0;
-}
-
-.mobile-menu-toggle.active span:last-child {
-    transform: rotate(-45deg);
-}
-
-/* Show mobile menu toggle on mobile */
-@media (max-width: 768px) {
-    .mobile-menu-toggle {
-        display: flex;
-    }
-    
-    .sidebar {
-        transform: translateX(-100%);
-    }
-    
-    .sidebar.open {
-        transform: translateX(0);
-    }
+.nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
 /* Sidebar Styles */
 .sidebar {
     width: 280px;
-    background: -var(--key);
+    background: var(--key);
     backdrop-filter: blur(12px);
     border-right: 1px solid var(--border);
     position: fixed;
     left: 0;
-    top: 100px; /* 80px nav + 20px spacing */
-    height: calc(100vh - 100px - 20px); /* Full height minus nav and spacing */
+    top: 60px; /* Reduced from 100px */
+    height: calc(100vh - 60px - 20px); /* Adjusted for smaller nav */
     z-index: 1001; /* Higher than nav z-index */
     overflow-y: auto;
     transition: all 0.3s ease;
@@ -149,8 +116,9 @@
   }
   
   .sidebar-link.active {
-    background: var(--gradient-primary);
-    color: white;
+    background: var(--accent);
+    color: #ffffff;
+    font-weight: 500;
     border-right: 3px solid var(--primary);
   }
   
@@ -173,18 +141,17 @@
   
   /* Main Content Area - Part 3 */
   .main-content {
-    margin-left: 280px; /* Start after sidebar */
-    margin-top: 8%; /* 100px spacing from navigation bar */
-    margin-right: 2rem; /* Right margin */
+    margin-left: 280px;
+    margin-top: 5%; /* Reduced from 8% */
+    margin-right: 2rem;
     padding: 2rem;
-    background: rgba(8, 8, 8, 0.9); /* Semi-transparent background */
-    border: 2px solid rgba(164, 109, 255, 0.5); /* Stronger border */
-    border-radius: 1rem; /* Rounded corners */
-    min-height: calc(100vh - 100px - 20px - 200px); /* Subtract nav + spacing + footer height */
-    overflow-y: auto; /* Independent scrolling */
-    backdrop-filter: blur(8px); /* Glass effect */
-    box-shadow: 0 4px 20px rgba(164, 109, 255, 0.2); /* Glow effect */
-    width: calc(100% - 280px - 4rem); /* Same width as footer */
+    background: var(--key);
+    border: none;
+    border-radius: 1rem;
+    min-height: calc(100vh - 60px - 20px - 200px); /* Adjusted for smaller nav */
+    overflow-y: auto;
+    backdrop-filter: blur(8px);
+    width: calc(100% - 280px - 4rem);
   }
   
   /* Dashboard Content */
@@ -193,20 +160,6 @@
     margin: 0 auto;
   }
   
-  .content-placeholder {
-    background: rgba(8, 8, 8, 0.5);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(164, 109, 255, 0.2);
-    border-radius: 1rem;
-    padding: 3rem;
-    text-align: center;
-    margin-top: 2rem;
-  }
-  
-  .content-placeholder p {
-    color: var(--muted-foreground);
-    font-size: 1.125rem;
-  }
   
   /* Dashboard Header */
   .dashboard-header {
@@ -246,14 +199,16 @@
     gap: 1rem;
     padding: 0rem 1rem;
     background: rgba(8, 8, 8, 0.5);
-    border: 1px solid rgba(164, 109, 255, 0.2);
+    border: 1px solid var(--gradient-accent);
     border-radius: 0.75rem;
     backdrop-filter: blur(8px);
+    position: relative;
+    cursor: pointer;
   }
   
   .profile-picture {
-    width: 30px;
-    height: 30px;
+    width: 24px; /* Reduced from 30px */
+    height: 24px; /* Reduced from 30px */
     border-radius: 50%;
     background: var(--gradient-primary);
     display: flex;
@@ -261,7 +216,7 @@
     justify-content: center;
     color: white;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.875rem; /* Reduced from 1rem */
   }
   
   .profile-info {
@@ -271,19 +226,120 @@
   }
   
   .profile-name {
-    font-size: 0.875rem;
+    font-size: 0.8125rem; /* Reduced from 0.875rem */
     font-weight: 500;
     color: var(--foreground);
   }
   
   .profile-role {
-    font-size: 0.75rem;
+    font-size: 0.6875rem; /* Reduced from 0.75rem */
     color: var(--primary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
   
-  /* Dashboard Cards Grid */
+  /* Profile Dropdown Styles */
+.profile-container {
+  position: relative;
+  cursor: pointer;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 280px;
+  background: rgba(8, 8, 8, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.profile-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.dropdown-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dropdown-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--foreground);
+}
+
+.dropdown-email {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.dropdown-body {
+  padding: 0.5rem;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: var(--foreground);
+  text-decoration: none;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(164, 109, 255, 0.1);
+  color: var(--primary);
+}
+
+.dropdown-item svg {
+  width: 16px;
+  height: 16px;
+  color: var(--muted-foreground);
+}
+
+.dropdown-item:hover svg {
+  color: var(--primary);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.5rem 0;
+}
+
+/* Make sure the profile container in the nav is styled properly */
+.nav-right .profile-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Reduced from 0.75rem */
+  padding: 0.3rem 0.5rem; /* Reduced from 0.5rem 0.75rem */
+  background: rgba(8, 8, 8, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 36px; /* Explicitly set height */
+}
+
+/* Dashboard Cards Grid */
   .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -321,7 +377,7 @@
   
   .dashboard-card:hover {
     transform: translateY(-5px);
-    border-color: rgba(164, 109, 255, 0.4);
+    border-color: var(--border);
     box-shadow: 0 10px 30px rgba(164, 109, 255, 0.1);
   }
   
@@ -459,9 +515,9 @@
   /* Main Content Positioning */
 main {
     margin-left: 280px; /* Same as sidebar width */
-    margin-top: 100px; /* Same as navbar height */
+    margin-top: 60px; /* Reduced from 100px */
     padding: 2rem;
-    min-height: calc(100vh - 100px - 20px - 200px); /* Subtract nav + spacing + footer height */
+    min-height: calc(100vh - 60px - 20px - 200px); /* Adjusted for smaller nav */
     width: calc(100% - 280px - 4rem); /* Full width minus sidebar and padding */
     position: relative;
     z-index: 10; /* Ensure it's above background but below nav/sidebar */
@@ -471,11 +527,11 @@ main {
 main .dashboard-card {
     background: rgba(8, 8, 8, 0.9);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(164, 109, 255, 0.2);
+    border: 1px solid var(--border);
     border-radius: 1rem;
     max-width: 100%; /* Override the max-width from cards.css */
     margin-bottom: 2rem;
-    box-shadow: 0 4px 20px rgba(164, 109, 255, 0.2);
+    box-shadow: 0 4px 20px var(--glow-primary);
 }
 
 /* Responsive Design */
@@ -620,7 +676,7 @@ main .dashboard-card {
     visibility: hidden;
     transition: all 0.3s ease;
     z-index: 1000;
-    border: 1px solid rgba(164, 109, 255, 0.3);
+    border: 1px solid var(--border);
   }
   
   .tooltip:hover::after {
@@ -631,17 +687,17 @@ main .dashboard-card {
   
   /* Dashboard Footer */
   .dashboard-footer {
-    margin-top: 20px; /* 20px spacing from main content */
-    margin-left: 280px; /* Start after sidebar */
-    margin-right: 2rem; /* Right margin to match main content */
-    background: rgba(8, 8, 8, 0.9);
+    margin-top: 20px;
+    margin-left: 280px;
+    margin-right: 2rem;
+    background: var(--key);
     backdrop-filter: blur(12px);
-    border: 2px solid rgba(164, 109, 255, 0.5); /* Stronger border to match main content */
-    border-radius: 1rem; /* Rounded corners */
-    padding: 2rem 0 0;
-    position: relative; /* Ensure it stays at bottom */
-    width: calc(100% - 280px - 4rem); /* Same width as main content */
-    box-shadow: 0 4px 20px rgba(164, 109, 255, 0.2); /* Glow effect */
+    border: none; /* removed border */
+    border-radius: 1rem;
+    padding: 1.5rem 0 0;
+    position: relative;
+    width: calc(100% - 280px - 4rem);
+    box-shadow: none; /* Reduced shadow */
   }
   
   .dashboard-footer .footer-container {
@@ -691,8 +747,8 @@ main .dashboard-card {
   .dashboard-footer .social-link {
     width: 40px;
     height: 40px;
-    background: rgba(164, 109, 255, 0.1);
-    border: 1px solid rgba(164, 109, 255, 0.2);
+    background: var(--key);
+    border-top: 1px solid var(--border);
     border-radius: 50%;
     display: flex;
     align-items: center;

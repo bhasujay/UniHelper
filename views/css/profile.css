@@ -1,0 +1,324 @@
+/* Traditional Website Profile Styles - Completely Isolated */
+
+/* Only target specific profile elements and nothing else */
+.main-content .profile-container {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.main-content .profile-card {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.main-content .profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #252525;
+  border-bottom: 1px solid #444;
+}
+
+.main-content .profile-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.main-content .profile-card-header {
+  display: flex;
+  padding: 20px;
+  border-bottom: 1px solid #444;
+  align-items: center;
+}
+
+.main-content .profile-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-right: 20px;
+  border: 2px solid #555;
+  overflow: hidden;
+}
+
+.main-content .profile-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.main-content .profile-image-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-right: 20px;
+  background-color: #444;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.main-content .profile-name-section {
+  flex-grow: 1;
+}
+
+.main-content .profile-name {
+  font-size: 20px;
+  margin: 0 0 5px 0;
+  color: #fff;
+}
+
+.main-content .profile-role-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: #333;
+  border: 1px solid #666;
+  color: #ccc;
+  font-size: 12px;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
+.main-content .profile-card-body {
+  padding: 20px;
+}
+
+.main-content .profile-info-section {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #444;
+}
+
+.main-content .profile-info-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.main-content .profile-info-section h3 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #ddd;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #555;
+}
+
+.main-content .profile-info-items {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.main-content .profile-info-item {
+  display: table-row;
+}
+
+.main-content .info-label {
+  display: table-cell;
+  width: 200px;
+  padding: 10px;
+  color: #aaa;
+  font-weight: 500;
+  border-bottom: 1px solid #333;
+}
+
+.main-content .info-value {
+  display: table-cell;
+  padding: 10px;
+  color: #fff;
+  border-bottom: 1px solid #333;
+}
+
+.main-content .profile-actions {
+  margin-top: 20px;
+}
+
+/* Button Styles - Make extremely specific to prevent affecting other buttons */
+.main-content .profile-container .btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: transparent;
+  border: 1px solid #555;
+  color: #ddd;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.main-content .profile-container .btn-outline {
+  color: #ddd;
+}
+
+.main-content .profile-container .btn-outline:hover {
+  background-color: #333;
+}
+
+.main-content .profile-container .btn-primary {
+  background-color: #4a6fa5;
+  color: #fff;
+  border: 1px solid #4a6fa5;
+}
+
+.main-content .profile-container .btn-primary:hover {
+  background-color: #3c5d8a;
+}
+
+.main-content .profile-container .btn svg {
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.main-content .form-section {
+  margin-bottom: 25px;
+}
+
+.main-content .form-section .section-title {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #ddd;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #555;
+}
+
+.main-content .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.main-content .form-group {
+  margin-bottom: 15px;
+}
+
+.main-content .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #aaa;
+}
+
+.main-content .form-group input, 
+.main-content .form-group select, 
+.main-content .form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  background-color: #333;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 4px;
+}
+
+.main-content .form-group input:focus, 
+.main-content .form-group select:focus, 
+.main-content .form-group textarea:focus {
+  outline: none;
+  border-color: #4a6fa5;
+}
+
+.main-content .profile-upload-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 15px;
+  background-color: #252525;
+  border: 1px solid #444;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.main-content .profile-image-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #555;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #333;
+}
+
+.main-content .profile-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.main-content .upload-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.main-content .file-input {
+  display: none;
+}
+
+.main-content .form-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  justify-content: flex-start;
+}
+
+.main-content .alert {
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+
+.main-content .alert-error {
+  background-color: rgba(220, 53, 69, 0.2);
+  border: 1px solid rgba(220, 53, 69, 0.5);
+  color: #ff6b6b;
+}
+
+.main-content .alert-success {
+  background-color: rgba(40, 167, 69, 0.2);
+  border: 1px solid rgba(40, 167, 69, 0.5);
+  color: #75b798;
+}
+
+/* Media Queries */
+@media screen and (max-width: 768px) {
+  .main-content .profile-card-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .main-content .profile-image,
+  .main-content .profile-image-placeholder {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+
+  .main-content .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .main-content .info-label,
+  .main-content .info-value {
+    display: block;
+    width: 100%;
+    padding: 8px 0;
+  }
+  
+  .main-content .profile-info-item {
+    display: block;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+  }
+}

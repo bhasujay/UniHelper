@@ -111,9 +111,11 @@
                                 <div class="form-select-group">
                                     <select id="undergradUniversity" name="undergradUniversity" class="form-select" required>
                                         <option value="" disabled selected>Select University</option>
-                                        <option value="1">University of Colombo</option>
-                                        <option value="2">University of Peradeniya</option>
-                                        <option value="3">University of Moratuwa</option>
+                                        <?php foreach ($universities as $university): ?>
+                                            <option value="<?= htmlspecialchars($university->id) ?>">
+                                                <?= htmlspecialchars($university->name) ?>
+                                            </option>
+                                        <?php endforeach; ?>
                                     </select>
                                     <span class="form-select-arrow"></span>
                                 </div>
@@ -123,9 +125,11 @@
                                 <div class="form-select-group">
                                     <select id="major" name="major" class="form-select" required>
                                         <option value="" disabled selected>Select Major</option>
-                                        <option value="1">Computer Science</option>
-                                        <option value="2">Engineering</option>
-                                        <option value="3">Medicine</option>
+                                        <?php foreach ($majors as $major): ?>
+                                            <option value="<?= htmlspecialchars($major->id) ?>">
+                                                <?= htmlspecialchars($major->name) ?>
+                                            </option>
+                                        <?php endforeach; ?>
                                     </select>
                                     <span class="form-select-arrow"></span>
                                 </div>
@@ -137,9 +141,11 @@
                                 <div class="form-select-group">
                                     <select id="profileUniversity" name="profileUniversity" class="form-select" required>
                                         <option value="" disabled selected>Select University</option>
-                                        <option value="1">University of Colombo</option>
-                                        <option value="2">University of Peradeniya</option>
-                                        <option value="3">University of Moratuwa</option>
+                                        <?php foreach ($universities as $university): ?>
+                                            <option value="<?= htmlspecialchars($university->id) ?>">
+                                                <?= htmlspecialchars($university->name) ?>
+                                            </option>
+                                        <?php endforeach; ?>
                                     </select>
                                     <span class="form-select-arrow"></span>
                                 </div>
@@ -271,5 +277,24 @@
         </div>
     </footer>
     <script src="views/js/register.js"></script>
+
+    <!-- Error Modal Script -->
+    <?php if (isset($error) && !empty($error)): ?>
+    <script>
+        // Wait for the page (and register.js) to load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the modal elements created by register.js
+            const modalErrorBox = document.getElementById('modalErrorBox');
+            const modalErrorMsg = document.getElementById('modalErrorMsg');
+            
+            if (modalErrorBox && modalErrorMsg) {
+                // Set the error message from PHP and show the modal
+                modalErrorMsg.innerHTML = '<?php echo htmlspecialchars($error); ?>';
+                modalErrorBox.style.display = 'flex';
+            }
+        });
+    </script>
+    <?php endif; ?>
+
 </body>
 </html>

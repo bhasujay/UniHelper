@@ -1,4 +1,4 @@
-// register.js - Registration form validation for register.html
+// register.js - Registration form validation for register.php
 
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('registerForm');

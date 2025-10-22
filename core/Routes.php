@@ -3,8 +3,8 @@
 // Base routes
 $app->router->get('/', 'home.html');
 $app->router->get('/home', 'home.html');
-$app->router->get('/login', 'login.html');
-$app->router->get('/register', 'register.html');
+$app->router->get('/login', 'login.php');
+$app->router->get('/register', [app\controllers\AuthController::class, 'populateRegisterForm']);
 $app->router->get('/logout', [app\controllers\AuthController::class, 'logout']);
 
 // Authentication routes - POST (process forms)
@@ -22,6 +22,26 @@ $app->router->get('/dashboard/applicant/:component', [app\controllers\ApplicantD
 $app->router->get('/dashboard/undergraduate/:component', [app\controllers\UndergradDashController::class, 'renderComponent']);
 $app->router->get('/dashboard/profile/:component', [app\controllers\ProfileDashController::class, 'renderComponent']);
 $app->router->get('/dashboard/admin/:component', [app\controllers\AdminDashController::class, 'renderComponent']);
+
+// Dashboard POST routes for component actions
+$app->router->post('/dashboard/applicant/qa-forum/post', [app\controllers\ApplicantDashController::class, 'handleComponentAction']);
+$app->router->post('/dashboard/undergraduate/qa-forum/post', [app\controllers\UndergradDashController::class, 'handleComponentAction']);
+$app->router->post('/dashboard/profile/qa-forum/post', [app\controllers\ProfileDashController::class, 'handleComponentAction']);
+
+// Dashboard GET routes for fetching question data
+$app->router->get('/dashboard/applicant/qa-forum/question/:id', [app\controllers\ApplicantDashController::class, 'getQuestionData']);
+$app->router->get('/dashboard/undergraduate/qa-forum/question/:id', [app\controllers\UndergradDashController::class, 'getQuestionData']);
+$app->router->get('/dashboard/profile/qa-forum/question/:id', [app\controllers\ProfileDashController::class, 'getQuestionData']);
+
+// Dashboard GET routes for deleting questions
+$app->router->get('/dashboard/applicant/qa-forum/delete/:id', [app\controllers\ApplicantDashController::class, 'deleteQuestion']);
+$app->router->get('/dashboard/undergraduate/qa-forum/delete/:id', [app\controllers\UndergradDashController::class, 'deleteQuestion']);
+$app->router->get('/dashboard/profile/qa-forum/delete/:id', [app\controllers\ProfileDashController::class, 'deleteQuestion']);
+
+// Add these routes for profile components
+$app->router->get('/profile', [app\controllers\ProfileController::class, 'index']);
+$app->router->get('/profile/edit', [app\controllers\ProfileController::class, 'edit']);
+$app->router->post('/profile/update', [app\controllers\ProfileController::class, 'update']);
 
 // Z-Score API routes
 $app->router->post('/api/z-score/save', [app\controllers\ApplicantDashController::class, 'saveZScore']);

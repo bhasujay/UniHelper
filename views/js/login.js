@@ -1,4 +1,4 @@
-// sign.js - Login form validation for login.html
+// sign.js - Login form validation for login.php
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('loginForm');
   const emailInput = document.getElementById('email');
@@ -52,8 +52,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Password validation
     if (!password) {
       errors.push('Password is required.');
-    } else if (password.length < 6) {
-      errors.push('Password must be at least 6 characters.');
     }
 
     if (errors.length > 0) {
