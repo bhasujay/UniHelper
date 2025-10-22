@@ -24,6 +24,18 @@ class Router
         $this->routes['POST'][$path] = $callback;
     }
 
+    // Adds a route for PUT requests
+    public function put($path, $callback)
+    {
+        $this->routes['PUT'][$path] = $callback;
+    }
+
+    // Adds a route for DELETE requests
+    public function delete($path, $callback)
+    {
+        $this->routes['DELETE'][$path] = $callback;
+    }
+
     // Resolves the route based on the request method and path
     public function resolve()
     {

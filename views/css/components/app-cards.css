@@ -18,10 +18,332 @@
     margin: 0;
 }
 
+/* Fix button clickability - ensure it's above the card's ::before pseudo-element */
+.z-score-card .card-main-action button {
+    position: relative;
+    z-index: 2; /* Just higher than the pseudo-element's z-index: 1 */
+}
+
+/* Z-Score Card State Management */
+/* Initial state - when user hasn't submitted Z-Score */
+.z-score-card.initial-state .initial-content {
+    display: block;
+}
+
+.z-score-card.initial-state .submitted-content {
+    display: none;
+}
+
+/* Submitted state - after user submits Z-Score */
+.z-score-card.submitted-state .initial-content {
+    display: none;
+}
+
+.z-score-card.submitted-state .submitted-content {
+    display: block;
+}
+
+/* Submitted content styling */
+.submitted-content .score-details {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(164, 109, 255, 0.1);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(164, 109, 255, 0.2);
+}
+
+.submitted-content .score-details p {
+    margin: 0.5rem 0;
+    color: var(--foreground);
+}
+
+.submitted-content .subjects-list {
+    margin-top: 1rem;
+}
+
+.submitted-content .subjects-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+}
+
+.submitted-content .subjects-list li {
+    padding: 0.25rem 0;
+    color: var(--muted-foreground);
+    position: relative;
+    padding-left: 1rem;
+}
+
+.submitted-content .subjects-list li::before {
+    content: '•';
+    color: var(--primary);
+    position: absolute;
+    left: 0;
+}
+
+/* Submitted content button styling */
+.submitted-content .card-secondary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.submitted-content .card-secondary-actions .btn-primary {
+    flex: 1;
+    min-width: 200px;
+}
+
+.submitted-content .card-secondary-actions .btn-outline {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* Ensure submitted content buttons are clickable */
+.submitted-content .card-secondary-actions button {
+    position: relative;
+    z-index: 15;
+    pointer-events: auto;
+}
+
+/* Make sure the entire submitted content area is above the card's pseudo-element */
+.submitted-content {
+    position: relative;
+    z-index: 5;
+}
+
 .z-score-card .card-secondary-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
+}
+
+/* Dashboard Modal Styles - Appears in dashboard content area */
+.dashboard-modal {
+    display: none;
+    margin: 2rem 0;
+    animation: slideDown 0.3s ease-out;
+}
+
+.dashboard-modal-content {
+    background: rgba(8, 8, 8, 0.95);
+    border: 1px solid rgba(164, 109, 255, 0.3);
+    border-radius: 1rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.modal-content {
+    background: rgba(8, 8, 8, 0.95);
+    margin: 5% auto;
+    padding: 0;
+    border: 1px solid rgba(164, 109, 255, 0.3);
+    border-radius: 1rem;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease-out;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 2rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0;
+}
+
+.close {
+    color: var(--muted-foreground);
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close:hover {
+    color: var(--primary);
+}
+
+.modal-form {
+    padding: 2rem;
+}
+
+.modal-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.modal-form .form-label {
+    display: block;
+    font-weight: 500;
+    color: var(--foreground);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.modal-form .form-label.required::after {
+    content: ' *';
+    color: #ff6b6b;
+}
+
+.modal-form .form-input,
+.modal-form .form-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(8, 8, 8, 0.5);
+    border: 1px solid rgba(164, 109, 255, 0.3);
+    border-radius: 0.5rem;
+    color: var(--foreground);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+}
+
+.modal-form .form-input:focus,
+.modal-form .form-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(255, 148, 102, 0.1);
+}
+
+.modal-form .form-input-with-icon {
+    position: relative;
+}
+
+.modal-form .form-input-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted-foreground);
+    pointer-events: none;
+}
+
+.modal-form .form-select-group {
+    position: relative;
+}
+
+.modal-form .form-select-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted-foreground);
+    pointer-events: none;
+}
+
+.modal-form .form-select-arrow::after {
+    content: '▼';
+    font-size: 0.8rem;
+}
+
+.modal-form .form-instructions {
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+    margin-top: 0.5rem;
+    display: block;
+}
+
+.modal-form .form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* Subjects Container - 3 input boxes */
+.subjects-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .subjects-container {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+}
+
+/* Read-only subject fields styling */
+.modal-form .form-input[readonly] {
+    background-color: rgba(164, 109, 255, 0.1);
+    border-color: rgba(164, 109, 255, 0.3);
+    cursor: not-allowed;
+    color: var(--muted-foreground);
+}
+
+.modal-form .form-input[readonly]:focus {
+    outline: none;
+    box-shadow: none;
+    border-color: rgba(164, 109, 255, 0.3);
+}
+
+.modal-form .btn-full {
+    flex: 1;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        max-height: 85vh;
+    }
+    
+    .modal-header {
+        padding: 1.5rem 1.5rem 1rem;
+    }
+    
+    .modal-form {
+        padding: 1.5rem;
+    }
+    
+    .modal-form .form-actions {
+        flex-direction: column;
+    }
 }
 
 

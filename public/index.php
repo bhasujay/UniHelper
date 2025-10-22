@@ -21,7 +21,10 @@ require_once dirname(__DIR__) . '/controllers/UndergradDashController.php';
 require_once dirname(__DIR__) . '/controllers/ProfileDashController.php';
 
 // Require model files
+require_once dirname(__DIR__) . '/models/base-model.php';
 require_once dirname(__DIR__) . '/models/User.php';
+require_once dirname(__DIR__) . '/models/ZScore_model.php';
+require_once dirname(__DIR__) . '/models/ProgramModel.php';
 
 use app\core\Application;
 

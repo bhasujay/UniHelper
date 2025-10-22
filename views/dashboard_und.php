@@ -32,6 +32,12 @@
                     <button class="btn btn-outline">Logout</button>
                 </a>
             </div>
+            <!-- Mobile Menu Toggle Button -->
+            <button id="mobileMenuToggle" class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
@@ -139,21 +145,30 @@
     </footer>
 
     <script>
-        // Mobile menu toggle
-        document.getElementById('mobileMenuToggle').addEventListener('click', function() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('open');
-        });
-
-        // Sidebar link active state
-        document.querySelectorAll('.sidebar-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                // Remove active class from all links
-                document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                // Add active class to clicked link
-                this.classList.add('active');
+        // Mobile menu toggle - Safe implementation
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', function() {
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) {
+                    sidebar.classList.toggle('open');
+                    this.classList.toggle('active');
+                }
             });
-        });
+        }
+
+        // Sidebar link active state - Safe implementation
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        if (sidebarLinks.length > 0) {
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Remove active class from all links
+                    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                    // Add active class to clicked link
+                    this.classList.add('active');
+                });
+            });
+        }
     </script>
 </body>
 </html>
