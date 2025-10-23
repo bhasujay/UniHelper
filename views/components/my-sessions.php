@@ -51,7 +51,7 @@
     }
 
     .my-session-card {
-        background-color: var(--card-bg);
+        background-color: var(--card);
         border-radius: 12px;
         box-shadow: var(--card-shadow);
         padding: 1.5rem 2rem;
@@ -72,7 +72,7 @@
     .session-title {
         font-size: 1.75rem;
         font-weight: 700;
-        color: var(--text-primary);
+        color: var(--text);
         margin: 0;
     }
 
@@ -103,12 +103,12 @@
         align-items: center;
         gap: 0.5rem;
         font-size: 0.9rem;
-        color: var(--text-secondary);
+        color: var(--text);
     }
     .session-details-list li svg {
         width: 16px;
         height: 16px;
-        fill: var(--text-secondary);
+        fill: var(--text);
     }
 
     .session-footer {
@@ -124,7 +124,7 @@
         align-items: center;
         gap: 0.75rem;
         font-size: 0.9rem;
-        color: var(--text-secondary);
+        color: var(--glow-primary);
     }
 
     .avatar-stack { display: flex; }
@@ -160,7 +160,7 @@
     .action-btn:hover { opacity: 0.85; }
     .action-btn svg { width: 14px; height: 14px; fill: white; }
 
-    .btn-grey { background-color: var(--accent-grey); }
+    .btn-grey { background-color: var(--accent); }
     .btn-red { background-color: var(--accent-red); }
 
     .copy-link {
@@ -169,7 +169,7 @@
         gap: 0.4rem;
         font-size: 0.875rem;
         font-weight: 600;
-        color: var(--text-secondary);
+        color: var(--accent);
         text-decoration: none;
         transition: color 0.2s;
     }
