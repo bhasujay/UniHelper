@@ -254,8 +254,8 @@ async function saveZScoreToAPI(formData) {
     console.log('🚀🚀🚀 API FUNCTION CALLED - saveZScoreToAPI 🚀🚀🚀');
     console.log('🚀 saveZScoreToAPI called with formData:', formData);
     try {
-        console.log('📡 Sending POST request to /unihelper/api/z-score/save');
-        const response = await fetch('/unihelper/api/z-score/save', {
+        console.log('📡 Sending POST request to /UniHelper/api/z-score/save');
+        const response = await fetch('/UniHelper/api/z-score/save', {
             method: 'POST',
             body: formData
         });
@@ -286,7 +286,7 @@ async function updateZScoreToAPI(formData) {
         console.log('🚀🚀🚀 API FUNCTION CALLED - updateZScoreToAPI 🚀🚀🚀');
         console.log('🚀 updateZScoreToAPI called with formData:', formData);
         
-        const response = await fetch('/unihelper/api/z-score/update', {
+        const response = await fetch('/UniHelper/api/z-score/update', {
             method: 'POST',
             body: formData
         });
@@ -313,7 +313,7 @@ async function updateZScoreToAPI(formData) {
 
 async function loadZScoreFromAPI() {
     try {
-        const response = await fetch('/unihelper/api/z-score/get');
+        const response = await fetch('/UniHelper/api/z-score/get');
         const result = await response.json();
         
         if (result.success && result.data) {
@@ -346,7 +346,7 @@ async function loadZScoreFromAPI() {
 
 async function deleteZScoreFromAPI() {
     try {
-        const response = await fetch('/unihelper/api/z-score/delete', {
+        const response = await fetch('/UniHelper/api/z-score/delete', {
             method: 'DELETE'
         });
         

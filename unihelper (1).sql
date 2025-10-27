@@ -32,7 +32,7 @@ CREATE TABLE `degree_program` (
   `name` varchar(255) NOT NULL,
   `university_id` int(11) DEFAULT NULL,
   `stream` enum('physical-science','biological-science','technology','commerce','arts','other') DEFAULT NULL,
-  `unicode_code` varchar(20) DEFAULT NULL,
+  `unicode` varchar(20) DEFAULT NULL,
   `major_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

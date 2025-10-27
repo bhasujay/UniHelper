@@ -18,6 +18,9 @@ abstract class BaseModel {
     
     // CREATE - Insert new record
     public function create($data) {
+
+        unset($data['id']);
+
         $columns = implode(', ', array_keys($data));
         $placeholders = ':' . implode(', :', array_keys($data));
         

@@ -31,8 +31,8 @@ if (isset($_SESSION['user_id'])) {
     <!-- Search Bar Section - Only visible in search mode -->
     <div class="page-search-section" id="searchSection">
         <div class="search-header">
-            <h2>Search Degree Programs</h2>
-            <p>Find the perfect degree program for your future</p>
+            <h2 style="color: white;">Search Degree Programs</h2>
+            <p style="color: white;">Find the perfect degree program for your future</p>
         </div>
         
         <div class="search-bar-container">

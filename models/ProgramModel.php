@@ -51,9 +51,9 @@ class ProgramModel extends BaseModel {
         }
         
         // Unicode filter
-        if (isset($filters['unicode_code']) && !empty($filters['unicode_code'])) {
-            $sql .= " AND dp.unicode_code LIKE :unicode_code";
-            $params['unicode_code'] = "%{$filters['unicode_code']}%";
+        if (isset($filters['unicode']) && !empty($filters['unicode'])) {
+            $sql .= " AND dp.unicode LIKE :unicode";
+            $params['unicode'] = "%{$filters['unicode']}%";
         }
         
         $sql .= " ORDER BY dp.name ASC";

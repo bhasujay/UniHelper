@@ -165,7 +165,7 @@ async function performSearch() {
     if (universityId) params.append('university_id', universityId);
     if (stream) params.append('stream', stream);
     if (majorId) params.append('major_id', majorId);
-    if (unicodeCode.trim()) params.append('unicode_code', unicodeCode.trim());
+    if (unicodeCode.trim()) params.append('unicode', unicodeCode.trim());
     
     // Show loading
     loading.style.display = 'block';
@@ -220,7 +220,7 @@ function displaySearchResults(programs) {
                 
                 <div class="degree-metrics">
                     <div class="cutoff-info">Stream: <strong>${program.stream}</strong></div>
-                    <div class="unicode-info">Unicode: <strong>${program.unicode_code}</strong></div>
+                    <div class="unicode-info">Unicode: <strong>${program.unicode}</strong></div>
                 </div>
                 
                 <div class="degree-tags">
@@ -231,7 +231,7 @@ function displaySearchResults(programs) {
             <div class="card-footer">
                 <div class="footer-details">
                     <span>Major: <strong>${program.major_name}</strong></span>
-                    <span>Unicode: <strong>${program.unicode_code}</strong></span>
+                    <span>Unicode: <strong>${program.unicode}</strong></span>
                 </div>
                 <div class="card-actions">
                     <button class="icon-btn wishlist-btn" onclick="toggleWishlist(${program.program_id})" aria-label="Add to Wishlist">

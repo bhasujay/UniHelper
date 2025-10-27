@@ -234,7 +234,7 @@ class ApplicantDashController extends DashboardController
                 'university_id' => $_GET['university_id'] ?? null,
                 'stream' => $_GET['stream'] ?? null,
                 'major_id' => $_GET['major_id'] ?? null,
-                'unicode_code' => $_GET['unicode_code'] ?? null,
+                'unicode' => $_GET['unicode'] ?? null,
                 'limit' => $_GET['limit'] ?? 20,
                 'offset' => $_GET['offset'] ?? 0
             ];
