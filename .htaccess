@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Redirect root URL to home page
+RewriteRule ^$ public/index.php/home [L]
+
+# Redirect all other requests to public/index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/index.php/$1 [QSA,L]

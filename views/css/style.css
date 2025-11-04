@@ -1,0 +1,322 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Segoe UI', 'Arial', 'Helvetica Neue', sans-serif;
+    background: #303030;
+    color: #fafafa;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+  
+  /* CSS Variables for design system */
+  :root {
+    --primary: #0062ffff;
+    --accent: #3168ff8d;
+    --background: #5056ff;
+    --border: #1f1f1f;
+    --card: #404040;
+    --text: #ffffff;
+    --key: #303030;
+    --key-bottom: #54545448;
+
+    --bg-blur1: #e9edb011;
+    --bg-blur2: #ff84472f;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #3a96ff, #32a6ff);
+    
+    --gradient-secondary: linear-gradient(135deg, #ff853e52, #ff9d4746);
+    --gradient-accent: linear-gradient(135deg, #ff844752, #ff844752);
+    
+    /* Glows */
+    --glow-primary: 0 0 60px #ff823541;
+    --glow-secondary: 0 0 40px #ff7c1f1c;
+  }
+
+    /* text colors */ 
+  .text1 {
+    color: rgb(255, 255, 255) !important;
+  }
+  .text2 {
+    color: rgb(0, 0, 0) !important;
+  }
+  
+
+  
+  /* Navigation */
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: -var(--key);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 0;
+  }
+  
+  .nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+  }
+  
+  .logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+  }
+  
+  .nav-link {
+    color: var(--foreground);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  .nav-link:hover {
+    color: var(--primary);
+  }
+  
+  .nav-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .logout-btn {
+    text-decoration: none;
+  }
+  
+  .logout-btn .btn {
+    font-size: 0.9rem;
+    padding: 0.4rem 1rem;
+  }
+  
+  /* Buttons */
+  .btn {
+    padding: 0.5rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+  }
+  
+  .btn-primary {
+    background: var(--gradient-primary);
+    color: rgb(0, 0, 0);
+    justify-content: center;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glow-primary), 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+  
+  .btn-outline {
+    background: transparent;
+    color: var(--foreground);
+    border: 1px solid rgba(255, 255, 255, 0.318);
+  }
+  
+  .btn-text {
+    color: #111 !important;
+    font-weight: bold;
+    font-size: 1.15rem;
+  }
+
+  
+  /* Footer Section */
+  .footer {
+  background: -var(--key-bottom);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 2rem 0 0;
+  }
+  
+  .footer-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+  
+  .footer-content {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  justify-content: space-between;
+  }
+  
+  .footer-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  }
+  
+  .footer-logo {
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+  }
+  
+  .footer-description {
+  color: var(--muted-foreground);
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  width:30vw;
+  }
+  
+  .social-links {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .social-link {
+    width: 40px;
+    height: 40px;
+    background: rgba(164, 109, 255, 0.1);
+    border: 1px solid rgba(164, 109, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  
+  .social-link:hover {
+    background: var(--gradient-primary);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+  
+  .social-link svg {
+    width: 20px;
+    height: 20px;
+    color: var(--foreground);
+  }
+  
+  .social-link:hover svg {
+    color: white;
+  }
+  
+  .footer-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+  }
+  
+  .footer-links {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .footer-links li {
+  margin-bottom: 0.5rem;
+  }
+  
+  .footer-links a {
+    color: var(--muted-foreground);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  .footer-links a:hover {
+    color: var(--primary);
+  }
+  
+  .contact-info {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  }
+  
+  .contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted-foreground);
+  }
+  
+  .contact-item svg {
+    width: 20px;
+    height: 20px;
+    color: var(--primary);
+  }
+  
+
+  .footer-bottom {
+  border-top: 1px solid var(--border);
+  padding: 1rem 0;
+  }
+  
+  .footer-bottom-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .footer-bottom p {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+  }
+  
+  .footer-bottom-links {
+    display: flex;
+    gap: 2rem;
+  }
+  
+  .footer-bottom-links a:hover {
+    color: var(--primary);
+  }
+
+  .nav-right .btn-primary {
+    color: rgb(0, 0, 0) !important;  /* Force black text color for nav buttons */
+  }
+
+  /* Update the nav-right button styles */
+  .nav-right .btn {
+    font-size: 1.05rem;  /* Bigger text */
+    padding: 0.5rem 1rem;  /* Smaller button size */
+    font-weight: 500;  /* Slightly bolder text */
+  }
