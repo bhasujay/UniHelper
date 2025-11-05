@@ -6,9 +6,7 @@ use app\core\Request;
 use app\models\DegreeProgram;
 
 
-/**
- * Controller for the admin dashboard
- */
+// Controller for the admin dashboard
 class AdminDashController extends DashboardController
 {
     protected $validComponents = [
@@ -21,9 +19,7 @@ class AdminDashController extends DashboardController
     protected $defaultComponent = 'degree-programs-management';
     protected $requiredRole = 'role-admin';
     
-    /**
-     * Add a new degree program
-     */
+    // Add a new degree program
     public function addDegreeProgram(Request $request)
     {
         // Get form data
@@ -57,16 +53,14 @@ class AdminDashController extends DashboardController
         exit;
     }
     
-    /**
-     * Remove a degree program
-     */
-    public function removeDegreeProgram($id)
+    // Remove a degree program
+    public function removeDegreeProgram($params)
     {
         // Create instance of DegreeProgram model
         $degreeModel = new DegreeProgram();
         
         // Check if $id is an array and extract the actual ID value
-        $programId = is_array($id) ? $id['id'] : $id;
+        $programId = is_array($params) ? $params['id'] : $params;
         
         error_log("Removing degree program with ID: " . $programId);
         
@@ -78,9 +72,7 @@ class AdminDashController extends DashboardController
         exit;
     }
     
-    /**
-     * Update a degree program
-     */
+    // Update a degree program
     public function updateDegreeProgramForm($id, $request = null)
     {
         // Ensure $id is a number
@@ -120,9 +112,7 @@ class AdminDashController extends DashboardController
         exit;
     }
     
-    /**
-     * Get degree program data for editing
-     */
+    // Get degree program data for editing
     public function getDegreeProgramData($id)
     {
         // Ensure $id is a number

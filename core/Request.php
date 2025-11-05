@@ -62,6 +62,18 @@ class Request
         return $body;
     }
 
+    public function getQueryParams()
+    {
+        if ($this->getMethod() === 'GET') {
+            $query = [];
+            foreach ($_GET as $key => $value) {
+                $query[$key] = filter_input(INPUT_GET, $key, FILTER_SANITIZE_SPECIAL_CHARS);
+            }
+            return $query;
+        }
+        return [];
+    }
+
     public function get($key)
     {
         return $this->getBody()[$key] ?? null;

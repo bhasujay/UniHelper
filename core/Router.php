@@ -41,6 +41,7 @@ class Router
     {
         $path = $this->request->getPath();
         $method = $this->request->getMethod();
+        $queryParams = $this->request->getQueryParams();
         
         // First check for exact match
         if (isset($this->routes[$method][$path])) {
@@ -74,9 +75,14 @@ class Router
                         return !is_numeric($key);
                     }, ARRAY_FILTER_USE_KEY);
                     
-                    // Check callback type and handle appropriately
+                    // for component routes
                     if (is_string($callback)) {
                         return $this->render_view($callback);
+                    }
+
+                    // Merge query parameters (GET) into path parameters
+                    if ($method === 'GET') {
+                        $params = array_merge($params, $queryParams);
                     }
                         
                     if (is_array($callback)) {
