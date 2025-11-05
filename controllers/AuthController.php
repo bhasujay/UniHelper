@@ -42,7 +42,7 @@ class AuthController
                 $_SESSION['user_name'] = $foundUser->firstName . ' ' . $foundUser->lastName;
 
                 // Redirect based on role
-                $this->redirectToDashboard($foundUser->role);
+                header('Location: /UniHelper/dashboard');
                 exit;
             } else {
                 return $this->render('login.php', ['error' => 'Invalid email or password']);
@@ -102,7 +102,7 @@ class AuthController
                 $_SESSION['user_name'] = $user->firstName . ' ' . $user->lastName;
 
                 // Redirect based on role
-                $this->redirectToDashboard($user->role);
+                header('Location: /UniHelper/dashboard');
                 exit;
             } else {
                 return $this->render('register.php', ['error' => "Registration failed. Please try again."]);
@@ -134,28 +134,6 @@ class AuthController
         session_destroy();
         header('Location: /UniHelper/home');
         exit;
-    }
-
-    // Helper method to redirect to appropriate dashboard
-    private function redirectToDashboard($role)
-    {
-        switch ($role) {
-            case 'role-applicant':
-                header('Location: /UniHelper/dashboard/applicant');
-                break;
-            case 'role-undergrad':
-                header('Location: /UniHelper/dashboard/undergraduate');
-                break;
-            case 'role-profile':
-                header('Location: /UniHelper/dashboard/profile');
-                break;
-            case 'role-admin':
-                header('Location: /UniHelper/dashboard/admin');
-            default:
-                // Render an error view or message for unknown role
-                $this->render('register.php', ['error' => 'Unknown user role']);
-                exit;
-        }
     }
 
     // to reload the views with data/errors
