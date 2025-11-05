@@ -85,15 +85,15 @@
             <!-- University Admin Features -->
             <div class="sidebar-section">
                 <div class="sidebar-section-title">University Admin</div>
-                <li><a href="dashboard/profile/qa-forum" class="sidebar-link <?= $activeComponent === 'qa-forum' ? 'active' : '' ?>">
+                <li><a href="dashboard/qa-forum" class="sidebar-link <?= $activeComponent === 'qa-forum' ? 'active' : '' ?>">
                     <i class="fas fa-question-circle"></i>
                     <span>Q&A Forum</span>
                 </a></li>
-                <li><a href="dashboard/profile/publish-events" class="sidebar-link <?= $activeComponent === 'publish-events' ? 'active' : '' ?>">
+                <li><a href="dashboard/publish-events" class="sidebar-link <?= $activeComponent === 'publish-events' ? 'active' : '' ?>">
                     <i class="fas fa-calendar-plus"></i>
                     <span>Publish Events</span>
                 </a></li>
-                <li><a href="dashboard/profile/announcements" class="sidebar-link <?= $activeComponent === 'announcements' ? 'active' : '' ?>">
+                <li><a href="dashboard/announcements" class="sidebar-link <?= $activeComponent === 'announcements' ? 'active' : '' ?>">
                     <i class="fas fa-bullhorn"></i>
                     <span>Announcements</span>
                 </a></li>

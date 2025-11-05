@@ -84,28 +84,28 @@
             <!-- Undergraduate Features -->
             <div class="sidebar-section">
                 <div class="sidebar-section-title">Undergraduate</div>
-                <li><a href="dashboard/undergraduate/qa-forum" class="sidebar-link <?= $activeComponent === 'qa-forum' ? 'active' : '' ?>">
+                <li><a href="dashboard/qa-forum" class="sidebar-link <?= $activeComponent === 'qa-forum' ? 'active' : '' ?>">
                     <i class="fas fa-question-circle"></i>
                     <span>Q&A Forum</span>
                 </a></li>
-                <li><a href="dashboard/undergraduate/create-session" class="sidebar-link <?= $activeComponent === 'create-session' ? 'active' : '' ?>">
+                <li><a href="dashboard/create-session" class="sidebar-link <?= $activeComponent === 'create-session' ? 'active' : '' ?>">
                     <i class="fas fa-plus-circle"></i>
                     <span>Create Session</span>
                 </a></li>
-                <li><a href="dashboard/undergraduate/my-sessions" class="sidebar-link <?= $activeComponent === 'my-sessions' ? 'active' : '' ?>">
+                <li><a href="dashboard/my-sessions" class="sidebar-link <?= $activeComponent === 'my-sessions' ? 'active' : '' ?>">
                     <i class="fas fa-calendar-alt"></i>
                     <span>My Sessions</span>
                 </a></li>
-                <li><a href="dashboard/undergraduate/join-sessions" class="sidebar-link <?= $activeComponent === 'join-sessions' ? 'active' : '' ?>">
+                <li><a href="dashboard/join-sessions" class="sidebar-link <?= $activeComponent === 'join-sessions' ? 'active' : '' ?>">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Join Sessions</span>
                 </a></li>
                 <div class="sidebar-section-subtitle">Moderator Features</div>
-                <li><a href="dashboard/undergraduate/flagged-content" class="sidebar-link <?= $activeComponent === 'flagged-content' ? 'active' : '' ?>">
+                <li><a href="dashboard/flagged-content" class="sidebar-link <?= $activeComponent === 'flagged-content' ? 'active' : '' ?>">
                     <i class="fas fa-book"></i>
                     <span>Flagged Content</span>
                 </a></li>
-                <li><a href="dashboard/undergraduate/banned-users" class="sidebar-link <?= $activeComponent === 'banned-users' ? 'active' : '' ?>">
+                <li><a href="dashboard/banned-users" class="sidebar-link <?= $activeComponent === 'banned-users' ? 'active' : '' ?>">
                     <i class="fas fa-tools"></i>
                     <span>Banned Users</span>
                 </a></li>

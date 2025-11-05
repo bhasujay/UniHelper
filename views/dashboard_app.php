@@ -88,27 +88,27 @@
 
                 <div class="sidebar-section-title">University Applicant</div>
 
-                <li><a href="dashboard/applicant/qa-forum" class="sidebar-link <?= $activeComponent === 'qa-forum' ? 'active' : '' ?>">
+                <li><a href="dashboard/qa-forum" class="sidebar-link <?= $activeComponent === 'qa-forum' ? 'active' : '' ?>">
                     <i class="fas fa-question-circle"></i>
                     <span>Q&A Forum</span>
                 </a></li>
-                <li><a href="dashboard/applicant/z-score-checker" class="sidebar-link <?= $activeComponent === 'z-score-checker' ? 'active' : '' ?>">
+                <li><a href="dashboard/z-score-checker" class="sidebar-link <?= $activeComponent === 'z-score-checker' ? 'active' : '' ?>">
                     <i class="fas fa-calculator"></i>
                     <span>Z-Score Checker</span>
                 </a></li>
-                <li><a href="dashboard/applicant/degree-programs" class="sidebar-link <?= $activeComponent === 'degree-programs' ? 'active' : '' ?>">
+                <li><a href="dashboard/degree-programs" class="sidebar-link <?= $activeComponent === 'degree-programs' ? 'active' : '' ?>">
                     <i class="fas fa-graduation-cap"></i>
                     <span>Degree Programs</span>
                 </a></li>
-                <li><a href="dashboard/applicant/find-applicant" class="sidebar-link <?= $activeComponent === 'find-applicant' ? 'active' : '' ?>">
+                <li><a href="dashboard/find-applicant" class="sidebar-link <?= $activeComponent === 'find-applicant' ? 'active' : '' ?>">
                     <i class="fas fa-users"></i>
                     <span>Find Applicants</span>
                 </a></li>
-                <li><a href="dashboard/applicant/unicode-generator" class="sidebar-link <?= $activeComponent === 'unicode-generator' ? 'active' : '' ?>">
+                <li><a href="dashboard/unicode-generator" class="sidebar-link <?= $activeComponent === 'unicode-generator' ? 'active' : '' ?>">
                     <i class="fas fa-list-ol"></i>
                     <span>Unicode Generator</span>
                 </a></li>
-                <li><a href="dashboard/applicant/connect-undergrads" class="sidebar-link <?= $activeComponent === 'connect-undergrads' ? 'active' : '' ?>">
+                <li><a href="dashboard/connect-undergrads" class="sidebar-link <?= $activeComponent === 'connect-undergrads' ? 'active' : '' ?>">
                     <i class="fab fa-whatsapp"></i>
                     <span>Connect with Undergrads</span>
                 </a></li>

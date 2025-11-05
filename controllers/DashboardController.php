@@ -13,14 +13,17 @@ use app\models\Major;
 use app\models\University;
 use app\models\DegreeProgram;
 
-abstract class DashboardController
+class DashboardController
 {
     protected $validComponents = [];
-    protected $dashboardTemplate = '';
-    protected $defaultComponent = '';
-    protected $requiredRole = '';
-    protected $user; // Add user property
-    protected $activeComponent = ''; // Add active component tracker
+    protected $role_data = [
+        'role-applicant' => ['dash' => 'dashboard_app', 'default' => 'qa-forum'],
+        'role-undergrad' => ['dash' => 'dashboard_und', 'default' => 'qa-forum'],
+        'role-profile' => ['dash' => 'dashboard_pro', 'default' => 'qa-forum'],
+        'role-admin' => ['dash' => 'dashboard_adm', 'default' => 'degree-programs-management']
+    ];
+    protected $activeComponent = '';
+    protected $user;
 
     public function __construct()
     {
@@ -39,41 +42,32 @@ abstract class DashboardController
             header('Location: /UniHelper/login');
             exit;
         }
-
-        // Check role-based access if required
-        if (!empty($this->requiredRole) && $this->user->role !== $this->requiredRole) {
-            header('Location: /UniHelper/dashboard');
-            exit;
-        }
     }
 
     // Default entry point for dashboard
     public function index()
     {
         // Set active component
-        $this->activeComponent = $this->defaultComponent;
+        $this->activeComponent = $this->role_data[$_SESSION['user_role']]['default'];
         
         // Load default component
-        $content = $this->loadComponent($this->defaultComponent . '.php');
-        return $this->renderDashboard($content);
+        $content = $this->loadComponent($this->role_data[$_SESSION['user_role']]['default']);
+        return $this->renderDashboard($this->role_data[$_SESSION['user_role']]['dash'], $content);
     }
 
     // Renders a specific component based on URL parameter
     public function renderComponent($params)
     {
-        $component = $params['component'] ?? $this->defaultComponent;
-        
-        // Security check - only allow whitelisted components
-        if (!in_array($component, $this->validComponents)) {
-            return $this->renderDashboard("<div class='error'>Component not found or not authorized</div>");
-        }
+        $component = $params['component'] ?? $this->role_data[$_SESSION['user_role']]['default'];
         
         // Set active component
         $this->activeComponent = $component;
+
+        $user = $this->user; // Make user available to the component
         
         // Load the requested component
-        $content = $this->loadComponent($component . '.php');
-        return $this->renderDashboard($content);
+        $content = $this->loadComponent($component);
+        return $this->renderDashboard($this->role_data[$_SESSION['user_role']]['dash'], $content);
     }
 
     // Handle component actions (POST requests from components)
@@ -309,38 +303,7 @@ abstract class DashboardController
         }
     }
 
-    // Loads a component file
-    protected function loadComponent($componentName)
-    {
-        $componentPath = Application::$ROOT_DIR . "/views/components/{$componentName}";
-        
-        if (!file_exists($componentPath)) {
-            return "<div class='error'>Component {$componentName} not found</div>";
-        }
-        
-        // Make user available to component
-        $user = $this->user;
-        
-        // Capture the component content
-        ob_start();
-        include $componentPath;
-        return ob_get_clean();
-    }
-
-    // Renders the dashboard with the given content
-    protected function renderDashboard($content = null)
-    {
-        // Make user available to the dashboard template
-        $user = $this->user;
-        
-        // Make active component available to the dashboard template
-        $activeComponent = $this->activeComponent;
-        
-        // Make content available to the dashboard template
-        include Application::$ROOT_DIR . "/views/{$this->dashboardTemplate}";
-    }
-    
-    // Get question data for editing
+        // Get question data for editing
     public function getQuestionData($params)
     {
         // Check if question ID is provided
@@ -374,4 +337,36 @@ abstract class DashboardController
         header('Content-Type: application/json');
         echo json_encode($question);
     }
+
+    // Loads a component file
+    protected function loadComponent($componentName)
+    {
+        $componentPath = Application::$ROOT_DIR . "/views/components/{$componentName}.php";
+        
+        if (!file_exists($componentPath)) {
+            return "<div class='error'>Component {$componentName} not found</div>";
+        }
+
+        error_log("Loading component from path: " . $componentPath);
+
+        $user = $this->user; // Make user available to components
+        
+        // Capture the component content
+        ob_start();
+        include $componentPath;
+        return ob_get_clean();
+    }
+
+    // Renders the dashboard with the given content
+    protected function renderDashboard($dashboardTemplate, $content = NULL)
+    {
+        $user = $this->user; // Make user available to the dashboard template
+
+        // Make active component available to the dashboard template
+        $activeComponent = $this->activeComponent;
+        
+        // Make content available to the dashboard template
+        include Application::$ROOT_DIR . "/views/{$dashboardTemplate}.php";
+    }
+    
 }
