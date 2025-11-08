@@ -3,18 +3,18 @@
 // Base routes
 $app->router->get('/', 'home.html');
 $app->router->get('/home', 'home.html');
-$app->router->get('/login', 'login.php');
+
+// Authentication routes
 $app->router->get('/register', [app\controllers\AuthController::class, 'populateRegisterForm']);
+$app->router->post('/register', [app\controllers\AuthController::class, 'register']);
+$app->router->get('/login', 'login.php');
+$app->router->post('/login', [app\controllers\AuthController::class, 'login']);
 $app->router->get('/logout', [app\controllers\AuthController::class, 'logout']);
 
-// Authentication routes - POST (process forms)
-$app->router->post('/login', [app\controllers\AuthController::class, 'login']);
-$app->router->post('/register', [app\controllers\AuthController::class, 'register']);
-
-// Dashboard base routes - default component
+// Dashboard base route - default component
 $app->router->get('/dashboard', [app\controllers\DashboardController::class, 'index']);
 
-// Dashboard component routes - dynamic paths
+// Dashboard component route - dynamic paths
 $app->router->get('/dashboard/:component', [app\controllers\DashboardController::class, 'renderComponent']);
 
 // Dashboard POST routes for component actions

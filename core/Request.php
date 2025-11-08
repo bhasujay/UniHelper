@@ -4,6 +4,7 @@ namespace app\core;
 
 class Request
 {
+    private ?array $reqBody = null; 
 
     public function getPath()
     {
@@ -35,6 +36,11 @@ class Request
         if ($this->getMethod() === 'POST') {
             foreach ($_POST as $key => $value) {
                 $body[$key] = filter_input(INPUT_POST, $key, FILTER_SANITIZE_SPECIAL_CHARS);
+            }
+            
+            // Handle uploaded files
+            foreach ($_FILES as $key => $file) {
+                $body[$key] = $file;
             }
         }
         // This is not use but we keep it here for future reference
@@ -76,6 +82,9 @@ class Request
 
     public function get($key)
     {
-        return $this->getBody()[$key] ?? null;
+        if ($this->reqBody === null) {
+            $this->reqBody = $this->getBody();
+        }
+        return $this->reqBody[$key] ?? null;
     }
 }

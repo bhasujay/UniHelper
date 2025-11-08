@@ -81,11 +81,24 @@ class AuthController
             $user->password_hash = $request->get('hashed_password');
 
             // Validate data
-            // $errors = $user->validate();
+            $errors = $user->validate();
 
-            // if (!empty($errors)) {
-            //     return $this->render('register.php', ['errors' => $errors]);
-            // }
+            // Handle profile picture upload
+            $profilePicture = $request->get('profilePicture');
+            if ($profilePicture && isset($profilePicture['tmp_name']) && is_uploaded_file($profilePicture['tmp_name'])) {
+                $emailUsername = explode('@', $user->email)[0];
+                $targetFile = Application::$ROOT_DIR . '/public/uploads/profilePictures/' . $emailUsername . '.' . pathinfo($profilePicture['name'], PATHINFO_EXTENSION);
+
+                if (move_uploaded_file($profilePicture['tmp_name'], $targetFile)) {
+                    $user->profilePicture = '/uploads/profilePictures/' . basename($targetFile);
+                } else {
+                    $errors[] = "Failed to upload profile picture.";
+                }
+            }
+
+            if (!empty($errors)) {
+                return $this->render('register.php', ['errors' => $errors]);
+            }
 
             // Check if email already exists
             if ($user->emailExists($user->email)) {
