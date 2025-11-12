@@ -15,21 +15,16 @@ use app\models\DegreeProgram;
 
 class DashboardController
 {
-    protected $validComponents = [];
-    protected $role_data = [
-        'role-applicant' => ['dash' => 'dashboard_app', 'default' => 'qa-forum'],
-        'role-undergrad' => ['dash' => 'dashboard_und', 'default' => 'qa-forum'],
-        'role-profile' => ['dash' => 'dashboard_pro', 'default' => 'qa-forum'],
-        'role-admin' => ['dash' => 'dashboard_adm', 'default' => 'degree-programs-management']
-    ];
     protected $activeComponent = '';
     protected $user;
+    protected $role_data;
+    protected $role_title;
 
     public function __construct()
     {
         // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
-            header('Location: /UniHelper/login');
+            header('Location: /UniHelper/home');
             exit;
         }
 
@@ -39,36 +34,164 @@ class DashboardController
         
         if (!$this->user) {
             session_destroy();
-            header('Location: /UniHelper/login');
+            header('Location: /UniHelper/register');
             exit;
         }
+
+        switch ($this->user->role) {
+            case 'role-applicant':
+                $this->role_title = 'Applicant';
+                break;
+            case 'role-undergrad':
+                $this->role_title = 'Undergraduate';
+                break;
+            case 'role-profile':
+                $this->role_title = 'Profile';
+                break;
+            case 'role-admin':
+                $this->role_title = 'Administrator';
+                break;
+            default:
+                $this->role_title = 'Dashboard';
+        }
+
+        $this->role_data = require Application::$ROOT_DIR . '/config/sidebar_config.php';
     }
 
     // Default entry point for dashboard
     public function index()
     {
-        // Set active component
-        $this->activeComponent = $this->role_data[$_SESSION['user_role']]['default'];
+        // Set default active component
+        $this->activeComponent = $this->role_data[$this->user->role][0]['component'];
         
         // Load default component
-        $content = $this->loadComponent($this->role_data[$_SESSION['user_role']]['default']);
-        return $this->renderDashboard($this->role_data[$_SESSION['user_role']]['dash'], $content);
+        $content = $this->loadComponent($this->activeComponent);
+        return $this->renderDashboard($content, $this->role_data[$this->user->role]);
     }
 
     // Renders a specific component based on URL parameter
     public function renderComponent($params)
     {
-        $component = $params['component'] ?? $this->role_data[$_SESSION['user_role']]['default'];
+        $component = $params['component'] ?? $this->role_data[$this->user->role][0]['component'];
         
         // Set active component
         $this->activeComponent = $component;
 
-        $user = $this->user; // Make user available to the component
-        
         // Load the requested component
         $content = $this->loadComponent($component);
-        return $this->renderDashboard($this->role_data[$_SESSION['user_role']]['dash'], $content);
+        return $this->renderDashboard($content, $this->role_data[$this->user->role]);
     }
+
+    // Loads a component file
+    protected function loadComponent($componentName)
+    {
+        $componentPath = Application::$ROOT_DIR . "/views/components/{$componentName}.php";
+
+        if (!file_exists($componentPath)) {
+            $componentPath = Application::$ROOT_DIR . "/views/{$componentName}.php";
+        }
+        
+        if (!file_exists($componentPath)) {
+            return "<div class='error'>Component {$componentName} not found</div>";
+        }
+
+        $user = $this->user; // Make user available to components
+        
+        // Capture the component content
+        ob_start();
+        include $componentPath;
+        return ob_get_clean();
+    }
+
+    // Renders the dashboard with the given content
+    protected function renderDashboard($content = NULL, $sidebar = NULL)
+    {
+        $user = $this->user; // Make user available to the dashboard template        
+        $activeComponent = $this->activeComponent; // Make active component available to the dashboard template
+        $role_title = $this->role_title; // Make role title available to the dashboard template
+        
+        // Make content available to the dashboard template
+        include Application::$ROOT_DIR . "/views/dashboard.php";
+    }
+
+    // Profile card index
+    public function profileIndex(Request $request)
+    {
+        $pathParts = explode('/', $request->getPath());
+        $req = end($pathParts);
+        $component = '';
+        if ($req === 'edit') {
+            $component = 'edit-component';
+        } elseif ($req === 'view') {
+            $component = 'profile-component';
+        }
+
+        $activeComponent = $component;
+        $content = $this->loadComponent('profile/' . $component);
+
+        return $this->renderDashboard($content, $this->role_data[$this->user->role]);
+    }
+
+    // profile edit component action handlers
+    public function profileUpdate(Request $request)
+    {
+        // Get form data
+        $this->user->firstName = $request->get('firstName');
+        $this->user->lastName = $request->get('lastName');
+        $this->user->email = $request->get('email');
+        $this->user->phone = $request->get('phone');
+        $this->user->public = $request->get('public') ? 1 : 0;
+        
+        // Role-specific fields
+        if ($this->user->role === 'role-applicant') {
+            $this->user->alYear = $request->get('alYear');
+        } elseif ($this->user->role === 'role-undergrad') {
+            $this->user->University = $request->get('undergradUniversity');
+            $this->user->major = $request->get('major');
+        } elseif ($this->user->role === 'role-profile') {
+            $this->user->University = $request->get('profileUniversity');
+            $this->user->profileRole = $request->get('profileRole');
+        }
+
+        // Handle profile picture upload
+        $profilePicture = $request->get('profilePicture');
+        if ($profilePicture && isset($profilePicture['tmp_name']) && is_uploaded_file($profilePicture['tmp_name'])) {
+            // Delete old profile picture if exists
+            if (!empty($this->user->profilePicture)) {
+                $oldPicturePath = Application::$ROOT_DIR . '/public' . $this->user->profilePicture;
+                if (file_exists($oldPicturePath)) {
+                    unlink($oldPicturePath);
+                }
+            }
+
+            $emailUsername = explode('@', $this->user->email)[0];
+            $targetFile = Application::$ROOT_DIR . '/public/uploads/profilePictures/' . $emailUsername . '.' . pathinfo($profilePicture['name'], PATHINFO_EXTENSION);
+
+            if (move_uploaded_file($profilePicture['tmp_name'], $targetFile)) {
+                $this->user->profilePicture = '/uploads/profilePictures/' . basename($targetFile);
+            }
+        } else {
+            // If profile picture should be removed (set to null)
+            if ($request->get('removeProfilePicture') === '1' || empty($this->user->profilePicture)) {
+                // Delete existing profile picture file
+                if (!empty($this->user->profilePicture)) {
+                    $existingPicturePath = Application::$ROOT_DIR . '/public' . $this->user->profilePicture;
+                    if (file_exists($existingPicturePath)) {
+                        unlink($existingPicturePath);
+                    }
+                }
+                $this->user->profilePicture = null;
+            }
+        }
+
+        // Update user
+        $this->user->update();
+
+        // Redirect to profile view
+        header('Location: /UniHelper/profile/view');
+        exit;
+    }
+
 
     // Handle component actions (POST requests from components)
     public function handleComponentAction(Request $request)
@@ -338,35 +461,5 @@ class DashboardController
         echo json_encode($question);
     }
 
-    // Loads a component file
-    protected function loadComponent($componentName)
-    {
-        $componentPath = Application::$ROOT_DIR . "/views/components/{$componentName}.php";
-        
-        if (!file_exists($componentPath)) {
-            return "<div class='error'>Component {$componentName} not found</div>";
-        }
 
-        error_log("Loading component from path: " . $componentPath);
-
-        $user = $this->user; // Make user available to components
-        
-        // Capture the component content
-        ob_start();
-        include $componentPath;
-        return ob_get_clean();
-    }
-
-    // Renders the dashboard with the given content
-    protected function renderDashboard($dashboardTemplate, $content = NULL)
-    {
-        $user = $this->user; // Make user available to the dashboard template
-
-        // Make active component available to the dashboard template
-        $activeComponent = $this->activeComponent;
-        
-        // Make content available to the dashboard template
-        include Application::$ROOT_DIR . "/views/{$dashboardTemplate}.php";
-    }
-    
 }

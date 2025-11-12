@@ -103,7 +103,7 @@
 
 .tag {
     background-color: rgba(102, 189, 255, 0.1);
-    color: var(--primary);
+    color: var(--accent);
     padding: 0.25rem 0.75rem;
     border-radius: 99px;
     font-size: 0.75rem;

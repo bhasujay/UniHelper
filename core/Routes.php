@@ -1,7 +1,7 @@
 <?php
 
 // Base routes
-$app->router->get('/', 'home.html');
+$app->router->get('/', [app\controllers\DashboardController::class, 'index']);
 $app->router->get('/home', 'home.html');
 
 // Authentication routes
@@ -10,6 +10,11 @@ $app->router->post('/register', [app\controllers\AuthController::class, 'registe
 $app->router->get('/login', 'login.php');
 $app->router->post('/login', [app\controllers\AuthController::class, 'login']);
 $app->router->get('/logout', [app\controllers\AuthController::class, 'logout']);
+
+// Add these routes for profile components
+$app->router->get('/profile/view', [app\controllers\DashboardController::class, 'profileIndex']);
+$app->router->get('/profile/edit', [app\controllers\DashboardController::class, 'profileIndex']);
+$app->router->post('/profile/update', [app\controllers\DashboardController::class, 'profileUpdate']);
 
 // Dashboard base route - default component
 $app->router->get('/dashboard', [app\controllers\DashboardController::class, 'index']);
@@ -31,11 +36,6 @@ $app->router->get('/dashboard/profile/qa-forum/question/:id', [app\controllers\P
 $app->router->get('/dashboard/applicant/qa-forum/delete/:id', [app\controllers\ApplicantDashController::class, 'deleteQuestion']);
 $app->router->get('/dashboard/undergraduate/qa-forum/delete/:id', [app\controllers\UndergradDashController::class, 'deleteQuestion']);
 $app->router->get('/dashboard/profile/qa-forum/delete/:id', [app\controllers\ProfileDashController::class, 'deleteQuestion']);
-
-// Add these routes for profile components
-$app->router->get('/profile', [app\controllers\ProfileController::class, 'index']);
-$app->router->get('/profile/edit', [app\controllers\ProfileController::class, 'edit']);
-$app->router->post('/profile/update', [app\controllers\ProfileController::class, 'update']);
 
 // Z-Score API routes
 $app->router->post('/api/z-score/save', [app\controllers\ApplicantDashController::class, 'saveZScore']);

@@ -19,24 +19,26 @@
   justify-content: space-between;
   align-items: center;
   height: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: auto;
+  margin: 0px 20px 0px 60px; /* Top, Right, Bottom, Left */
   padding: 0 1.5rem;
 }
 
 /* Sidebar Styles */
 .sidebar {
     width: 280px;
-    background: var(--key);
+    background: var(--key-bottom);
     backdrop-filter: blur(12px);
     border-right: 1px solid var(--border);
     position: fixed;
     left: 0;
-    top: 60px; /* Reduced from 100px */
-    height: calc(100vh - 60px - 20px); /* Adjusted for smaller nav */
-    z-index: 1001; /* Higher than nav z-index */
-    overflow-y: auto;
-    transition: all 0.3s ease;
+    top: 60px;
+    bottom: 0;        /* ensure it ends at the viewport bottom */
+    height: auto;     /* let top+bottom define height */
+    min-height: 0;    /* override previous 100vh */
+    /* keep flex layout so footer stays at bottom */
+    display: flex;
+    flex-direction: column;
   }
   
   .sidebar-header {
@@ -67,6 +69,9 @@
     list-style: none;
     padding: 1rem 0;
     margin: 0;
+    flex: 1 1 auto;   /* menu fills remaining space */
+    overflow-y: auto; /* only menu scrolls */
+    padding-bottom: 80px; /* <--- Add this! Ensures footer is never hidden */
   }
   
   .sidebar-section {
@@ -116,7 +121,7 @@
   }
   
   .sidebar-link.active {
-    background: var(--accent);
+    background: var(--gradient-secondary);
     color: #ffffff;
     font-weight: 500;
     border-right: 3px solid var(--primary);
@@ -142,7 +147,7 @@
   /* Main Content Area - Part 3 */
   .main-content {
     margin-left: 280px;
-    margin-top: 5%; /* Reduced from 8% */
+    margin-top: 3%; /* Reduced from 8% */
     margin-right: 2rem;
     padding: 2rem;
     background: var(--key);
@@ -198,7 +203,7 @@
     align-items: center;
     gap: 1rem;
     padding: 0rem 1rem;
-    background: rgba(8, 8, 8, 0.5);
+    background: var(--key);
     border: 1px solid var(--gradient-accent);
     border-radius: 0.75rem;
     backdrop-filter: blur(8px);
@@ -210,15 +215,22 @@
     width: 24px; /* Reduced from 30px */
     height: 24px; /* Reduced from 30px */
     border-radius: 50%;
-    background: var(--gradient-primary);
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: var(--gradient-primary);
     color: white;
     font-weight: 600;
     font-size: 0.875rem; /* Reduced from 1rem */
-  }
+  }  
   
+  .profile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
   .profile-info {
     display: flex;
     flex-direction: column;
@@ -249,33 +261,38 @@
   top: calc(100% + 10px);
   right: 0;
   width: 280px;
-  background: rgba(8, 8, 8, 0.95);
+  background: #303030;
   backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   z-index: 1050;
   opacity: 0;
-  visibility: hidden;
+  pointer-events: none;
   transform: translateY(-10px);
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .profile-dropdown.show {
   opacity: 1;
-  visibility: visible;
+  pointer-events: auto;
   transform: translateY(0);
 }
 
 .dropdown-header {
   padding: 1rem;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
 }
 
 .dropdown-user-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  flex: 1;
 }
 
 .dropdown-name {
@@ -287,6 +304,21 @@
 .dropdown-email {
   font-size: 0.875rem;
   color: var(--muted-foreground);
+}
+
+.dropdown-profile-picture {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid var(--primary);
+}
+
+.dropdown-profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .dropdown-body {
@@ -305,8 +337,8 @@
 }
 
 .dropdown-item:hover {
-  background: rgba(164, 109, 255, 0.1);
-  color: var(--primary);
+  background: var(--gradient-secondary);
+  color: var(--text);
 }
 
 .dropdown-item svg {
@@ -316,7 +348,7 @@
 }
 
 .dropdown-item:hover svg {
-  color: var(--primary);
+  color: var(--text);
 }
 
 .dropdown-divider {
@@ -428,90 +460,6 @@
     line-height: 1.5;
   }
   
-  /* Quick Actions */
-  .quick-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 3rem;
-  }
-  
-  .quick-action-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 1.5rem;
-    background: rgba(8, 8, 8, 0.5);
-    border: 1px solid rgba(164, 109, 255, 0.2);
-    border-radius: 0.75rem;
-    color: var(--foreground);
-    text-decoration: none;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(8px);
-  }
-  
-  .quick-action-btn:hover {
-    background: var(--gradient-primary);
-    color: white;
-    transform: translateY(-2px);
-    border-color: var(--primary);
-  }
-  
-  .quick-action-btn svg {
-    width: 1.25rem;
-    height: 1.25rem;
-    flex-shrink: 0;
-  }
-  
-  /* Recent Activity */
-  .activity-list {
-    background: rgba(8, 8, 8, 0.5);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(164, 109, 255, 0.2);
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-  }
-  
-  .activity-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 0;
-    border-bottom: 1px solid rgba(164, 109, 255, 0.1);
-  }
-  
-  .activity-item:last-child {
-    border-bottom: none;
-  }
-  
-  .activity-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--gradient-primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    flex-shrink: 0;
-  }
-  
-  .activity-content {
-    flex: 1;
-  }
-  
-  .activity-title {
-    font-weight: 500;
-    color: var(--foreground);
-    margin-bottom: 0.25rem;
-  }
-  
-  .activity-time {
-    font-size: 0.875rem;
-    color: var(--muted-foreground);
-  }
-  
   /* Main Content Positioning */
 main {
     margin-left: 280px; /* Same as sidebar width */
@@ -532,6 +480,53 @@ main .dashboard-card {
     max-width: 100%; /* Override the max-width from cards.css */
     margin-bottom: 2rem;
     box-shadow: 0 4px 20px var(--glow-primary);
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+    background: var(--key-bottom);
+    border-top: 1px solid var(--border);
+    padding: 18px 20px 24px 20px;
+    /* margin-bottom: 16px;  <--- REMOVE this! */
+    text-align: left;
+    font-size: 13px;
+    color: var(--muted-foreground);
+    box-shadow: 0 -2px 12px 0 rgba(0,0,0,0.03);
+    letter-spacing: 0.01em;
+    width: 100%;
+    margin-top: auto; /* pin footer to bottom of sidebar */
+    display: block;
+}
+
+.sidebar-footer-logo {
+    font-weight: 700;
+    font-size: 1.08rem;
+    color: var(--primary);
+    margin-bottom: 2px;
+    letter-spacing: 0.04em;
+}
+
+.sidebar-footer-link {
+    display: inline-block;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    font-size: 12px;
+    margin-bottom: 2px;
+    transition: color 0.2s;
+}
+
+.sidebar-footer-link:hover,
+.sidebar-footer-link:focus {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.sidebar-footer-copy {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--muted-foreground);
+    opacity: 0.7;
+    letter-spacing: 0.02em;
 }
 
 /* Responsive Design */
@@ -685,135 +680,7 @@ main .dashboard-card {
     transform: translateX(-50%) translateY(-10px);
   }
   
-  /* Dashboard Footer */
-  .dashboard-footer {
-    margin-top: 20px;
-    margin-left: 280px;
-    margin-right: 2rem;
-    background: var(--key);
-    backdrop-filter: blur(12px);
-    border: none; /* removed border */
-    border-radius: 1rem;
-    padding: 1.5rem 0 0;
-    position: relative;
-    width: calc(100% - 280px - 4rem);
-    box-shadow: none; /* Reduced shadow */
-  }
   
-  .dashboard-footer .footer-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
-  }
-  
-  .dashboard-footer .footer-content {
-    display: flex;
-    flex-direction: row;
-    gap: 2rem;
-    margin-bottom: 1rem;
-    justify-content: space-between;
-  }
-  
-  .dashboard-footer .footer-section {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-  }
-  
-  .dashboard-footer .footer-logo {
-    font-size: 1.2rem;
-    font-weight: 700;
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 0.5rem;
-  }
-  
-  .dashboard-footer .footer-description {
-    color: var(--muted-foreground);
-    line-height: 1.4;
-    margin-bottom: 0.5rem;
-    margin-top: 0.5rem;
-    width: 30vw;
-  }
-  
-  .dashboard-footer .social-links {
-    display: flex;
-    gap: 1rem;
-  }
-  
-  .dashboard-footer .social-link {
-    width: 40px;
-    height: 40px;
-    background: var(--key);
-    border-top: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-  }
-  
-  .dashboard-footer .social-link:hover {
-    background: var(--gradient-primary);
-    border-color: var(--primary);
-    transform: translateY(-2px);
-  }
-  
-  .dashboard-footer .social-link svg {
-    width: 20px;
-    height: 20px;
-    color: var(--foreground);
-  }
-  
-  .dashboard-footer .social-link:hover svg {
-    color: white;
-  }
-  
-  .dashboard-footer .footer-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--foreground);
-    margin-bottom: 1rem;
-  }
-  
-  .dashboard-footer .contact-info {
-    display: flex;
-    flex-direction: row;
-    gap: 2rem;
-  }
-  
-  .dashboard-footer .contact-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--muted-foreground);
-  }
-  
-  .dashboard-footer .contact-item svg {
-    width: 20px;
-    height: 20px;
-    color: var(--primary);
-  }
-  
-  .dashboard-footer .footer-bottom {
-    border-top: 1px solid var(--border);
-    padding: 1rem 0;
-  }
-  
-  .dashboard-footer .footer-bottom-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .dashboard-footer .footer-bottom p {
-    color: var(--muted-foreground);
-    font-size: 0.875rem;
-  }
-
   /* Remove any remote font imports or @font-face using URLs */
 body {
     font-family: 'Segoe UI', Arial, sans-serif; /* Use only local system fonts */

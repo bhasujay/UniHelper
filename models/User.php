@@ -191,7 +191,8 @@ class User
                 $user->profileRole = $userData['profile_role'];
                 $user->major = $userData['major'];
                 $user->createdAt = $userData['created_at'];
-                
+                $user->public = $userData['public'];
+                $user->mod = $userData['moderator'];
                 return $user;
             }
             return null;
@@ -214,7 +215,8 @@ class User
                     university = :University,
                     major = :major,
                     profile_role = :profileRole,
-                    profile_picture = :profilePicture
+                    profile_picture = :profilePicture,
+                    public = :public
                     WHERE id = :id";
                     
             $stmt = $this->db->prepare($sql);
@@ -228,12 +230,30 @@ class User
             $stmt->bindParam(':University', $this->University);
             $stmt->bindParam(':major', $this->major);
             $stmt->bindParam(':profileRole', $this->profileRole);
-            $stmt->bindParam(':profilePicture', $this->profilePicture);
+            $stmt->bindValue(':profilePicture', $this->profilePicture, $this->profilePicture === null ? \PDO::PARAM_NULL : \PDO::PARAM_STR);
+            $stmt->bindParam(':public', $this->public, \PDO::PARAM_INT);
             $stmt->bindParam(':id', $this->id);
             
             return $stmt->execute();
         } catch (\PDOException $e) {
             error_log("User update error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Update Public status
+    public function updatePublicStatus($public)
+    {
+        try {
+            $sql = "UPDATE users SET public = :public WHERE id = :id";
+            $stmt = $this->db->prepare($sql);
+            
+            $stmt->bindParam(':public', $public, \PDO::PARAM_INT);
+            $stmt->bindParam(':id', $this->id);
+            
+            return $stmt->execute();
+        } catch (\PDOException $e) {
+            error_log("Public status update error: " . $e->getMessage());
             return false;
         }
     }

@@ -15,27 +15,28 @@
   
   /* CSS Variables for design system */
   :root {
-    --primary: #0062ffff;
-    --accent: #3168ff8d;
-    --background: #5056ff;
+    --primary: rgb(0, 170, 255);
+    --accent: #04d1fff1;
+    --background: #3898ff;
     --border: #1f1f1f;
     --card: #404040;
     --text: #ffffff;
+    --text-alt: #003a66;
     --key: #303030;
-    --key-bottom: #54545448;
+    --key-bottom: #2e2e2e91;
 
-    --bg-blur1: #e9edb011;
-    --bg-blur2: #ff84472f;
+    --bg-blur1: #20ffff11;
+    --bg-blur2: #38fff22f;
     
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, #3a96ff, #32a6ff);
     
-    --gradient-secondary: linear-gradient(135deg, #ff853e52, #ff9d4746);
-    --gradient-accent: linear-gradient(135deg, #ff844752, #ff844752);
+    --gradient-secondary: linear-gradient(135deg, #3eb5ff52, #47c5ff46);
+    --gradient-accent: linear-gradient(135deg, #2ee7ff52, #08fbff48);
     
     /* Glows */
-    --glow-primary: 0 0 60px #ff823541;
-    --glow-secondary: 0 0 40px #ff7c1f1c;
+    --glow-primary: 0 0 60px #35f5ff41;
+    --glow-secondary: 0 0 40px #1fe9ff1c;
   }
 
     /* text colors */ 

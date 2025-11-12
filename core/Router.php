@@ -41,7 +41,6 @@ class Router
     {
         $path = $this->request->getPath();
         $method = $this->request->getMethod();
-        $queryParams = $this->request->getQueryParams();
         
         // First check for exact match
         if (isset($this->routes[$method][$path])) {
@@ -56,7 +55,13 @@ class Router
             if (is_array($callback)) {
                 $controller = new $callback[0]();
                 $method = $callback[1];
-                return $controller->$method($this->request);
+                
+                $refMethod = new \ReflectionMethod($controller, $method);
+                if ($refMethod->getNumberOfParameters() > 0) {
+                    return $controller->$method($this->request);
+                } else {
+                    return $controller->$method();
+                }
             }
             
             // if the callback is a closure, call it directly
@@ -80,11 +85,6 @@ class Router
                         return $this->render_view($callback);
                     }
 
-                    // Merge query parameters (GET) into path parameters
-                    if ($method === 'GET') {
-                        $params = array_merge($params, $queryParams);
-                    }
-                        
                     if (is_array($callback)) {
                         $controller = new $callback[0]();
                         $method = $callback[1];

@@ -1,4 +1,5 @@
-<div class="profile-container">
+<?php ?>
+<div class="profile-card-container">
     <div class="profile-card">
         <div class="profile-header">
             <h1 class="profile-title">My Profile</h1>
@@ -14,18 +15,35 @@
         <div class="profile-card-header">
             <?php if($user->profilePicture): ?>
                 <div class="profile-image">
-                    <img src="<?= htmlspecialchars($user->profilePicture) ?>" alt="Profile Picture">
-                </div>
-            <?php else: ?>
-                <div class="profile-image-placeholder">
-                    <?= strtoupper(substr($user->firstName, 0, 1) . substr($user->lastName, 0, 1)) ?>
+                    <img src="<?= htmlspecialchars("/unihelper/public/" . $user->profilePicture ?? 'views/assets/default-pfp.png') ?>" alt="Profile Picture">
                 </div>
             <?php endif; ?>
             
-            <div class="profile-name-section">
-                <h2 class="profile-name"><?= htmlspecialchars($user->firstName . ' ' . $user->lastName) ?></h2>
+            <div class="profile-card-name-section">
+                <h2 class="profile-card-name"><?= htmlspecialchars($user->firstName . ' ' . $user->lastName) ?></h2>
                 <div class="profile-role-badge"><?= htmlspecialchars(substr($user->role, 5)) ?></div>
             </div>
+
+            <div class="profile-public-card">
+                <?php if (!empty($user->public)): ?>
+                    <div class="public-status public">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" fill="#4caf50"/>
+                            <path d="M9 12l2 2l4 -4" stroke="#fff" stroke-width="2" fill="none"/>
+                        </svg>
+                        <span>Public Account</span>
+                    </div>
+                <?php else: ?>
+                    <div class="public-status private">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" fill="#f44336"/>
+                            <path d="M8 12l2 2l4 -4" stroke="#fff" stroke-width="2" fill="none"/>
+                        </svg>
+                        <span>Private Account</span>
+                    </div>
+                <?php endif; ?>
+            </div>
+
         </div>
         
         <div class="profile-card-body">
@@ -140,13 +158,3 @@
         </div>
     </div>
 </div>
-
-<style>
-.nav {
-  height: auto !important;
-}
-
-.nav-container {
-  height: auto !important;
-}
-</style>

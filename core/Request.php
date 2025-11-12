@@ -13,7 +13,7 @@ class Request
         $parts = explode('/', trim($path, '/'));
         array_shift($parts); // Remove the first part
         $path = '/' . implode('/', $parts);
-        
+
         $position = strpos($path, '?');
         return ($position === false) ? $path : substr($path, 0, $position);
     }
@@ -34,13 +34,19 @@ class Request
         }
         
         if ($this->getMethod() === 'POST') {
+            // Handle POST data
             foreach ($_POST as $key => $value) {
-                $body[$key] = filter_input(INPUT_POST, $key, FILTER_SANITIZE_SPECIAL_CHARS);
+            $body[$key] = filter_input(INPUT_POST, $key, FILTER_SANITIZE_SPECIAL_CHARS);
             }
-            
+
             // Handle uploaded files
             foreach ($_FILES as $key => $file) {
-                $body[$key] = $file;
+            $body[$key] = $file;
+            }
+
+            // Handle GET queries in POST requests
+            foreach ($_GET as $key => $value) {
+            $body[$key] = filter_input(INPUT_GET, $key, FILTER_SANITIZE_SPECIAL_CHARS);
             }
         }
         // This is not use but we keep it here for future reference
@@ -66,18 +72,6 @@ class Request
         }
         
         return $body;
-    }
-
-    public function getQueryParams()
-    {
-        if ($this->getMethod() === 'GET') {
-            $query = [];
-            foreach ($_GET as $key => $value) {
-                $query[$key] = filter_input(INPUT_GET, $key, FILTER_SANITIZE_SPECIAL_CHARS);
-            }
-            return $query;
-        }
-        return [];
     }
 
     public function get($key)

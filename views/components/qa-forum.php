@@ -151,9 +151,9 @@ if (isset($_GET['error'])) {
                                     <circle cx="12" cy="18" r="2"></circle>
                                 </svg>
                             </button>
-                            <div class="dropdown-menu">
-                                <a href="#" class="dropdown-item edit-question" data-question-id="<?= $question['post_id'] ?>">Edit Question</a>
-                                <a href="#" class="dropdown-item delete-question" data-question-id="<?= $question['post_id'] ?>">Delete Question</a>
+                            <div class="qa-qa-dropdown-menu">
+                                <a href="#" class="qa-dropdown-item edit-question" data-question-id="<?= $question['post_id'] ?>">Edit Question</a>
+                                <a href="#" class="qa-dropdown-item delete-question" data-question-id="<?= $question['post_id'] ?>">Delete Question</a>
                             </div>
                         </div>
                         <?php endif; ?>
@@ -409,7 +409,7 @@ if (isset($_GET['error'])) {
     color: var(--accent-foreground);
 }
 
-.dropdown-menu {
+.qa-dropdown-menu {
     position: absolute;
     top: 100%;
     right: 0;
@@ -422,11 +422,11 @@ if (isset($_GET['error'])) {
     z-index: 100;
 }
 
-.dropdown-menu.show {
+.qa-dropdown-menu.show {
     display: block;
 }
 
-.dropdown-item {
+.qa-dropdown-item {
     display: block;
     padding: 0.5rem 1rem;
     color: var(--foreground);
@@ -434,11 +434,11 @@ if (isset($_GET['error'])) {
     font-size: 0.875rem;
 }
 
-.dropdown-item:hover {
+.qa-dropdown-item:hover {
     background-color: var(--accent);
 }
 
-.dropdown-item.delete-question {
+.qa-dropdown-item.delete-question {
     color: var(--destructive);
 }
 
@@ -671,7 +671,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close all dropdowns when clicking outside
     document.addEventListener('click', function(event) {
         if (!event.target.closest('.three-dot-menu')) {
-            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            document.querySelectorAll('.qa-dropdown-menu').forEach(menu => {
                 menu.classList.remove('show');
             });
         }
@@ -684,7 +684,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const dropdown = this.nextElementSibling;
             
             // Close all other dropdowns
-            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            document.querySelectorAll('.qa-dropdown-menu').forEach(menu => {
                 if (menu !== dropdown) {
                     menu.classList.remove('show');
                 }
