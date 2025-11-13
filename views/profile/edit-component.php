@@ -47,7 +47,7 @@ $majors = (new app\models\Major())->getAll();
                     <div class="profile-upload-container">
                         <div class="profile-image-preview">
                             <?php if($user->profilePicture): ?>
-                                <img src="<?= htmlspecialchars("/unihelper/public/" . $user->profilePicture ?? 'unihelper/views/assets/default-pfp.png') ?>" alt="Profile Picture" id="profileImagePreview">
+                                <img src="<?= htmlspecialchars($user->profilePicture ? "/unihelper/public/" . $user->profilePicture : '/unihelper/views/assets/default-pfp.png') ?>" alt="Profile Picture" id="profileImagePreview">
                             <?php endif; ?>
                         </div>
                         <div class="profile-upload-controls">

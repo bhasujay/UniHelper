@@ -15,7 +15,7 @@
         <div class="profile-card-header">
             <?php if($user->profilePicture): ?>
                 <div class="profile-image">
-                    <img src="<?= htmlspecialchars("/unihelper/public/" . $user->profilePicture ?? 'views/assets/default-pfp.png') ?>" alt="Profile Picture">
+                    <img src="<?= htmlspecialchars($user->profilePicture ? "/unihelper/public/" . $user->profilePicture : '/unihelper/views/assets/default-pfp.png') ?>" alt="Profile Picture">
                 </div>
             <?php endif; ?>
             

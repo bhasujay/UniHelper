@@ -236,8 +236,7 @@ class User
             
             return $stmt->execute();
         } catch (\PDOException $e) {
-            error_log("User update error: " . $e->getMessage());
-            return false;
+            return $e;
         }
     }
 

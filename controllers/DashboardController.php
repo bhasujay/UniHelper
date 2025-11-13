@@ -104,12 +104,12 @@ class DashboardController
     }
 
     // Renders the dashboard with the given content
-    protected function renderDashboard($content = NULL, $sidebar = NULL)
+    protected function renderDashboard($content = NULL, $sidebar = NULL, $error = NULL)
     {
         $user = $this->user; // Make user available to the dashboard template        
         $activeComponent = $this->activeComponent; // Make active component available to the dashboard template
         $role_title = $this->role_title; // Make role title available to the dashboard template
-        
+
         // Make content available to the dashboard template
         include Application::$ROOT_DIR . "/views/dashboard.php";
     }
@@ -185,7 +185,20 @@ class DashboardController
         }
 
         // Update user
-        $this->user->update();
+        $error = $this->user->update();
+
+        if ($error instanceof \PDOException) {
+
+            
+            if (strpos($error->getMessage(), 'SQLSTATE[23000]') !== false) {
+                $errorMsg = 'Email already in use by another account.';
+            } else {
+                $errorMsg = 'An error occurred while updating your profile. Please try again.';
+            }
+            
+            $content = $this->loadComponent('profile/edit-component');
+            return $this->renderDashboard($content, $this->role_data[$this->user->role], $errorMsg);
+        }
 
         // Redirect to profile view
         header('Location: /UniHelper/profile/view');

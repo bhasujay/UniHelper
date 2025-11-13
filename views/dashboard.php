@@ -24,7 +24,7 @@
             <div class="nav-right">
                 <div class="profile-container" id="profileDropdownTrigger">
                     <div class="profile-picture" >
-                        <img class="profile-img" src="<?= htmlspecialchars("/unihelper/public/" . $user->profilePicture ?? 'unihelper/views/assets/default-pfp.png') ?>">
+                        <img class="profile-img" src="<?= htmlspecialchars($user->profilePicture ? "/unihelper/public/" . $user->profilePicture : '/unihelper/views/assets/default-pfp.png') ?>">
                     </div>
                     <div class="profile-info">
                         <span class="profile-name"><?= htmlspecialchars($user->firstName) ?></span>
@@ -37,7 +37,7 @@
                                 <span class="dropdown-email"><?= htmlspecialchars($user->email) ?></span>
                             </div>
                             <div class="dropdown-profile-picture">
-                                <img src="<?= htmlspecialchars("/unihelper/public/" . $user->profilePicture ?? 'unihelper/views/assets/default-pfp.png') ?>" alt="Profile Picture" class="dropdown-profile-img">
+                                <img src="<?= htmlspecialchars($user->profilePicture ? "/unihelper/public/" . $user->profilePicture : '/unihelper/views/assets/default-pfp.png') ?>" alt="Profile Picture" class="dropdown-profile-img">
                             </div>
                         </div>
                         <div class="dropdown-body">
@@ -149,5 +149,73 @@
             }
         });
     </script>
+
+    <!-- Error Modal Script -->
+    <?php if (isset($error) && !empty($error)): ?>
+    <style>
+        .modal-error-box {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .modal-error-content {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        .modal-error-content span {
+            color: #d32f2f;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 15px;
+        }
+        
+        .modal-error-close {
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .modal-error-close:hover {
+            background-color: #b71c1c;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalErrorBox = document.createElement('div');
+            modalErrorBox.className = 'modal-error-box';
+            modalErrorBox.style.display = 'flex';
+            modalErrorBox.innerHTML = `
+                <div class="modal-error-content">
+                    <span><?php echo htmlspecialchars($error); ?></span>
+                    <br>
+                    <button class="modal-error-close">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modalErrorBox);
+            console.log("motherfuker");
+            
+            modalErrorBox.querySelector('.modal-error-close').onclick = function() {
+                modalErrorBox.remove();
+            };
+        });
+    </script>
+    <?php endif; ?>
 </body>
 </html>
