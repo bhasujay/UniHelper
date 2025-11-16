@@ -149,6 +149,11 @@ class AuthController
         exit;
     }
 
+    // password change
+    public function changePassword(Request $request)
+    { 
+    }
+
     // to reload the views with data/errors
     protected function render($view, $data = [])
     {
