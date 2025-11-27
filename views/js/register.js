@@ -41,6 +41,195 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 
+  // OTP Modal
+  let otpModal = document.getElementById('otpModal');
+  if (!otpModal) {
+    otpModal = document.createElement('div');
+    otpModal.id = 'otpModal';
+    otpModal.style.display = 'none';
+    otpModal.innerHTML = `
+      <div class="otp-modal-content">
+        <div class="otp-header">
+          <div class="otp-icon">📧</div>
+          <h2 class="otp-title">Verify Your Email</h2>
+          <p class="otp-subtitle">We've sent a 6-digit code to <strong id="otpEmailDisplay"></strong></p>
+        </div>
+        <div class="otp-inputs-container">
+          <input type="text" maxlength="1" class="otp-input" data-index="0">
+          <input type="text" maxlength="1" class="otp-input" data-index="1">
+          <input type="text" maxlength="1" class="otp-input" data-index="2">
+          <input type="text" maxlength="1" class="otp-input" data-index="3">
+          <input type="text" maxlength="1" class="otp-input" data-index="4">
+          <input type="text" maxlength="1" class="otp-input" data-index="5">
+        </div>
+        <div class="otp-error" id="otpError"></div>
+        <div class="otp-loading" id="otpLoading">Verifying...</div>
+        <div class="otp-buttons">
+          <button type="button" class="otp-btn otp-btn-cancel" id="otpCancelBtn">Cancel</button>
+          <button type="button" class="otp-btn otp-btn-verify" id="otpVerifyBtn">Verify</button>
+        </div>
+        <div class="otp-resend">
+          Didn't receive code? <a class="otp-resend-link" id="otpResendLink">Resend</a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(otpModal);
+
+    // OTP Input handling
+    const otpInputs = otpModal.querySelectorAll('.otp-input');
+    otpInputs.forEach((input, index) => {
+      input.addEventListener('input', function(e) {
+        const value = e.target.value;
+        if (value && index < otpInputs.length - 1) {
+          otpInputs[index + 1].focus();
+        }
+      });
+      
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+          otpInputs[index - 1].focus();
+        }
+      });
+
+      input.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pasteData = e.clipboardData.getData('text').slice(0, 6);
+        pasteData.split('').forEach((char, i) => {
+          if (otpInputs[i]) {
+            otpInputs[i].value = char;
+          }
+        });
+        if (pasteData.length === 6) {
+          otpInputs[5].focus();
+        }
+      });
+    });
+
+    // OTP Verify Button
+    document.getElementById('otpVerifyBtn').addEventListener('click', function() {
+      const otpCode = Array.from(otpInputs).map(input => input.value).join('');
+      if (otpCode.length !== 6) {
+        showOtpError('Please enter all 6 digits');
+        return;
+      }
+      verifyOtp(otpCode);
+    });
+
+    // OTP Cancel Button
+    document.getElementById('otpCancelBtn').addEventListener('click', function() {
+      closeOtpModal();
+      nextBtn.disabled = false;
+      nextBtn.querySelector('.btn-text').innerText = 'Submit';
+    });
+
+    // OTP Resend Link
+    document.getElementById('otpResendLink').addEventListener('click', function() {
+      generateOtp();
+    });
+  }
+
+  function showOtpModal() {
+    otpModal.style.display = 'flex';
+    document.getElementById('otpEmailDisplay').innerText = email.value;
+    const otpInputs = otpModal.querySelectorAll('.otp-input');
+    otpInputs.forEach(input => input.value = '');
+    otpInputs[0].focus();
+    document.getElementById('otpError').style.display = 'none';
+  }
+
+  function closeOtpModal() {
+    otpModal.style.display = 'none';
+  }
+
+  function showOtpError(message) {
+    const errorEl = document.getElementById('otpError');
+    errorEl.innerText = message;
+    errorEl.style.display = 'block';
+  }
+
+  function generateOtp() {
+    document.getElementById('otpLoading').style.display = 'block';
+    document.getElementById('otpVerifyBtn').disabled = true;
+    
+    fetch(`/unihelper/otp/generate?email=${encodeURIComponent(email.value)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('otpLoading').style.display = 'none';
+      document.getElementById('otpVerifyBtn').disabled = false;
+      if (!data.success && data.message) {
+        showOtpError(data.message);
+      }
+    })
+    .catch(error => {
+      document.getElementById('otpLoading').style.display = 'none';
+      document.getElementById('otpVerifyBtn').disabled = false;
+      showOtpError('Failed to send OTP. Please try again.');
+    });
+  }
+
+  function verifyOtp(otpCode) {
+    document.getElementById('otpLoading').style.display = 'block';
+    document.getElementById('otpVerifyBtn').disabled = true;
+    document.getElementById('otpError').style.display = 'none';
+
+    const formData = new FormData();
+    formData.append('otp', otpCode);
+
+    fetch('/unihelper/otp/validate', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('otpLoading').style.display = 'none';
+      document.getElementById('otpVerifyBtn').disabled = false;
+      
+      if (data.success) {
+        closeOtpModal();
+        submitFormWithHashedPassword();
+      } else {
+        showOtpError(data.message || 'Invalid OTP. Please try again.');
+      }
+    })
+    .catch(error => {
+      document.getElementById('otpLoading').style.display = 'none';
+      document.getElementById('otpVerifyBtn').disabled = false;
+      showOtpError('Verification failed. Please try again.');
+    });
+  }
+
+  async function submitFormWithHashedPassword() {
+    try {
+      const pwd = password.value;
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      let hashedInput = form.querySelector('input[name="hashed_password"]');
+      if (!hashedInput) {
+        hashedInput = document.createElement('input');
+        hashedInput.type = 'hidden';
+        hashedInput.name = 'hashed_password';
+        form.appendChild(hashedInput);
+      }
+      hashedInput.value = hashHex;
+      
+      password.value = '';
+      confirmPassword.value = '';
+      form.submit();
+    } catch (error) {
+      nextBtn.disabled = false;
+      nextBtn.querySelector('.btn-text').innerText = 'Submit';
+      document.getElementById('modalErrorMsg').innerHTML = 'An error occurred during submission. Please try again.';
+      modalErrorBox.style.display = 'flex';
+    }
+  }
+
   // Role switch functionality
   function updateRoleSwitch(selectedRole) {
     let sliderPosition = 0;
@@ -266,33 +455,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // Final submit
       if (validateStep(currentStep)) {
         nextBtn.disabled = true;
-        nextBtn.querySelector('.btn-text').innerText = 'Submitting...';
+        nextBtn.querySelector('.btn-text').innerText = 'Sending OTP...';
         
-        try {
-          // Hash password using SHA-256
-          const pwd = password.value;
-          const hashBuffer = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
-          const hashArray = Array.from(new Uint8Array(hashBuffer));
-          const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-          
-          let hashedInput = form.querySelector('input[name="hashed_password"]');
-          if (!hashedInput) {
-            hashedInput = document.createElement('input');
-            hashedInput.type = 'hidden';
-            hashedInput.name = 'hashed_password';
-            form.appendChild(hashedInput);
-          }
-          hashedInput.value = hashHex;
-          
-          password.value = '';
-          confirmPassword.value = '';
-          form.submit();
-        } catch (error) {
-          nextBtn.disabled = false;
-          nextBtn.querySelector('.btn-text').innerText = 'Submit';
-          document.getElementById('modalErrorMsg').innerHTML = 'An error occurred during submission. Please try again.';
-          modalErrorBox.style.display = 'flex';
-        }
+        generateOtp();
+        showOtpModal();
       }
     }
   });
@@ -312,7 +478,7 @@ document.addEventListener('DOMContentLoaded', function() {
         input.classList.remove('input-error');
         modalErrorBox.style.display = 'none';
         nextBtn.disabled = false;
-        if (nextBtn.querySelector('.btn-text').innerText === 'Submitting...') {
+        if (nextBtn.querySelector('.btn-text').innerText === 'Submitting...' || nextBtn.querySelector('.btn-text').innerText === 'Sending OTP...') {
           nextBtn.querySelector('.btn-text').innerText = currentStep === sections.length - 1 ? 'Submit' : 'Next';
         }
       });

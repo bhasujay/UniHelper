@@ -4,7 +4,7 @@ namespace app\models;
 
 use app\core\Database;
 
-class otp
+class otpModel
 {
     private $db;
 
@@ -16,11 +16,11 @@ class otp
     // Insert a new OTP record
     public function insert($data)
     {
-        $sql = "INSERT INTO user_otps (user_id, otp_hash, expires_at, attempts, is_used)
-                VALUES (:user_id, :otp_hash, :expires_at, :attempts, :is_used)";
+        $sql = "INSERT INTO otps (identifier, otp_hash, expires_at, attempts, is_used)
+                VALUES (:identifier, :otp_hash, :expires_at, :attempts, :is_used)";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
-            ':user_id'   => $data['user_id'],
+            ':identifier'   => $data['identifier'],
             ':otp_hash'  => $data['otp_hash'],
             ':expires_at'=> $data['expires_at'],
             ':attempts'  => $data['attempts'] ?? 0,
@@ -32,7 +32,7 @@ class otp
     // Delete an OTP by its ID
     public function delete($id)
     {
-        $sql = "DELETE FROM user_otps WHERE id = :id";
+        $sql = "DELETE FROM otps WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([':id' => $id]);
     }
@@ -40,17 +40,31 @@ class otp
     // Get OTP record by ID
     public function getOTP($id)
     {
-        $sql = "SELECT * FROM user_otps WHERE id = :id";
+        $sql = "SELECT * FROM otps WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();
+    }
+
+    // Update OTP record
+    public function update($id, $data)
+    {
+        $fields = [];
+        $params = [':id' => $id];
+        foreach ($data as $key => $value) {
+            $fields[] = "$key = :$key";
+            $params[":$key"] = $value;
+        }
+        $sql = "UPDATE otps SET " . implode(', ', $fields) . " WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
     }
 
     // Delete all expired OTPs
     public function deleteExpiredOTPs()
     {
         $now = time();
-        $sql = "DELETE FROM user_otps WHERE expires_at < :now OR is_used = 1";
+        $sql = "DELETE FROM otps WHERE expires_at < :now OR is_used = 1";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([':now' => $now]);
     }

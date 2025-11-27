@@ -2,6 +2,8 @@
 
 namespace app\controllers;
 
+use app\core\Request;
+use app\core\mailer;
 use app\models\otpModel;
 
 // Controller for OTP-related actions
@@ -28,36 +30,47 @@ class OtpController
     }
 
     // Action to generate OTP
-    public function generateOtpAction()
+    public function generateOtpAction(Request $request)
     {
-        $otp = $this->generateOTP();
-        $otpHash = $this->hashOtp($otp);
-        $expiresAt = time() + 300;
+        header('Content-Type: application/json');
 
-        $data = [
-            'user_id'   => $_SESSION['user_id'],
-            'otp_hash'  => $otpHash,
-            'expires_at'=> $expiresAt,
-            'attempts'  => 0,
-            'is_used'   => 0,
-        ];
+        try {
+            $otp = $this->generateOTP();
+            $otpHash = $this->hashOtp($otp);
+            $expiresAt = time() + 300;
 
-        $otpId = $this->otpModel->insert($data);
+            // Send OTP via email
+            $email = $request->get('email');
+            $mailer = new mailer($email);
+            $mailer->sendOTP($otp);
 
-        $_SESSION['otp_id'] = $otpId;
+            // Store OTP details in the database
+            $data = [
+                'identifier'   => $email ?? null,
+                'otp_hash'  => $otpHash,
+                'expires_at'=> $expiresAt,
+                'attempts'  => 0,
+                'is_used'   => 0,
+            ];
+            $otpId = $this->otpModel->insert($data);
+
+            $_SESSION['otp_id'] = $otpId;
+            $_SESSION['otp_verified'] = false;
+
+            echo json_encode(['success' => true, 'message' => 'OTP sent successfully.']);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Failed to generate OTP.']);
+        }
     }
 
     // Action to validate OTP
-    public function validateOtpAction()
+    public function validateOtpAction(Request $request)
     {
         header('Content-Type: application/json');
 
         // Get POST data
-        $userOtp = $_POST['otp'] ?? null;
+        $userOtp = $request->get('otp') ?? null;
         $otpId = $_SESSION['otp_id'] ?? null;
-
-        // set session otp_verified to false initially
-        $_SESSION['otp_verified'] = false;
 
         if (!$userOtp || !$otpId) {
             echo json_encode(['success' => false, 'message' => 'Missing OTP or session.']);
@@ -89,18 +102,21 @@ class OtpController
 
         // Verify OTP
         if (password_verify($userOtp, $otpRecord['otp_hash'])) {
-            // Mark OTP as used
-            $sql = "UPDATE user_otps SET is_used = 1 WHERE id = :id";
-            $this->otpModel->db->prepare($sql)->execute([':id' => $otpId]);
+            // Mark OTP as used using the model's update method
+            $this->otpModel->update($otpId, ['is_used' => 1]);
+
             $_SESSION['otp_verified'] = true;
             echo json_encode(['success' => true, 'message' => 'OTP verified.']);
         } else {
-            // Increment attempts
-            $sql = "UPDATE user_otps SET attempts = attempts + 1 WHERE id = :id";
-            $this->otpModel->db->prepare($sql)->execute([':id' => $otpId]);
-            echo json_encode(['success' => false, 'message' => 'Invalid OTP.']);
+            // Increment attempts using the model's update method
+            $this->otpModel->update($otpId, ['attempts' => $otpRecord['attempts'] + 1]);
+            
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid OTP.',
+                'user_otp' => $userOtp
+            ]);
         }
     }
-
 
 }

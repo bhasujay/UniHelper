@@ -34,7 +34,16 @@
                         <div class="dropdown-header">
                             <div class="dropdown-user-info">
                                 <span class="dropdown-name"><?= htmlspecialchars($user->firstName . ' ' . $user->lastName) ?></span>
-                                <span class="dropdown-email"><?= htmlspecialchars($user->email) ?></span>
+                                <?php
+                                $email = $user->email;
+                                if (strlen($email) > 20 && ($atPos = strpos($email, '@')) !== false) {
+                                    $visible = substr($email, 0, min(10, $atPos));
+                                    $shortEmail = $visible . '..' . substr($email, $atPos);
+                                } else {
+                                    $shortEmail = $email;
+                                }
+                                ?>
+                                <span class="dropdown-email"><?= htmlspecialchars($shortEmail) ?></span>
                             </div>
                             <div class="dropdown-profile-picture">
                                 <img src="<?= htmlspecialchars($user->profilePicture ? "/unihelper/public/" . $user->profilePicture : '/unihelper/views/assets/default-pfp.png') ?>" alt="Profile Picture" class="dropdown-profile-img">
@@ -91,7 +100,7 @@
                 <div class="sidebar-section-title"><?= htmlspecialchars($role_title) ?></div>
                 <?php foreach ($sidebar as $item): ?>
                     <li>
-                        <a href="dashboard/<?= htmlspecialchars($item['component']) ?>" class="sidebar-link <?= $activeComponent === $item['component'] ? 'active' : '' ?>">
+                        <a href="<?= htmlspecialchars($item['component']) ?>" class="sidebar-link <?= $activeComponent === $item['component'] ? 'active' : '' ?>">
                             <i class="fas fa-question-circle"></i>
                             <span><?= htmlspecialchars($item['title']) ?></span>
                         </a>

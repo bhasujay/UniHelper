@@ -74,8 +74,4 @@ class mailer
         return $this->sendEmail($subject, $body);
     }    
 }
-
-$test = new mailer("bhasujw@gmail.com");
-$test->sendOTP("123456");
-
 ?>
