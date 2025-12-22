@@ -15,8 +15,8 @@ class DegreeProgram {
     
     // Method to add a degree
     public function addDegree($data) {
-        $query = "INSERT INTO degree_program (name, university_id, stream, unicode, major_id, descriptions, duration) 
-                  VALUES (:name, :university_id, :stream, :unicode, :major_id, :descriptions, :duration)";
+        $query = "INSERT INTO degree_program (name, university_id, stream, unicode, major_id) 
+                  VALUES (:name, :university_id, :stream, :unicode, :major_id)";
                   
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':name', $data['name']);
@@ -24,8 +24,6 @@ class DegreeProgram {
         $stmt->bindParam(':stream', $data['stream']);
         $stmt->bindParam(':unicode', $data['unicode']);
         $stmt->bindParam(':major_id', $data['major_id'], \PDO::PARAM_INT);
-        $stmt->bindParam(':descriptions', $data['descriptions']);
-        $stmt->bindParam(':duration', $data['duration']);
         
         if($stmt->execute()) {
             return $this->db->lastInsertId();
@@ -47,8 +45,7 @@ class DegreeProgram {
     public function updateDegree($id, $data) {
         $query = "UPDATE degree_program 
                   SET name = :name, university_id = :university_id, stream = :stream, 
-                      unicode = :unicode, major_id = :major_id, 
-                      descriptions = :descriptions, duration = :duration
+                      unicode = :unicode, major_id = :major_id
                   WHERE program_id = :id";
                   
         $stmt = $this->db->prepare($query);
@@ -57,8 +54,6 @@ class DegreeProgram {
         $stmt->bindParam(':stream', $data['stream']);
         $stmt->bindParam(':unicode', $data['unicode']);
         $stmt->bindParam(':major_id', $data['major_id'], \PDO::PARAM_INT);
-        $stmt->bindParam(':descriptions', $data['descriptions']);
-        $stmt->bindParam(':duration', $data['duration']);
         $stmt->bindParam(':id', $id, \PDO::PARAM_INT);
         
         return $stmt->execute();
@@ -79,7 +74,6 @@ class DegreeProgram {
     public function getAllDegrees() {
         // Join with universities table to get university name
         $query = "SELECT d.program_id as id, d.name, d.stream, d.unicode, 
-                  d.descriptions as description, d.duration, 
                   u.name as university, m.name as major
                   FROM degree_program d
                   LEFT JOIN universities u ON d.university_id = u.id
@@ -95,8 +89,8 @@ class DegreeProgram {
             $degree->name = $row['name'];
             $degree->stream = $row['stream'];
             $degree->unicode = $row['unicode'];
-            $degree->description = $row['description'];
-            $degree->duration = $row['duration']; 
+            $degree->description = ''; // Column doesn't exist in table
+            $degree->duration = ''; // Column doesn't exist in table
             $degree->university = $row['university'];
             $degree->major = $row['major'];
             $degree->status = 'Active'; // Default status since it's not in your table

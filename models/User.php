@@ -27,6 +27,8 @@ class User
     public $profileRole;
     public $profilePicture;
     public $createdAt;
+    public $public;
+    public $mod;
 
     // Save new user to database
     public function save()
