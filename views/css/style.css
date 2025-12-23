@@ -424,6 +424,15 @@
     display: none;
   }
 
+  .otp-success {
+    color: var(--accent);
+    font-size: 13px;
+    text-align: center;
+    margin-top: -15px;
+    margin-bottom: 15px;
+    display: none;
+  }
+
   .otp-buttons {
     display: flex;
     gap: 12px;

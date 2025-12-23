@@ -141,8 +141,19 @@ document.addEventListener('DOMContentLoaded', function() {
     otpModal.style.display = 'none';
   }
 
-  function showOtpError(message) {
+  function showOtpError(message, success = false) {
     const errorEl = document.getElementById('otpError');
+    if (success) {
+      errorEl.classList.remove('otp-error');
+      if (!errorEl.classList.contains('otp-success')) {
+        errorEl.classList.add('otp-success');
+      }
+    } else {
+      errorEl.classList.remove('otp-success');
+      if (!errorEl.classList.contains('otp-error')) {
+        errorEl.classList.add('otp-error');
+      }
+    }
     errorEl.innerText = message;
     errorEl.style.display = 'block';
   }
@@ -161,9 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
       document.getElementById('otpLoading').style.display = 'none';
       document.getElementById('otpVerifyBtn').disabled = false;
-      if (!data.success && data.message) {
-        showOtpError(data.message);
-      }
+      showOtpError(data.message, data.success);
     })
     .catch(error => {
       document.getElementById('otpLoading').style.display = 'none';
