@@ -7,8 +7,8 @@ use app\core\Request;
 class ApiGateway
 {
     private $paths = [
-        'qaController' => '/qaController.php',
         'otpController' => '/otpController.php',
+        'qaController' => '/qaController.php',
     ];
     
     public function handleRequest(Request $request)
@@ -17,7 +17,7 @@ class ApiGateway
         $action = $request->get('action');
 
         if (array_key_exists($controller, $this->paths)) {
-            require_once $this->paths[$controller];
+            require_once dirname(__DIR__,1) . '/controllers' . $this->paths[$controller];
             $controllerClass = 'app\\controllers\\' . ucfirst($controller);
             if (class_exists($controllerClass)) {
                 $controllerInstance = new $controllerClass();
