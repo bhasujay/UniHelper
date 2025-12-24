@@ -2,6 +2,8 @@
 
 namespace app\controllers;
 
+require_once dirname(__DIR__, 1) . '/models/DegreeProgram.php';
+
 use app\core\Request;
 use app\models\DegreeProgram;
 

@@ -15,31 +15,9 @@ require_once dirname(__DIR__) . '/core/Database.php';
 
 // these require statements will be moved to an autoloader in the future
 
-// Require controller files
-require_once dirname(__DIR__) . '/controllers/AuthController.php';
-require_once dirname(__DIR__) . '/controllers/DashboardController.php';
-require_once dirname(__DIR__) . '/controllers/ApplicantDashController.php';
-require_once dirname(__DIR__) . '/controllers/UndergradDashController.php';
-require_once dirname(__DIR__) . '/controllers/ProfileDashController.php';
-require_once dirname(__DIR__) . '/controllers/AdminDashController.php';
-require_once dirname(__DIR__) . '/controllers/common/otpController.php';
-require_once dirname(__DIR__) . '/controllers/common/qaController.php';
-
-// Require model files
-require_once dirname(__DIR__) . '/models/base-model.php';
-require_once dirname(__DIR__) . '/models/User.php';
-require_once dirname(__DIR__) . '/models/University.php';
-require_once dirname(__DIR__) . '/models/Major.php';
-require_once dirname(__DIR__) . '/models/DegreeProgram.php';
-require_once dirname(__DIR__) . '/models/ZScore_model.php';
-require_once dirname(__DIR__) . '/models/ProgramModel.php';
-require_once dirname(__DIR__) . '/models/WishlistModel.php';
-
 use app\core\Application;
 
 $app = new Application(dirname(__DIR__));
-
-require_once dirname(__DIR__) . '/core/Routes.php';
 
 $app->run();
 

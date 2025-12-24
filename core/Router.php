@@ -4,7 +4,28 @@ namespace app\core;
 
 class Router
 {
-    protected array $routes = [];
+    protected array $routes = [
+        'GET' => [
+            '/home' => 'home.html',
+            '/register' => ['AuthController', 'populateRegisterForm'],
+            '/login' => 'login.php',
+            '/logout' => ['AuthController', 'logout'],
+            '/api' => ['apiGateway', 'handleRequest'],
+            '/' => ['DashboardController', 'index'],
+            '/dashboard' => ['DashboardController', 'index'],
+            '/profile/view' => ['DashboardController', 'profileIndex'],
+            '/profile/edit' => ['DashboardController', 'profileIndex'],
+            '/:component' => ['DashboardController', 'renderComponent'],
+        ],
+        'POST' => [
+            '/register' => ['AuthController', 'register'],
+            '/login' => ['AuthController', 'login'],
+            '/api' => ['apiGateway', 'handleRequest'],
+            '/profile/update' => ['DashboardController', 'profileUpdate'],
+        ],
+        'PUT' => [],
+        'DELETE' => []
+    ];
     public Request $request;
 
     public function __construct(Request $request)
@@ -53,7 +74,9 @@ class Router
 
             // if the callback is an array, instantiate the controller and call the method
             if (is_array($callback)) {
-                $controller = new $callback[0]();
+                require_once dirname(__DIR__,1) . '/controllers/' . $callback[0] . '.php';
+                $controllerClass = 'app\\controllers\\' . $callback[0];
+                $controller = new $controllerClass();
                 $method = $callback[1];
                 
                 $refMethod = new \ReflectionMethod($controller, $method);
@@ -86,7 +109,9 @@ class Router
                     }
 
                     if (is_array($callback)) {
-                        $controller = new $callback[0]();
+                        require_once dirname(__DIR__) . '/controllers/' . $callback[0] . '.php';
+                        $controllerClass = 'app\\controllers\\' . $callback[0];
+                        $controller = new $controllerClass();
                         $method = $callback[1];
                         
                         // Handle differently for POST requests

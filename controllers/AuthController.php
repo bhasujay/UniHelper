@@ -2,6 +2,10 @@
 
 namespace app\controllers;
 
+require_once dirname(__DIR__, 1) . '/models/University.php';
+require_once dirname(__DIR__, 1) . '/models/Major.php';
+require_once dirname(__DIR__, 1) . '/models/User.php';
+
 use app\core\Application;
 use app\core\Request;
 use app\models\User;

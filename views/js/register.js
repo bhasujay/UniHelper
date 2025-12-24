@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('otpLoading').style.display = 'block';
     document.getElementById('otpVerifyBtn').disabled = true;
     
-    fetch(`/unihelper/otp/generate?email=${encodeURIComponent(email.value)}`, {
+    fetch(`/unihelper/api?controller=otpController&action=generateOtpAction&email=${encodeURIComponent(email.value)}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const formData = new FormData();
     formData.append('otp', otpCode);
 
-    fetch('/unihelper/otp/validate', {
+    fetch('/unihelper/api?controller=otpController&action=validateOtpAction', {
       method: 'POST',
       body: formData
     })

@@ -2,16 +2,11 @@
 
 namespace app\controllers;
 
+require_once dirname(__DIR__, 1) . '/models/User.php';
+
 use app\core\Application;
 use app\core\Request;
 use app\models\User;
-use app\models\QnaPost;
-use app\models\Tag;
-use app\models\QnaPostTag;
-use app\models\QnaHierarchy;
-use app\models\Major;
-use app\models\University;
-use app\models\DegreeProgram;
 
 class DashboardController
 {

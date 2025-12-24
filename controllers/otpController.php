@@ -2,8 +2,8 @@
 
 namespace app\controllers;
 
-require_once dirname(__DIR__, 2) . '/core/mailer.php';
-require_once dirname(__DIR__, 2) . '/models/otp.php';
+require_once dirname(__DIR__, 1) . '/core/mailer.php';
+require_once dirname(__DIR__, 1) . '/models/otp.php';
 
 use app\core\Request;
 use app\core\mailer;
