@@ -15,7 +15,6 @@ class Router
             '/dashboard' => ['DashboardController', 'index'],
             '/profile/view' => ['DashboardController', 'profileIndex'],
             '/profile/edit' => ['DashboardController', 'profileIndex'],
-            '/:component' => ['DashboardController', 'renderComponent'],
         ],
         'POST' => [
             '/register' => ['AuthController', 'register'],
@@ -24,37 +23,17 @@ class Router
             '/profile/update' => ['DashboardController', 'profileUpdate'],
         ],
         'PUT' => [],
-        'DELETE' => []
+        'DELETE' => [],
+        'DYNAMIC' => [
+            '/:component' => ['DashboardController', 'renderComponent'],
+            '/this/is/a/test/:id' => ['TestController', 'testMethod']
+        ]
     ];
     public Request $request;
 
     public function __construct(Request $request)
     {
         $this->request = $request;
-    }
-
-    // Adds a route for GET requests
-    public function get($path, $callback)
-    {
-        $this->routes['GET'][$path] = $callback;
-    }
-
-    // Adds a route for POST requests
-    public function post($path, $callback)
-    {
-        $this->routes['POST'][$path] = $callback;
-    }
-
-    // Adds a route for PUT requests
-    public function put($path, $callback)
-    {
-        $this->routes['PUT'][$path] = $callback;
-    }
-
-    // Adds a route for DELETE requests
-    public function delete($path, $callback)
-    {
-        $this->routes['DELETE'][$path] = $callback;
     }
 
     // Resolves the route based on the request method and path
@@ -91,48 +70,49 @@ class Router
             return call_user_func($callback);
         }
         
-        // Check for pattern match with parameters
-        foreach ($this->routes[$method] as $route => $callback) {
-            if (strpos($route, ':') !== false) {
-                $routePattern = preg_replace('/:(\w+)/', '(?P<$1>[^/]+)', $route);
-                $routePattern = "#^$routePattern$#";
-                
-                if (preg_match($routePattern, $path, $matches)) {
-                    // Extract parameters - only keep named captures (non-numeric keys)
-                    $params = array_filter($matches, function($key) {
-                        return !is_numeric($key);
-                    }, ARRAY_FILTER_USE_KEY);
+        // Check DYNAMIC routes for pattern matching
+        if (isset($this->routes['DYNAMIC'])) {
+            foreach ($this->routes['DYNAMIC'] as $route => $callback) {
+                if (strpos($route, ':') !== false) {
+                    $routePattern = preg_replace('/:(\w+)/', '(?P<$1>[^/]+)', $route);
+                    $routePattern = "#^$routePattern$#";
                     
-                    // for component routes
-                    if (is_string($callback)) {
-                        return $this->render_view($callback);
-                    }
-
-                    if (is_array($callback)) {
-                        require_once dirname(__DIR__) . '/controllers/' . $callback[0] . '.php';
-                        $controllerClass = 'app\\controllers\\' . $callback[0];
-                        $controller = new $controllerClass();
-                        $method = $callback[1];
+                    if (preg_match($routePattern, $path, $matches)) {
+                        // Extract parameters - only keep named captures
+                        $params = array_filter($matches, function($key) {
+                            return !is_numeric($key);
+                        }, ARRAY_FILTER_USE_KEY);
                         
-                        // Handle differently for POST requests
-                        if ($this->request->getMethod() === 'POST') {
-                            // Pass both params and request to the controller method
-                            return $controller->$method($params, $this->request);
-                        } else {
-                            // For GET requests, maintain the existing behavior
-                            return $controller->$method($params);
+                        // if the callback is a string, render the view
+                        if (is_string($callback)) {
+                            return $this->render_view($callback);
                         }
+
+                        // if the callback is an array, instantiate the controller and call the method
+                        if (is_array($callback)) {
+                            require_once dirname(__DIR__) . '/controllers/' . $callback[0] . '.php';
+                            $controllerClass = 'app\\controllers\\' . $callback[0];
+                            $controller = new $controllerClass();
+                            $method = $callback[1];
+                            
+                            $refMethod = new \ReflectionMethod($controller, $method);
+                            if ($refMethod->getNumberOfParameters() > 0) {
+                                return $controller->$method($params);
+                            } else {
+                                return $controller->$method();
+                            }
+                        }
+                        
+                        // if the callback is a closure, call it directly
+                        return call_user_func_array($callback, [$params]);
                     }
-                    
-                    // For closure callbacks
-                    return call_user_func_array($callback, [$params]);
                 }
             }
         }
         
         // Handle 404
         http_response_code(404);
-        return "404 Not Found";
+        return $this->render_view('404.php');
     }
 
     public function render_view($view)
