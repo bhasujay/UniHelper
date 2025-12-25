@@ -5,19 +5,14 @@ namespace app\controllers;
 use app\core\Request;
 
 class ApiGateway
-{
-    private $paths = [
-        'otpController' => '/otpController.php',
-        'qaController' => '/qaController.php',
-    ];
-    
+{    
     public function handleRequest(Request $request)
     {
         $controller = $request->get('controller');
         $action = $request->get('action');
 
-        if (array_key_exists($controller, $this->paths)) {
-            require_once dirname(__DIR__,1) . '/controllers' . $this->paths[$controller];
+        if (file_exists(dirname(__DIR__,1) . '/controllers/' . $controller . '.php')) {
+            require_once dirname(__DIR__,1) . '/controllers/' . $controller . '.php';
             $controllerClass = 'app\\controllers\\' . ucfirst($controller);
             if (class_exists($controllerClass)) {
                 $controllerInstance = new $controllerClass();
