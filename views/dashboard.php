@@ -8,9 +8,6 @@
 
     <link rel="stylesheet" href="/unihelper/views/css/style.css">
     <link rel="stylesheet" href="/unihelper/views/css/dashboard.css">
-    <link rel="stylesheet" href="/unihelper/views/css/profile.css">
-    <link rel="stylesheet" href="/unihelper/views/css/components/cards.css">
-    <link rel="stylesheet" href="/unihelper/views/css/components/<?= htmlspecialchars($user->role) ?>.css">
 </head>
 <body>
     <nav class="nav">

@@ -1,3 +1,10 @@
+<link rel="stylesheet" href="/unihelper/views/css/profile.css">
+
+<?php
+require_once dirname(__DIR__, 2) . '/models/University.php';
+require_once dirname(__DIR__, 2) . '/models/Major.php';
+?>
+
 <?php ?>
 <div class="profile-card-container">
     <div class="profile-card">
