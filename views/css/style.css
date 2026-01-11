@@ -24,12 +24,14 @@
     --text-alt: #003a66;
     --key: #303030;
     --key-bottom: #2e2e2e91;
+    --text_background: #363636;
 
     --bg-blur1: #20ffff11;
     --bg-blur2: #38fff22f;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, #3795ff, #32a6ff);
+    --gradient-primary: linear-gradient(135deg, #26b1fc, #32a6ff);
+    --btn-gradient-primary: linear-gradient(135deg, #0f6cbd, #0a70ff);
     --gradient-secondary: linear-gradient(135deg, #3eb5ff52, #47c5ff46);
     --btn-gradient: linear-gradient(135deg, #04d1ff, #0abfff);
     --gradient-accent: linear-gradient(135deg, #2ee7ff52, #08fbff48);
@@ -137,8 +139,8 @@
   }
   
   .btn-primary {
-    background: var(--gradient-primary);
-    color: rgb(0, 0, 0);
+    background: var(--btn-gradient-primary);
+    color: var(--text);
     justify-content: center;
   }
   
@@ -320,188 +322,6 @@
     font-size: 1.05rem;  /* Bigger text */
     padding: 0.5rem 1rem;  /* Smaller button size */
     font-weight: 500;  /* Slightly bolder text */
-  }
-
-  /* OTP Modal Styles */
-  #otpModal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(12px);
-  }
-
-  .otp-modal-content {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 40px;
-    max-width: 440px;
-    width: 90%;
-    box-shadow: var(--glow-primary), 0 20px 60px rgba(0, 0, 0, 0.5);
-    animation: slideIn 0.3s ease-out;
-  }
-
-  @keyframes slideIn {
-    from {
-      transform: translateY(-30px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  .otp-header {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-
-  .otp-icon {
-    width: 60px;
-    height: 60px;
-    background: var(--gradient-primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    font-size: 28px;
-    box-shadow: var(--glow-secondary);
-  }
-
-  .otp-title {
-    color: var(--text);
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-
-  .otp-subtitle {
-    color: var(--muted-foreground);
-    font-size: 14px;
-  }
-
-  .otp-inputs-container {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin: 30px 0;
-  }
-
-  .otp-input {
-    width: 50px;
-    height: 56px;
-    text-align: center;
-    font-size: 24px;
-    font-weight: 600;
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    background: var(--key);
-    color: var(--text);
-    transition: all 0.3s;
-  }
-
-  .otp-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: var(--glow-secondary);
-  }
-
-  .otp-error {
-    color: #fc8181;
-    font-size: 13px;
-    text-align: center;
-    margin-top: -15px;
-    margin-bottom: 15px;
-    display: none;
-  }
-
-  .otp-success {
-    color: var(--accent);
-    font-size: 13px;
-    text-align: center;
-    margin-top: -15px;
-    margin-bottom: 15px;
-    display: none;
-  }
-
-  .otp-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 25px;
-  }
-
-  .otp-btn {
-    flex: 1;
-    padding: 14px;
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-
-  .otp-btn-verify {
-    background: var(--gradient-primary);
-    color: var(--text-alt);
-  }
-
-  .otp-btn-verify:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--glow-primary);
-  }
-
-  .otp-btn-verify:disabled {
-    background: var(--border);
-    cursor: not-allowed;
-    transform: none;
-    opacity: 0.6;
-  }
-
-  .otp-btn-cancel {
-    background: var(--key);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-
-  .otp-btn-cancel:hover {
-    background: var(--card);
-  }
-
-  .otp-resend {
-    text-align: center;
-    margin-top: 20px;
-    color: var(--muted-foreground);
-    font-size: 14px;
-  }
-
-  .otp-resend-link {
-    color: var(--primary);
-    cursor: pointer;
-    text-decoration: none;
-    font-weight: 600;
-  }
-
-  .otp-resend-link:hover {
-    text-decoration: underline;
-    color: var(--accent);
-  }
-
-  .otp-loading {
-    display: none;
-    text-align: center;
-    color: var(--muted-foreground);
-    margin-top: 15px;
-    font-size: 14px;
   }
 
   /* Skeleton Loading Styles */
