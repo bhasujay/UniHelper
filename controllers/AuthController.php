@@ -165,4 +165,13 @@ class AuthController
         extract($data);
         require Application::$ROOT_DIR . "/views/$view";
     }
+
+    // helper functions
+    static function getUserNameById(Request $request)
+    {
+        $id = $request->get('id');
+        $user = new User();
+        $user = $user->findById($id);
+        return $user->firstName . ' ' . $user->lastName;
+    }
 }

@@ -118,7 +118,47 @@
         <?php if (isset($content)) echo $content; ?>
     </main>
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
     <script>
+        // Toast Notification Function
+        function showToast(message, type = 'success', duration = 5000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const typeText = type === 'success' ? 'Success' : 'Error';
+            
+            toast.innerHTML = `
+                <div>
+                    <div class="toast-type">${typeText}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" aria-label="Close">&times;</button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Close button handler
+            const closeBtn = toast.querySelector('.toast-close');
+            closeBtn.addEventListener('click', () => {
+                removeToast(toast);
+            });
+            
+            // Auto-remove after duration
+            setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+        }
+        
+        function removeToast(toast) {
+            toast.classList.add('hiding');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+
         // Profile dropdown functionality
         document.addEventListener('DOMContentLoaded', function() {
             const profileTrigger = document.getElementById('profileDropdownTrigger');
