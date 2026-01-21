@@ -4,37 +4,87 @@ namespace app\models;
 
 use app\core\Database;
 
+require_once dirname(__DIR__) . '\models\base-model.php';
 
-class Qna 
+class Qna extends BaseModel
 {
-    private $db;
-
     public function __construct()
     {
-        $this->db = Database::getInstance();
+        parent::__construct();
+        $this->table = 'questions';
+        $this->primaryKey = 'q_id';
     }
 
-    // Insert a new QnA record
-    public function insert($data)
+    public function create($data)
     {
-
+        // Set added_time and last_modified to the same value
+        $currentTime = date('Y-m-d H:i:s');
+        $data['added_time'] = $currentTime;
+        $data['last_modified'] = $currentTime;
+        
+        // Set default values if not provided
+        if (!isset($data['vote_count'])) {
+            $data['vote_count'] = 0;
+        }
+        if (!isset($data['status'])) {
+            $data['status'] = 'normal';
+        }
+        
+        return parent::create($data);
     }
-
-    // Delete a QnA by its ID
-    public function delete($id)
+    
+    // Handle multiple image uploads
+    public function handleImageUploads($files, $questionId)
     {
-
+        if (empty($files) || !isset($files['name']) || empty($files['name'][0])) {
+            return null;
+        }
+        
+        // Create directory for this question
+        $uploadDir = dirname(__DIR__) . '/public/uploads/qnaImages/' . $questionId;
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        $imagePaths = [];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        foreach ($files['name'] as $index => $fileName) {
+            $tmpName = $files['tmp_name'][$index];
+            $fileError = $files['error'][$index];
+            
+            if ($fileError !== UPLOAD_ERR_OK) {
+                continue;
+            }
+            
+            // Get file extension
+            $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            
+            // Validate extension
+            if (!in_array($extension, $allowedExtensions)) {
+                continue;
+            }
+            
+            // New filename: 0.jpg, 1.jpg, 2.jpg, etc.
+            $newFileName = $index . '.' . $extension;
+            $destination = $uploadDir . '/' . $newFileName;
+            
+            if (move_uploaded_file($tmpName, $destination)) {
+                $imagePaths[] = 'public/uploads/qnaImages/' . $questionId . '/' . $newFileName;
+            }
+        }
+        
+        // Return comma-separated paths or null if no images uploaded
+        return !empty($imagePaths) ? implode(',', $imagePaths) : null;
     }
 
-    // Get QnA record by ID
-    public function getQna($id)
+    // tag related functions
+    public function getTopTags()
     {
-
+        $sql = "SELECT tag_id, tag_name FROM tags ORDER BY tag_id LIMIT 10";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    // Update QnA record
-    public function update($id, $data)
-    {
-
-    }
 }
