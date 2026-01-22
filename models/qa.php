@@ -78,13 +78,53 @@ class Qna extends BaseModel
         return !empty($imagePaths) ? implode(',', $imagePaths) : null;
     }
 
-    // tag related functions
-    public function getTopTags()
+    public function getAllQuestions()
     {
-        $sql = "SELECT tag_id, tag_name FROM tags ORDER BY tag_id LIMIT 10";
+        $sql = "SELECT * FROM questions ORDER BY added_time DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getQuestionBatch(int $offset, int $limit = 10): array
+    {
+        $sql = "
+            SELECT *
+            FROM questions
+            WHERE status = 'normal'
+            ORDER BY vote_count ASC, q_id ASC
+            LIMIT :offset, :limit
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    // tag related functions
+    public function getTopTags()
+    {
+        $sql = "SELECT tag_id, tag_name, post_count FROM tags ORDER BY post_count DESC LIMIT 10";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    // vote related functions
+    public function checkUserVoteStatus($questionId, $userId)
+    {
+        $sql = "SELECT vote FROM question_votes WHERE q_id = :questionId AND user_id = :userId";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':questionId', (int)$questionId, \PDO::PARAM_INT);
+        $stmt->bindValue(':userId', (int)$userId, \PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        // Return the vote value if found, otherwise 0 (no vote)
+        return $result ? (int)$result['vote'] : 0;
     }
 
 }

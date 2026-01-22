@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="/unihelper/views/css/components/qa.css">
 <script src="/unihelper/views/js/qa.js"></script>
+<script src="/unihelper/views/js/qa-utils.js"></script>
 
 <!-- Ask Question Modal -->
 <div class="qa-askmodal" style="display: none;">
@@ -101,8 +102,8 @@
 </div>
 
 <!-- Question Card Template -->
-<div class="qa-question-card template" style="display: none;">
-    <input type="hidden" class="qa-user-id" value="18">
+<div id="qa-question-card-template" class="qa-question-card template" style="display: none;">
+    <input type="hidden" id="qa-user-id" value="0">
     <div class="qa-votes">
         <button class="vote-btn upvote" aria-label="Upvote">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" role="img">
@@ -119,7 +120,9 @@
     <div class="qa-content">
         <div class="qa-card-header">
             <div class="qa-user-info">
-                <div class="qa-avatar"></div>
+                <div class="qa-avatar">
+                    <img class="qa-avatar-img" src="placeholder-avatar.jpg" alt="User Avatar" style="width: 100%; height: 100%; object-fit: cover;">                
+                </div>
                 <div class="qa-user-details">
                     <span class="qa-username">Loading...</span>
                     <span class="qa-role">Loading...</span>
@@ -136,18 +139,15 @@
         </div>
         <h3 class="qa-question-title">Question Title</h3>
         <div class="qa-question-body-container">
-            <div class="qa-question-image-preview" style="display: none;"> <!-- Hide by default if no images -->
+            <!-- Image preview on the left, text on the right -->
+            <div class="qa-question-image-preview" style="display: none;">
                 <img src="placeholder.jpg" alt="Question attachment">
-                <span class="qa-image-count" style="display: none;">+0</span> <!-- Hide if not multiple -->
+                <span class="qa-image-count" style="display: none;">+0</span>
             </div>
             <p class="qa-question-text">Question content...</p>
         </div>
         <div class="qa-card-footer">
-            <span class="qa-answer-count">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-            0</span>
+            <span class="qa-answer-count">0</span>
             <div class="qa-actions">
                 <button class="btn btn-outline btn-sm answer-btn">Answer</button>
                 <button class="text1 btn btn-primary btn-sm">View</button>

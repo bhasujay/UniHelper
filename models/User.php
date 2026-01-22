@@ -204,6 +204,22 @@ class User
         }
     }
 
+    // get user's basic info
+    public function getBasicInfo($id)
+    {
+        try {
+            $sql = "SELECT id, first_name, last_name, role, profile_picture, moderator FROM users WHERE id = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            
+            return $stmt->fetch(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log("User getBasicInfo error: " . $e->getMessage());
+            return null;
+        }
+    }
+
     // Update user information in database
     public function update()
     {

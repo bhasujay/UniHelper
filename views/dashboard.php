@@ -23,14 +23,17 @@
                     <div class="profile-picture" >
                         <img class="profile-img" src="<?= htmlspecialchars($user->profilePicture ? "/unihelper/public/" . $user->profilePicture : '/unihelper/views/assets/default-pfp.png') ?>">
                     </div>
+                    <img id="default-pfpf" src="/unihelper/views/assets/default-pfp.png" style="display:none;">
                     <div class="profile-info">
                         <span class="profile-name"><?= htmlspecialchars($user->firstName) ?></span>
-                        <span class="profile-role"><?= htmlspecialchars(substr($user->role, 5)) ?></span>
+                        <span id="profileRole" class="profile-role"><?= htmlspecialchars(substr($user->role, 5)) ?></span>
+                        <span id="profileModStatus" style="display:none;"><?= htmlspecialchars($user->mod) ?></span>
+                        <span id="profileUserId" style="display:none;"><?= htmlspecialchars($user->id) ?></span>
                     </div>
                     <div class="profile-dropdown" id="profileDropdown">
                         <div class="dropdown-header">
                             <div class="dropdown-user-info">
-                                <span class="dropdown-name"><?= htmlspecialchars($user->firstName . ' ' . $user->lastName) ?></span>
+                                <span id="profileName" class="dropdown-name"><?= htmlspecialchars($user->firstName . ' ' . $user->lastName) ?></span>
                                 <?php
                                 $email = $user->email;
                                 if (strlen($email) > 20 && ($atPos = strpos($email, '@')) !== false) {

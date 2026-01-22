@@ -1,3 +1,14 @@
+// Declare selectedFiles globally at the top of the file
+var selectedFiles = [];
+var questionCardTemplate; // Declare globally
+var current_question_pointer = 0;
+var batch_limit = 10;
+var isFetching = false;
+var hasMoreQuestions = true;
+
+//////////////////////////////////////////////////////////////////////
+
+
 document.addEventListener('DOMContentLoaded', function() {
     // Create button element (label included but hidden via CSS)
     const btn = document.createElement('button');
@@ -16,8 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(answermodal);
 
     // the question card template
-    let questionCardTemplate = document.querySelector('.qa-question-card.template');
-    
+    questionCardTemplate = document.getElementById('qa-question-card-template');
     
     let isExpanded = false;
     // hover: toggle a class — label reveal is handled by CSS transitions
@@ -107,7 +117,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const imageInput = document.getElementById('qa-image-input');
     const imageTray = document.querySelector('.qa-image-tray');
     const imageAddBox = document.querySelector('.qa-image-add-box');
-    let selectedFiles = [];
     
     imageInput.addEventListener('change', function(e) {
         const files = Array.from(e.target.files);
@@ -119,16 +128,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 selectedFiles.push(file);
-                addImagePreview(file);
+                addImagePreview(file, imageTray, imageAddBox); // Pass imageTray and imageAddBox
             }
         });
         // Reset input so same file can be selected again if removed and re-added
         e.target.value = '';
     });
-    
-    let selectedTags = [];
+
+    // Hashtag parsing in question title
     document.getElementById('qa-question-title').addEventListener('input', function() {
-        parseHashtags(selectedTags);
+        parseHashtags();
     });
     
     // Form submission
@@ -150,8 +159,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (questionTitle.length > 255) {
-            showToast('Question title must not exceed 255 characters', 'error');
+        if (questionTitle.length > 512) {
+            showToast('Question title must not exceed 512 characters', 'error');
             return;
         }
         
@@ -160,8 +169,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (questionBody.length < 20) {
-            showToast('Description must be at least 20 characters long', 'error');
+        if (questionBody.length < 10) {
+            showToast('Description must be at least 10 characters long', 'error');
             return;
         }
         
@@ -195,6 +204,43 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 showToast('Question posted successfully!', 'success');
+                
+                // Make the data object for question card
+                const fullAvatarSrc = document.getElementsByClassName('profile-img')[0].src;
+                const baseUrl = 'http://localhost/unihelper/public/';
+                let user_avatar;
+
+                if (fullAvatarSrc.includes('/views/assets/')) {
+                    user_avatar = null; // Use default avatar
+                } else {
+                    user_avatar = fullAvatarSrc.replace(baseUrl, '');
+                }
+                
+                // Build the expected image path based on what the server would save
+                const firstImagePath = selectedFiles.length > 0 
+                    ? `uploads/qnaImages/${data.data.question_id}/0.${selectedFiles[0].name.split('.').pop()}`
+                    : '';
+                
+                const added_data = {
+                    userID: document.getElementById('profileUserId').textContent,
+                    username: document.getElementById('profileName').textContent,
+                    user_role: document.getElementById('profileRole').textContent,
+                    moderator_status: document.getElementById('profileModStatus').textContent,
+                    user_avatar: user_avatar,
+                    
+                    questionId: data.data.question_id,
+                    voteCount: 0,
+                    voteStatus: 0,
+                    answerCount: 0,
+                    questionTitle: questionTitle,
+                    questionText: questionBody,
+                    timestamp: 'Just now',
+                    imagecount: selectedFiles.length,
+                    firstImage: firstImagePath  // Use server path format instead of blob URL
+                };
+
+                makeQuestionCard(added_data, 0); // Prepend new question card
+                
                 // Close askmodal and reset
                 askmodal.style.display = 'none';
                 isExpanded = false;
@@ -208,6 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error submitting question:', error);
+            console.log(data.message);
             showToast('An error occurred while submitting your question. Please try again.', 'error');
         })
         .finally(() => {
@@ -215,7 +262,6 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.textContent = originalBtnText;
         });
     });
-
 
     // Clean up
     window.addEventListener('beforeunload', function() {
@@ -226,148 +272,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fetch and populate tags
     fetch('/unihelper/api?controller=qaController&action=getTopTags')
-        .then(response => response.json())
-        .then(data => {
-            const tags = data.data;
-            const tagsBar = document.querySelector('.qa-tags-bar');
-            tagsBar.innerHTML = ''; // Clear skeleton
-            tags.forEach(tag => {
-                const tagBtn = document.createElement('button');
-                tagBtn.className = 'tag-btn';
-                tagBtn.textContent = tag.tag_name;
-                tagsBar.appendChild(tagBtn);
-            });
-        })
-        .catch(error => console.error('Error fetching tags:', error));
+    .then(response => response.json())
+    .then(data => {
+        const tags = data.data;
+        const tagsBar = document.querySelector('.qa-tags-bar');
+        tagsBar.innerHTML = ''; // Clear skeleton
+        tags.forEach(tag => {
+            const tagBtn = document.createElement('button');
+            tagBtn.className = 'tag-btn';
+            tagBtn.textContent = tag.tag_name;
+            tagsBar.appendChild(tagBtn);
+        });
+    })
+    .catch(error => console.error('Error fetching tags:', error));
+
+    // Initial fetch of questions
+    fetchQuestions();
+
+    // Set up scroll listener for lazy loading
+    window.addEventListener('scroll', handleScroll);
 });
 
-//////////////////////////////////////////////////////////////////////
-
-function resetAnswerForm() {
-    document.getElementById('qaAnswerForm').reset();
-    const label = answermodal.querySelector('.qa-form-label');
-    label.innerHTML = 'Your Answer';
-}
-
-function resetForm() {
-    const titleDiv = document.getElementById('qa-question-title');
-    titleDiv.innerHTML = '';
-    document.getElementById('qa-question-body').value = '';
-    selectedFiles = [];
-    // Remove all image previews
-    document.querySelectorAll('.qa-image-preview').forEach(preview => preview.remove());
-}
-
-function addImagePreview(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const preview = document.createElement('div');
-        preview.className = 'qa-image-preview';
-        preview.dataset.fileName = file.name;
-        
-        const img = document.createElement('img');
-        img.src = e.target.result;
-        
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'qa-image-remove';
-        removeBtn.innerHTML = '×';
-        removeBtn.type = 'button';
-        removeBtn.addEventListener('click', function() {
-            removeImage(file.name, preview);
-        });
-        
-        preview.appendChild(img);
-        preview.appendChild(removeBtn);
-        
-        // Insert before the add box
-        imageTray.insertBefore(preview, imageAddBox);
-        
-        // Scroll to show the new image
-        imageTray.scrollLeft = imageTray.scrollWidth;
-    };
-    reader.readAsDataURL(file);
-}
-
-function removeImage(fileName, previewElement) {
-    selectedFiles = selectedFiles.filter(f => f.name !== fileName);
-    previewElement.remove();
-}
-
-function makeQuestionCard(template, data) {
-    //retriving the data
-    const username = data.username;
-    const userRole = data.userRole;
-    const moderatorStatus = data.moderatorStatus; 
-    const userAvatar = data.userAvatar;
-
-    const questionId = data.questionId;
-    const voteCount = data.voteCount;
-    const voteStatus = data.voteStatus;
-    const answerCount = data.answerCount;
-    const questionTitle = data.questionTitle;
-    const questionText = data.questionText;
-    const timestamp = data.timestamp;
-    const imagecount = data.imagecount;
-    const firstImage = data.firstImage;
-    
-
-    // the logic to clone and populate the template
-    
-}
-
-function parseHashtags(selectedTags) {
-    const titleDiv = document.getElementById('qa-question-title');
-    
-    // Save cursor position
-    const selection = window.getSelection();
-    let cursorPosition = 0;
-    if (selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const preCaretRange = range.cloneRange();
-        preCaretRange.selectNodeContents(titleDiv);
-        preCaretRange.setEnd(range.endContainer, range.endOffset);
-        cursorPosition = preCaretRange.toString().length;
-    }
-    
-    const text = titleDiv.textContent;
-    
-    // Simple regex replacement: match # followed by word characters
-    const styledText = text.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
-    
-    // Only update if HTML changed (prevents cursor jumping on every keystroke)
-    if (titleDiv.innerHTML !== styledText) {
-        titleDiv.innerHTML = styledText;
-        
-        // Restore cursor position
-        const restorePosition = (node, targetOffset) => {
-            let currentOffset = 0;
-            const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null, false);
-            
-            while (walker.nextNode()) {
-                const textNode = walker.currentNode;
-                const textLength = textNode.textContent.length;
-                
-                if (currentOffset + textLength >= targetOffset) {
-                    const range = document.createRange();
-                    range.setStart(textNode, Math.min(targetOffset - currentOffset, textLength));
-                    range.collapse(true);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                    return;
-                }
-                currentOffset += textLength;
-            }
-            
-            // If we couldn't find the exact position, move to end
-            const range = document.createRange();
-            range.selectNodeContents(titleDiv);
-            range.collapse(false);
-            selection.removeAllRanges();
-            selection.addRange(range);
-        };
-        
-        if (titleDiv.textContent.length > 0) {
-            restorePosition(titleDiv, cursorPosition);
-        }
-    }
-}

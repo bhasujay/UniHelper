@@ -532,7 +532,7 @@ main .dashboard-card {
 }
 
 /* Responsive Design */
-  @media (max-width: 1024px) {
+  @media (max-width: 972px) {
     .sidebar {
       transform: translateX(-100%);
     }
@@ -542,7 +542,7 @@ main .dashboard-card {
     }
     
     .main-content {
-      margin-left: 0;
+      margin-left: 20%;
     }
     
     .mobile-menu-toggle {

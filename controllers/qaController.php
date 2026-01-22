@@ -2,17 +2,23 @@
 
 namespace app\controllers;
 
-use app\models\Qna;
-
 require_once dirname(__DIR__) . '\models\qa.php';
+require_once dirname(__DIR__) . '\models\User.php';
+
+use app\models\Qna;
+use app\core\Request;
+use app\models\User;
+
 
 class QaController
 {
     private $model;
+    private $userModel;
     
     public function __construct()
     {
         $this->model = new Qna();
+        $this->userModel = new User();
     }
     
     public function create()
@@ -40,18 +46,18 @@ class QaController
         $question = trim($_POST['question']);
         $text = trim($_POST['text']);
         
-        if (strlen($question) < 10 || strlen($question) > 255) {
+        if (strlen($question) < 10 || strlen($question) > 512) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Question title must be between 10 and 255 characters'
+                'message' => 'Question title must be between 10 and 512 characters'
             ]);
             return;
         }
         
-        if (strlen($text) < 20) {
+        if (strlen($text) < 10) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Description must be at least 20 characters'
+                'message' => 'Description must be at least 10 characters'
             ]);
             return;
         }
@@ -91,6 +97,39 @@ class QaController
             ]);
         }
     }
+
+    public function getQuestions(Request $request)
+    {
+        $offset = $request->get('offset');
+        $limit = $request->get('limit');
+        header('Content-Type: application/json');
+        
+        try {
+            $questions = $this->model->getQuestionBatch($offset, $limit);
+
+            // For each question, get the vote status for the current user
+            foreach ($questions as &$question) {
+                $question['user_vote'] = $this->model->checkUserVoteStatus($question['q_id'], $_SESSION['user_id']);
+                $data = $this->userModel->getBasicInfo($question['user_id']);
+                $question['username'] = $data['first_name'] . ' ' . $data['last_name'];
+                $question['user_role'] = ucfirst(explode('-', $data['role'])[1]);
+                $question['moderator_status'] = $data['moderator'];
+                $question['user_avatar'] = $data['profile_picture'];
+            }
+
+
+
+            echo json_encode([
+            'success' => true,
+            'data' => empty($questions) ? null : $questions
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+            ]);
+        }
+    }
     
     public function getTopTags()
     {
@@ -110,3 +149,4 @@ class QaController
         }
     }
 }
+

@@ -154,6 +154,7 @@
 .qa-content {
     flex: 1;
     display: flex;
+    margin-left: 10px;
     flex-direction: column;
     gap: 1rem;
 }
@@ -176,6 +177,7 @@
     border-radius: 50%;
     background: var(--gradient-primary);
     border: 2px solid var(--border);
+    overflow: hidden;
 }
 
 .qa-user-details {
@@ -689,4 +691,42 @@
 .hashtag {
     color: var(--accent);
     font-weight: 500;
+}
+
+/* New styles for question body container and image preview */
+.qa-question-body-container {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.qa-question-image-preview {
+    position: relative;
+    flex-shrink: 0;
+    max-width: 200px;
+}
+
+.qa-question-image-preview img {
+    width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    transition: filter 0.3s ease; /* Smooth transition for darkening */
+}
+
+.qa-question-image-preview img.darkened {
+    filter: brightness(0.7); /* Darken the image when multiple images */
+}
+
+.qa-image-count {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: none; /* Hidden by default, shown in JS when needed */
 }
