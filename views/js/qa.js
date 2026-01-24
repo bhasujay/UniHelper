@@ -5,6 +5,7 @@ var current_question_pointer = 0;
 var batch_limit = 10;
 var isFetching = false;
 var hasMoreQuestions = true;
+var questionModel = true;
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -151,9 +152,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 answerCountEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>${currentCount + 1}`;
+
+                // if the view modal is open for this question, append the new answer there too
+                const qaViewModal = document.querySelector('.qa-question-view');
+                if (qaViewModal.style.display === 'flex') {
+
+                    const anscount = qaViewModal.querySelector('.qa-answer-count');
+                    const currentAnsCount = parseInt(anscount.textContent.match(/\d+/)[0]);
+                    anscount.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>${currentAnsCount + 1}`;
+                    
+                    let answerTemplate = qaViewModal.querySelector('.qa-answer-card');
+                    const card = answerTemplate.cloneNode(true);
+                    let user_avatar = document.getElementsByClassName('profile-img')[0].src;
+                    let defaultAvatar = document.getElementById('default-pfp').src;
+
+                    if (user_avatar.includes('/uploads')) {
+                        card.querySelector('.qa-avatar-img').src = user_avatar;
+                    } else {
+                        card.querySelector('.qa-avatar-img').src = defaultAvatar;
+                    }
+                    let username = document.getElementById('profileName').textContent;
+                    if (username.length >12) {
+                        username = username.split(' ')[0];
+                    }
+                    let role = document.getElementById('profileRole').textContent;
+                    card.querySelector('.qa-username').textContent = username;
+                    card.querySelector('.qa-role').textContent = role;
+
+                    card.querySelector('.qa-time').textContent = 'Just now';
+                    card.querySelector('.qa-answer-body').textContent = answerText;
+
+                    qaViewModal.querySelector('.qa-view-answers').appendChild(card);
+                    card.style.display = 'flex';
+                }
                 
                 // Close modal and reset form
                 answermodal.style.display = 'none';
+                questionModel = false;
                 resetAnswerForm();
             } else {
                 showToast('Error: ' + (data.message || 'Failed to post answer'), 'error');

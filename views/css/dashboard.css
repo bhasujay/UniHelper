@@ -709,6 +709,7 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: flex-start;
+    justify-content: space-between;
     gap: 12px;
     animation: slideIn 0.3s ease-out;
     position: relative;
@@ -772,6 +773,9 @@ body {
     justify-content: center;
     opacity: 0.6;
     transition: opacity 0.2s;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-left: auto;
 }
 
 .toast-close:hover {

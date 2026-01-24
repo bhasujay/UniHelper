@@ -18,6 +18,47 @@ function resetForm() {
     document.querySelectorAll('.qa-image-preview').forEach(preview => preview.remove());
 }
 
+function resetQuestionView() {
+    const qaViewModal = document.querySelector('.qa-question-view');
+    
+    // Reset user info
+    qaViewModal.querySelector('.qa-avatar-img').src = document.getElementById('default-pfp').src;
+    qaViewModal.querySelector('.qa-username').textContent = '';
+    qaViewModal.querySelector('.qa-role').textContent = '';
+    qaViewModal.querySelector('.qa-time').textContent = '';
+    qaViewModal.querySelector('.qa-modified').textContent = '';
+    
+    // Reset question content
+    qaViewModal.querySelector('.qa-view-title').innerHTML = '';
+    qaViewModal.querySelector('.qa-view-body').textContent = '';
+    
+    // Reset image gallery
+    qaViewModal.querySelector('.qa-view-images').style.display = 'none';
+    const imgContainer = qaViewModal.querySelector('.qa-img-container');
+    if (imgContainer) {
+        imgContainer.querySelector('img').src = '';
+    }
+    
+    // Reset vote functionalities
+    qaViewModal.querySelector('.vote-count').textContent = '0';
+    qaViewModal.querySelector('.upvote').classList.remove('active');
+    qaViewModal.querySelector('.downvote').classList.remove('active');
+    
+    // Reset answers section - but keep the template
+    qaViewModal.querySelector('.qa-answer-count').textContent = '0 Answers';
+    const answersContainer = qaViewModal.querySelector('.qa-view-answers');
+    const answerCards = answersContainer.querySelectorAll('.qa-answer-card');
+    answerCards.forEach((card, index) => {
+        if (index > 0) {
+            card.remove();
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    qaViewModal.querySelector('.qa-nav-left-btn').onclick = null;
+}
+
 function addImagePreview(file, imageTray, imageAddBox) { // Add parameters
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -64,28 +105,44 @@ function answer(questionId) {
     document.getElementById('qaAnswerForm').dataset.questionId = questionId;
     
     answermodal.style.display = 'flex';
+    questionModel = true;
+}
+
+function goBackFromQuestionView(questionId) {
+    // show the main qa forum elements
+    document.querySelector('.qa-question-view').style.display = 'none';
+    document.querySelector('.qa-main').style.display = 'block';
+    document.querySelector('.qa-header').style.display = 'block';
+    document.querySelector('.qa-sticky-btn').style.display = 'flex';
+    // Scroll to the question card
+    const questionCard = document.getElementById(questionId);
+    if (questionCard) {
+        questionCard.scrollIntoView({ behavior: 'auto', block: 'center' });
+    }
+    resetQuestionView();
 }
 
 // rendering the question view page
-function viewQuestion(questionId) {
+async function viewQuestion(questionId) {
     // hide the main qa forum elements
     document.querySelector('.qa-main').style.display = 'none';
     document.querySelector('.qa-header').style.display = 'none';
     document.querySelector('.qa-sticky-btn').style.display = 'none';
 
     const qaViewModal = document.querySelector('.qa-question-view');
-    qaViewModal.style.display = 'flex';
+
+    qaViewModal.querySelector('.qa-nav-left-btn').onclick = function() {
+        goBackFromQuestionView(questionId);
+    };
 
     // load the question details from an AJAX call
-    const question = loadQuestionDetails(questionId);
-
-    console.log(question);
+    const question = await loadQuestionDetails(questionId);
 
     // copy avatar src from the question card into the view modal
     if (question.user_avatar) {
         qaViewModal.querySelector('.qa-avatar-img').src = 'public' + question.user_avatar;
     } else {
-        qaViewModal.querySelector('.qa-avatar-img').src = document.getElementById('default-pfpf').src;
+        qaViewModal.querySelector('.qa-avatar-img').src = document.getElementById('default-pfp').src;
     }
     qaViewModal.querySelector('.qa-username').textContent = question.username;
     qaViewModal.querySelector('.qa-role').textContent = question.user_role;
@@ -99,8 +156,14 @@ function viewQuestion(questionId) {
         qaViewModal.querySelector('.qa-modified').textContent = '(edited)';
     }
 
-    qaViewModal.querySelector('.qa-view-title').textContent = question.question;
+    // Style the title with hashtags
+    const styledTitle = question.question.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
+    qaViewModal.querySelector('.qa-view-title').innerHTML = styledTitle;
+
     qaViewModal.querySelector('.qa-view-body').textContent = question.text;
+
+    // make the image array
+    question.images = question.img_path ? question.img_path.split(',') : [];
 
     // make the image gallery if there are images
     if (question.images.length > 0) {
@@ -111,6 +174,7 @@ function viewQuestion(questionId) {
         
         imageGallery.style.display = 'flex';
         let currentImageIndex = 0;
+        let length = question.images.length;
         
         // Set first image
         imgContainer.querySelector('img').src = question.images[0];
@@ -126,14 +190,14 @@ function viewQuestion(questionId) {
         
         // Previous button click handler
         prevBtn.onclick = function() {
-            currentImageIndex = (currentImageIndex - 1 + question.img_path.length) % question.img_path.length;
-            imgContainer.querySelector('img').src = question.img_path[currentImageIndex];
+            currentImageIndex = (currentImageIndex - 1 + length) % length;
+            imgContainer.querySelector('img').src = question.images[currentImageIndex];
         };
         
         // Next button click handler
         nextBtn.onclick = function() {
-            currentImageIndex = (currentImageIndex + 1) % question.img_path.length;
-            imgContainer.querySelector('img').src = question.img_path[currentImageIndex];
+            currentImageIndex = (currentImageIndex + 1) % length;
+            imgContainer.querySelector('img').src = question.images[currentImageIndex];
         };
     } else {
         qaViewModal.querySelector('.qa-view-images').style.display = 'none';
@@ -148,31 +212,42 @@ function viewQuestion(questionId) {
     }
 
     // populate the answers section
-    qaViewModal.querySelector('.qa-answers-title').textContent = `${question.answer_count} Answers`;
+    qaViewModal.querySelector('.qa-answer-count').textContent = `${question.answer_count} Answers`;
 
     let answerTemplate = qaViewModal.querySelector('.qa-answer-card');
-    answerTemplate.remove();
+    answerTemplate.style.display = 'none';
+
+    const answerBtn = qaViewModal.querySelector('.answer-btn');
+    answerBtn.addEventListener('click', function() {
+        answer(questionId);
+    });
 
     // populate for each answer
-    let answers = getAnswersForQuestion(questionId); 
-    for (let answer of answers) {
-        const card = answerTemplate.cloneNode(true);
-        if (answer.user_avatar) {
-            card.querySelector('qa-avatar-img').src = 'public' + answer.user_avatar;
-        } else {
-            card.querySelector('qa-avatar-img').src = document.getElementById('default-pfpf').src;
+    let answers = await getAnswersForQuestion(questionId); 
+    if (answers != null) {
+        for (let answer of answers) {
+            const card = answerTemplate.cloneNode(true);
+            if (answer.user_avatar) {
+                card.querySelector('.qa-avatar-img').src = 'public' + answer.user_avatar;
+            } else {
+                card.querySelector('.qa-avatar-img').src = document.getElementById('default-pfp').src;
+            }
+            if (answer.username.length >12) {
+                answer.username = answer.username.split(' ')[0];
+            }
+            card.querySelector('.qa-username').textContent = answer.username;
+            card.querySelector('.qa-role').textContent = answer.user_role;
+
+            const ansAddedTime = new Date(answer.added_time);
+            card.querySelector('.qa-time').textContent = getRelativeTime(ansAddedTime);
+            card.querySelector('.qa-answer-body').textContent = answer.text;
+
+            qaViewModal.querySelector('.qa-view-answers').appendChild(card);
+            card.style.display = 'flex';
         }
-        card.querySelector('.qa-username').textContent = answer.username;
-        card.querySelector('.qa-role').textContent = answer.user_role;
-
-        const ansAddedTime = new Date(answer.added_time);
-        card.querySelector('.qa-time').textContent = getRelativeTime(ansAddedTime);
-        card.querySelector('.qa-answer-body').textContent = answer.text;
-
-        qaViewModal.querySelector('.qa-view-answers').appendChild(card);
     }
-
-
+    // Scroll the question view and its answers to the top, and bring page to top
+    qaViewModal.style.display = 'flex';
 }
 
 // rendering question cards
@@ -190,7 +265,7 @@ function makeQuestionCard(data, position) {
     if (data.user_avatar) {
         card.querySelector('.qa-avatar-img').src = 'public' + data.user_avatar;
     } else {
-        card.querySelector('.qa-avatar-img').src = document.getElementById('default-pfpf').src;
+        card.querySelector('.qa-avatar-img').src = document.getElementById('default-pfp').src;
     }
     card.querySelector('.qa-username').textContent = data.username;
     card.querySelector('.qa-role').textContent = data.user_role;
@@ -451,8 +526,8 @@ function handleScroll() {
     }
 }
 
-function loadQuestionDetails(questionId) {
-    fetch(`http://localhost/unihelper/api?controller=qaController&action=getQuestion&questionId=${questionId}`)
+async function loadQuestionDetails(questionId) {
+    return fetch(`http://localhost/unihelper/api?controller=qaController&action=getQuestion&questionId=${questionId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -467,8 +542,8 @@ function loadQuestionDetails(questionId) {
         });
 }
 
-function getAnswersForQuestion(questionId) {
-    fetch(`http://localhost/unihelper/api?controller=qaController&action=getAnswers&questionId=${questionId}`)
+async function getAnswersForQuestion(questionId) {
+    return fetch(`http://localhost/unihelper/api?controller=qaController&action=getAnswers&questionId=${questionId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {

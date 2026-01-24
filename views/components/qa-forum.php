@@ -167,7 +167,7 @@
                         </div>
                         <div>
                             <span class="qa-time">Just now</span>
-                            <span class="qa-modified">edited</span>
+                            <span class="qa-modified"></span>
                         </div>
                     </div>
                     <button class="qa-menu-btn">
@@ -191,7 +191,7 @@
                         </svg>
                     </button>
                     <div class="qa-img-container">
-                        <img src="public\uploads\profilePictures\a.png" alt="Question image">
+                        <img src="placeholder" alt="Question image">
                     </div>
                     <button class="qa-img-nav qa-img-next">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

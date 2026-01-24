@@ -23,7 +23,7 @@
                     <div class="profile-picture" >
                         <img class="profile-img" src="<?= htmlspecialchars($user->profilePicture ? "/unihelper/public/" . $user->profilePicture : '/unihelper/views/assets/default-pfp.png') ?>">
                     </div>
-                    <img id="default-pfpf" src="/unihelper/views/assets/default-pfp.png" style="display:none;">
+                    <img id="default-pfp" src="/unihelper/views/assets/default-pfp.png" style="display:none;">
                     <div class="profile-info">
                         <span class="profile-name"><?= htmlspecialchars($user->firstName) ?></span>
                         <span id="profileRole" class="profile-role"><?= htmlspecialchars(substr($user->role, 5)) ?></span>
