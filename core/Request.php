@@ -81,4 +81,9 @@ class Request
         }
         return $this->reqBody[$key] ?? null;
     }
+
+    public function session($key)
+    {
+        return $_SESSION[$key] ?? null;
+    }
 }

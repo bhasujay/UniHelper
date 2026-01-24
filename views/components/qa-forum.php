@@ -82,25 +82,6 @@
     </div>
 </div>
 
-<!-- Q&A Forum -->
-<div class="qa-header">
-    <h1 class="qa-title">Q&A forum</h1>
-    <div class="qa-controls">
-        <div class="qa-searchbar">
-            <input type="text" placeholder="" class="search-input">
-            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-            </svg>
-        </div>
-    </div>
-    <div class="qa-tags-bar">
-        <?php for ($i = 0; $i < 10; $i++): ?>
-            <button class="tag-btn skeleton-text skeleton-tag"></button>
-        <?php endfor; ?>
-    </div>
-</div>
-
 <!-- Question Card Template -->
 <div id="qa-question-card-template" class="qa-question-card template" style="display: none;">
     <input type="hidden" id="qa-user-id" value="0">
@@ -127,7 +108,10 @@
                     <span class="qa-username">Loading...</span>
                     <span class="qa-role">Loading...</span>
                 </div>
-                <span class="qa-time">Just now</span>
+                <div>
+                    <span class="qa-time">Just now</span>
+                    <span class="qa-modified"></span>
+                </div>
             </div>
             <button class="qa-menu-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -137,7 +121,7 @@
                 </svg>
             </button>
         </div>
-        <h3 class="qa-question-title">Question Title</h3>
+        <h2 class="qa-question-title">Question Title</h3>
         <div class="qa-question-body-container">
             <!-- Image preview on the left, text on the right -->
             <div class="qa-question-image-preview" style="display: none;">
@@ -147,15 +131,146 @@
             <p class="qa-question-text">Question content...</p>
         </div>
         <div class="qa-card-footer">
-            <span class="qa-answer-count">0</span>
+            <span class="qa-answer-count">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+            0</span>
             <div class="qa-actions">
                 <button class="btn btn-outline btn-sm answer-btn">Answer</button>
-                <button class="text1 btn btn-primary btn-sm">View</button>
+                <button class="text1 btn btn-primary btn-sm view-question-btn">View</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Question main view -->
+<div class="qa-question-view" style="display: none;">
+    <div class="qa-view-container">
+        <!-- Question Section -->
+        <div class="qa-view-question">
+            <!-- Main Content -->
+            <div class="qa-view-content">
+                <div class="qa-view-header">
+                    <div class="qa-user-info">
+                        <button type="button" class="qa-nav-left-btn" aria-label="Previous image">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button>
+                        <div class="qa-avatar">
+                            <img class="qa-avatar-img" src="placeholder-avatar.jpg" alt="User Avatar" style="width: 100%; height: 100%; object-fit: cover;">                
+                        </div>
+                        <div class="qa-user-details">
+                            <span class="qa-username">Loading...</span>
+                            <span class="qa-role">Loading...</span>
+                        </div>
+                        <div>
+                            <span class="qa-time">Just now</span>
+                            <span class="qa-modified">edited</span>
+                        </div>
+                    </div>
+                    <button class="qa-menu-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+
+                <h1 class="qa-view-title">How do I solve this differential equation?</h1>
+                
+                <p class="qa-view-body">I'm stuck on this problem and need help understanding the steps...I'm stuck on this problem and need help understanding the steps...I'm stuck on this problem and need help understanding the steps...I'm stuck on this problem and need help understanding the steps...</p>
+
+                <!-- Image Gallery -->
+                <div class="qa-view-images">
+                    <button class="qa-img-nav qa-img-prev">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="qa-img-container">
+                        <img src="public\uploads\profilePictures\a.png" alt="Question image">
+                    </div>
+                    <button class="qa-img-nav qa-img-next">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="qa-view-footer">
+                    
+                    <div class="qa-votes">
+                        <button class="vote-btn upvote" aria-label="Upvote">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" role="img">
+                                <path d="M12 4 L5 13 H9 V21 H15 V13 H19 L12 4 Z"></path>
+                            </svg>
+                        </button>
+                        <span class="vote-count">0</span>
+                        <button class="vote-btn downvote" aria-label="Downvote">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" role="img">
+                                <path d="M12 20 L19 11 H15 V3 H9 V11 H5 L12 20 Z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <span class="qa-answer-count">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    0 Answers</span>
+                    <button class="btn btn-primary btn-sm answer-btn">Answer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Answers Section -->
+        <div class="qa-view-answers">
+            <!-- Answer Card Template -->
+            <div class="qa-answer-card">
+                <div class="qa-avatar">
+                    <img class="qa-avatar-img" src="placeholder-avatar.jpg" alt="User Avatar">
+                </div>
+                <div class="qa-answer-header">
+                    <span class="qa-username">John Doe</span>
+                    <span class="qa-role">Professor</span>
+                    <span class="qa-time">1 hour ago</span>
+                </div>
+                <div class="qa-answer-body">Here's how you solve it step by step...</div>
+                <button class="qa-menu-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!------------------------------------------------------------------>
+
+<!-- Q&A Forum -->
+<div class="qa-header">
+    <h1 class="qa-title">Q&A forum</h1>
+    <div class="qa-controls">
+        <div class="qa-searchbar">
+            <input type="text" placeholder="" class="search-input">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+        </div>
+    </div>
+    <div class="qa-tags-bar">
+        <?php for ($i = 0; $i < 10; $i++): ?>
+            <button class="tag-btn skeleton-text skeleton-tag"></button>
+        <?php endfor; ?>
+    </div>
+</div>
 
 <div class="qa-main">
      <!-- Skeletal loading figures -->
@@ -219,6 +334,8 @@
         </div>
     <?php endfor; ?>
 </div>
+
+
 
 <div class="qa-search-results qa-main" aria-hidden="true">
     <!-- for the search results -->

@@ -6,7 +6,7 @@ var batch_limit = 10;
 var isFetching = false;
 var hasMoreQuestions = true;
 
-//////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let answermodal = document.querySelector('.qa-answermodal');
     answermodal.parentElement.removeChild(answermodal);
     document.body.appendChild(answermodal);
+
+/////////////////////////////////////////////////////////////////////////////
 
     // the question card template
     questionCardTemplate = document.getElementById('qa-question-card-template');
@@ -100,18 +102,74 @@ document.addEventListener('DOMContentLoaded', function() {
         answermodal.style.display = 'none';
         resetAnswerForm();
     });
+
+/////////////////////////////////////////////////////////////////////////////
     
-    // Open answermodal
-    const answerButtons = document.querySelectorAll('.answer-btn');
-    answerButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const questionCard = btn.closest('.qa-question-card');
-            const username = questionCard.querySelector('.qa-username').textContent;
-            const label = answermodal.querySelector('.qa-form-label');
-            label.innerHTML = `Your Answer to <span class="answer-to-username">${username}</span>`;
-            answermodal.style.display = 'flex';
+    // Answer form submission
+    const answerForm = document.getElementById('qaAnswerForm');
+    answerForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const answerText = answerForm.querySelector('textarea').value.trim();
+        const questionId = answerForm.dataset.questionId;
+        
+        if (!answerText) {
+            showToast('Please enter your answer', 'error');
+            return;
+        }
+        
+        if (answerText.length < 1) {
+            showToast('Answer must be at least 1 character long', 'error');
+            return;
+        }
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('question_id', questionId);
+        formData.append('text', answerText);
+        
+        // Show loading state
+        const submitBtn = answerForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        
+        // AJAX submission
+        fetch('http://localhost/unihelper/api?controller=qaController&action=answerQuestion', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Answer posted successfully!', 'success');
+                
+                // Update answer count in the question card
+                const questionCard = document.getElementById(questionId);
+                const answerCountEl = questionCard.querySelector('.qa-answer-count');
+                const currentCount = parseInt(answerCountEl.textContent.match(/\d+/)[0]);
+                answerCountEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>${currentCount + 1}`;
+                
+                // Close modal and reset form
+                answermodal.style.display = 'none';
+                resetAnswerForm();
+            } else {
+                showToast('Error: ' + (data.message || 'Failed to post answer'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting answer:', error);
+            showToast('An error occurred while submitting your answer. Please try again.', 'error');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
         });
     });
+    
+/////////////////////////////////////////////////////////////////////////////
     
     // Image upload handling in askmodal
     const imageInput = document.getElementById('qa-image-input');
@@ -134,13 +192,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Reset input so same file can be selected again if removed and re-added
         e.target.value = '';
     });
-
+    
+/////////////////////////////////////////////////////////////////////////////
+    
     // Hashtag parsing in question title
     document.getElementById('qa-question-title').addEventListener('input', function() {
         parseHashtags();
     });
-    
-    // Form submission
+
+    // Ask Form submission
     const questionForm = document.getElementById('qaQuestionForm');
     questionForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -209,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fullAvatarSrc = document.getElementsByClassName('profile-img')[0].src;
                 const baseUrl = 'http://localhost/unihelper/public/';
                 let user_avatar;
-
+                
                 if (fullAvatarSrc.includes('/views/assets/')) {
                     user_avatar = null; // Use default avatar
                 } else {
@@ -218,8 +278,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Build the expected image path based on what the server would save
                 const firstImagePath = selectedFiles.length > 0 
-                    ? `uploads/qnaImages/${data.data.question_id}/0.${selectedFiles[0].name.split('.').pop()}`
-                    : '';
+                ? `public/uploads/qnaImages/${data.data.question_id}/0.${selectedFiles[0].name.split('.').pop()}`
+                : '';
                 
                 const added_data = {
                     userID: document.getElementById('profileUserId').textContent,
@@ -236,9 +296,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     questionText: questionBody,
                     timestamp: 'Just now',
                     imagecount: selectedFiles.length,
-                    firstImage: firstImagePath  // Use server path format instead of blob URL
+                    firstImage: firstImagePath,  // Use server path format instead of blob URL
+                    modified: false
                 };
-
+                
                 makeQuestionCard(added_data, 0); // Prepend new question card
                 
                 // Close askmodal and reset
@@ -263,13 +324,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+/////////////////////////////////////////////////////////////////////////////
+    
     // Clean up
     window.addEventListener('beforeunload', function() {
         if (btn.parentElement) btn.remove();
         if (askmodal.parentElement) askmodal.remove();
         if (answermodal.parentElement) answermodal.remove();
     });
-
+    
     // Fetch and populate tags
     fetch('/unihelper/api?controller=qaController&action=getTopTags')
     .then(response => response.json())
@@ -285,10 +348,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     })
     .catch(error => console.error('Error fetching tags:', error));
-
+    
     // Initial fetch of questions
     fetchQuestions();
-
+    
     // Set up scroll listener for lazy loading
     window.addEventListener('scroll', handleScroll);
 });

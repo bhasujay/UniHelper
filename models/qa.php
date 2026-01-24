@@ -17,11 +17,6 @@ class Qna extends BaseModel
 
     public function create($data)
     {
-        // Set added_time and last_modified to the same value
-        $currentTime = date('Y-m-d H:i:s');
-        $data['added_time'] = $currentTime;
-        $data['last_modified'] = $currentTime;
-        
         // Set default values if not provided
         if (!isset($data['vote_count'])) {
             $data['vote_count'] = 0;
@@ -30,9 +25,48 @@ class Qna extends BaseModel
             $data['status'] = 'normal';
         }
         
-        return parent::create($data);
+        // Call parent create
+        $questionId = parent::create($data);
+        
+        // Now update the timestamps using MySQL's NOW()
+        $sql = "UPDATE questions SET added_time = NOW(), last_modified = NOW() WHERE q_id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $questionId]);
+        
+        return $questionId;
     }
     
+    public function answerCreate($data)
+    {
+        // Set default values
+        if (!isset($data['status'])) {
+            $data['status'] = 'normal';
+        }
+        
+        // Insert the answer
+        $sql = "INSERT INTO answers (q_id, user_id, text, status, added_time) 
+                VALUES (:q_id, :user_id, :text, :status, NOW())";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'q_id' => $data['q_id'],
+            'user_id' => $data['user_id'],
+            'text' => $data['text'],
+            'status' => $data['status']
+        ]);
+        
+        $answerId = $this->db->lastInsertId();
+        
+        // Update the answer count in the questions table
+        $updateSql = "UPDATE questions 
+                      SET answer_count = answer_count + 1 
+                      WHERE q_id = :q_id";
+        $updateStmt = $this->db->prepare($updateSql);
+        $updateStmt->execute(['q_id' => $data['q_id']]);
+        
+        return $answerId;
+    }
+
     // Handle multiple image uploads
     public function handleImageUploads($files, $questionId)
     {
@@ -88,11 +122,13 @@ class Qna extends BaseModel
 
     public function getQuestionBatch(int $offset, int $limit = 10): array
     {
+        // we only take normal questions
+        // reported questions are only accessible to admins
         $sql = "
             SELECT *
             FROM questions
             WHERE status = 'normal'
-            ORDER BY vote_count ASC, q_id ASC
+            ORDER BY vote_count DESC, answer_count DESC, added_time DESC, last_modified DESC
             LIMIT :offset, :limit
         ";
 
@@ -101,6 +137,24 @@ class Qna extends BaseModel
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->execute();
 
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getQuestionById($questionId)
+    {
+        $sql = "SELECT * FROM questions WHERE q_id = :questionId";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':questionId', (int)$questionId, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    public function getAnswersByQuestionId($questionID)
+    {
+        $sql = "SELECT * FROM answers WHERE q_id = :questionID";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':questionID', (int)$questionID, \PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 

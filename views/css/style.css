@@ -142,6 +142,8 @@
     background: var(--btn-gradient-primary);
     color: var(--text);
     justify-content: center;
+
+    
   }
   
   .btn-primary:hover {
@@ -314,7 +316,11 @@
   }
 
   .nav-right .btn-primary {
-    color: rgb(0, 0, 0) !important;  /* Force black text color for nav buttons */
+    color: #fff !important;
+  }
+
+  .nav-right .btn-primary .btn-text {
+    color: #fff !important;
   }
 
   /* Update the nav-right button styles */
@@ -351,36 +357,38 @@
   }
 
   .skeleton-title {
-    width: 200px;
+    width: 12.5rem;
     height: 2rem;
   }
 
   .skeleton-tag {
-    width: 80px;
+    width: 5rem;
     height: 1.5rem;
   }
 
   .skeleton-username {
-    width: 100px;
+    width: 6.25rem;
     height: 1rem;
     display: inline-block;
   }
 
   .skeleton-role {
-    width: 60px;
+    width: 3.75rem;
     height: 0.75rem;
     display: inline-block;
   }
 
   .skeleton-time {
-    width: 70px;
+    width: 4.375rem;
     height: 0.8rem;
     display: inline-block;
   }
 
   .skeleton-count {
-    width: 30px;
+    width: 8%;
     height: 1rem;
+    min-width: 1.5rem;
+    max-width: 2rem;
     display: inline-block;
   }
 
@@ -395,13 +403,19 @@
   }
 
   .skeleton-stat {
-    width: 80px;
+    width: 15%;
     height: 1rem;
+    min-width: 3rem;
+    max-width: 5rem;
+    display: inline-block;
   }
 
   .skeleton-btn {
-    width: 100px;
+    width: 20%;
     height: 2rem;
+    min-width: 4rem;
+    max-width: 6.5rem;
+    display: inline-block;
   }
 
   @keyframes skeleton-loading {

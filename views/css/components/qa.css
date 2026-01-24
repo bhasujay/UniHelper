@@ -89,7 +89,8 @@
 
 .qa-question-card {
     display: flex;
-    gap: 0; /* remove space between vote column and content */
+    gap: 0;
+    /* remove space between vote column and content */
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 1rem;
@@ -107,9 +108,12 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.1rem; /* minimal gap to remove extra space */
-    min-width: 36px; /* shrink container to tightly fit arrows */
-    align-self: center; /* center the votes column vertically within the card */
+    gap: 0.1rem;
+    /* minimal gap to remove extra space */
+    min-width: 36px;
+    /* shrink container to tightly fit arrows */
+    align-self: center;
+    /* center the votes column vertically within the card */
 }
 
 .vote-btn {
@@ -117,15 +121,18 @@
     border: none;
     color: var(--muted-foreground);
     cursor: pointer;
-    padding: 0.12rem; /* minimal padding so SVG touches container edges less */
+    padding: 0.12rem;
+    /* minimal padding so SVG touches container edges less */
     transition: all 0.3s ease;
 }
 
-.vote-btn.upvote:hover {
+.vote-btn.upvote:hover,
+.vote-btn.upvote.active {
     color: #48bb78;
 }
 
-.vote-btn.downvote:hover {
+.vote-btn.downvote:hover,
+.vote-btn.downvote.active {
     color: #fc8181;
 }
 
@@ -136,11 +143,14 @@
 }
 
 .vote-btn svg {
-    width: 40px; /* keep arrow visual size */
+    width: 40px;
+    /* keep arrow visual size */
     height: 48px;
     display: block;
-    margin: 0; /* remove any built-in svg whitespace */
-    fill: none; /* outline by default */
+    margin: 0;
+    /* remove any built-in svg whitespace */
+    fill: none;
+    /* outline by default */
     stroke: currentColor;
     stroke-width: 0.7;
     vector-effect: non-scaling-stroke;
@@ -148,7 +158,8 @@
 }
 
 .vote-btn:hover svg {
-    fill: currentColor; /* fill on hover using the button color (set by specific hover rules) */
+    fill: currentColor;
+    /* fill on hover using the button color (set by specific hover rules) */
 }
 
 .qa-content {
@@ -193,13 +204,21 @@
 
 .qa-role {
     font-size: 0.75rem;
-    color: var(--muted-foreground);
+    color: var(--accent);
+    font-weight: bold;
 }
 
 .qa-time {
     font-size: 0.8rem;
     color: var(--muted-foreground);
-    margin-left: 0.5rem;
+}
+
+.qa-modified {
+    font-size: 0.8rem;
+    color: var(--gradient-accent);
+    margin-left: 0.1rem;
+    opacity: 0.7;
+    font-style: italic;
 }
 
 .qa-menu-btn {
@@ -257,11 +276,13 @@
     font-size: 0.875rem;
     color: var(--muted-foreground);
     white-space: nowrap;
-    margin-right: 1rem; /* spacing between stats */
+    margin-right: 1rem;
+    /* spacing between stats */
 }
 
 .qa-actions {
-    margin-left: auto; /* push actions to the right */
+    margin-left: auto;
+    /* push actions to the right */
     display: flex;
     gap: 0.75rem;
 }
@@ -299,7 +320,8 @@
         width: 100%;
         margin-top: 0;
         float: none;
-        transform: none !important; /* Override JS */
+        transform: none !important;
+        /* Override JS */
     }
 
     .qa-question-card {
@@ -373,7 +395,8 @@
 .qa-sticky-btn.hover .qa-sticky-label,
 .qa-sticky-btn.expanded .qa-sticky-label {
     opacity: 1;
-    width: 120px; /* visible label width */
+    width: 120px;
+    /* visible label width */
     margin-left: 8px;
 }
 
@@ -673,7 +696,8 @@
     font-family: inherit;
     transition: all 0.3s ease;
     outline: none;
-    min-height: 2.5rem; /* Ensure it looks like an input */
+    min-height: 2.5rem;
+    /* Ensure it looks like an input */
 }
 
 .qa-form-input[contenteditable]:focus {
@@ -685,7 +709,8 @@
     content: attr(placeholder);
     color: var(--muted-foreground);
     pointer-events: none;
-    opacity: 0.4; /* Force lower opacity */
+    opacity: 0.4;
+    /* Force lower opacity */
 }
 
 .hashtag {
@@ -711,11 +736,13 @@
     width: 100%;
     height: auto;
     border-radius: 0.5rem;
-    transition: filter 0.3s ease; /* Smooth transition for darkening */
+    transition: filter 0.3s ease;
+    /* Smooth transition for darkening */
 }
 
 .qa-question-image-preview img.darkened {
-    filter: brightness(0.7); /* Darken the image when multiple images */
+    filter: brightness(0.7);
+    /* Darken the image when multiple images */
 }
 
 .qa-image-count {
@@ -728,5 +755,259 @@
     border-radius: 4px;
     font-size: 0.8rem;
     font-weight: bold;
-    display: none; /* Hidden by default, shown in JS when needed */
+    display: none;
+    /* Hidden by default, shown in JS when needed */
+}
+
+/* Styles for question view page */
+
+.qa-question-view,
+.qa-view-container,
+.qa-view-question {
+    width: 100%;
+    max-width: 100%;
+}
+
+.qa-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.qa-view-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.qa-question-view .qa-view-content {
+    position: relative;
+}
+
+.qa-question-view .qa-view-content .qa-menu-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+}
+
+.qa-question-view .qa-view-content .qa-nav-left-btn {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--text_background);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    margin: 0 0 0 0;
+    padding: 0;
+    line-height: 0;
+}
+
+.qa-question-view .qa-view-content .qa-nav-left-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.qa-view-header .qa-view-left {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.qa-view-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.1rem;
+    margin-left: 3.4rem;
+    margin-right: 3.4rem;
+    background: var(--text);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.qa-view-body {
+    color: var(--muted-foreground);
+    line-height: 1.6;
+    font-size: 1rem;
+    margin-left: 3.4rem;
+    margin-right: 3.4rem;
+    margin-bottom: 0.2rem;
+}
+
+.qa-view-images {
+    width: 90%;
+    height: 50vh;
+    position: relative;
+    margin: 1rem auto;
+}
+
+.qa-img-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--text_background);
+    border-radius: 0.5rem;
+}
+
+.qa-img-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.qa-img-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.qa-img-nav:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.qa-img-prev {
+    left: 10px;
+}
+
+.qa-img-next {
+    right: 10px;
+}
+
+.qa-view-footer {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    gap: 3rem;
+}
+
+.qa-question-view .qa-view-footer .qa-votes {
+    display: flex;
+    flex-direction: row;
+    margin-left: 3.4rem;
+}
+
+.qa-question-view .vote-btn {
+    max-width: 10px;
+    padding: 0rem;
+}
+
+.qa-question-view .vote-btn svg {
+    width: 25px;
+    height: 28px;
+}
+
+.qa-question-view .vote-count {
+    font-size: 0.9rem;
+    margin-left: 1rem;
+}
+
+.qa-question-view .answer-btn {
+    position: absolute;
+    right: 3.4rem;
+}
+
+.qa-view-answers {
+    width: 100%;
+    background: var(--text_background);
+    border: 1px solid var(--border);
+    border-top: none; 
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+    margin-top: -1px; 
+    padding: 1rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.qa-answer-card {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    align-items: center; 
+}
+
+.qa-view-answers .qa-avatar {
+    width: 40px;
+    height: 40px;
+    margin: 0 0.1rem;
+    flex: 0 0 40px; 
+    align-self: center;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.qa-view-answers .qa-avatar .qa-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 50%;
+}
+
+.qa-answer-header {
+    display: flex;
+    flex-direction: column;
+    margin-left: 0.2rem;
+    gap: 0rem;
+    margin-right: 0.2rem;
+    min-width: 80px;
+    border-right: 1px solid var(--border);
+}
+
+.qa-view-answers .qa-answer-body {
+    margin-left: 0.2rem;
+    margin-right: 1rem;
+    color: var(--text);
+    font-size: 0.95rem;
+    flex: 1; 
+}
+
+.qa-view-answers .qa-answer-card .qa-menu-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    z-index: 10;
+}
+
+@media (max-width: 768px) {
+    .qa-view-answers {
+        margin-top: -1px;
+        padding: 0.75rem;
+    }
 }

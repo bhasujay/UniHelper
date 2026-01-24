@@ -15,6 +15,7 @@ class Router
             '/dashboard' => ['DashboardController', 'index'],
             '/profile/view' => ['DashboardController', 'profileIndex'],
             '/profile/edit' => ['DashboardController', 'profileIndex'],
+            '/view/profile/:id' => ['DashboardController', 'viewProfile'], // dynamic route example
         ],
         'POST' => [
             '/register' => ['AuthController', 'register'],

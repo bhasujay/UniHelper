@@ -1,9 +1,12 @@
+var questions_ids = [];
 //////////////////////////////////////////////////////////////////////
 
 function resetAnswerForm() {
     document.getElementById('qaAnswerForm').reset();
     const label = document.querySelector('.qa-answermodal .qa-form-label');
     label.innerHTML = 'Your Answer';
+    // Clear question ID
+    document.getElementById('qaAnswerForm').dataset.questionId = '';
 }
 
 function resetForm() {
@@ -50,6 +53,129 @@ function removeImage(fileName, previewElement) {
     previewElement.remove();
 }
 
+function answer(questionId) {
+    const answermodal = document.querySelector('.qa-answermodal');
+    const questionCard = document.getElementById(questionId);
+    const username = questionCard.querySelector('.qa-username').textContent;
+    const label = answermodal.querySelector('.qa-form-label');
+    label.innerHTML = `Your Answer to <span class="answer-to-username">${username}</span>`;
+    
+    // Store question ID in the form
+    document.getElementById('qaAnswerForm').dataset.questionId = questionId;
+    
+    answermodal.style.display = 'flex';
+}
+
+// rendering the question view page
+function viewQuestion(questionId) {
+    // hide the main qa forum elements
+    document.querySelector('.qa-main').style.display = 'none';
+    document.querySelector('.qa-header').style.display = 'none';
+    document.querySelector('.qa-sticky-btn').style.display = 'none';
+
+    const qaViewModal = document.querySelector('.qa-question-view');
+    qaViewModal.style.display = 'flex';
+
+    // load the question details from an AJAX call
+    const question = loadQuestionDetails(questionId);
+
+    console.log(question);
+
+    // copy avatar src from the question card into the view modal
+    if (question.user_avatar) {
+        qaViewModal.querySelector('.qa-avatar-img').src = 'public' + question.user_avatar;
+    } else {
+        qaViewModal.querySelector('.qa-avatar-img').src = document.getElementById('default-pfpf').src;
+    }
+    qaViewModal.querySelector('.qa-username').textContent = question.username;
+    qaViewModal.querySelector('.qa-role').textContent = question.user_role;
+    
+
+    const addedTime = new Date(question.added_time);
+    const lastModified = new Date(question.last_modified);
+    if (addedTime.getTime() === lastModified.getTime()) {
+        qaViewModal.querySelector('.qa-time').textContent = getRelativeTime(addedTime);
+    } else {
+        qaViewModal.querySelector('.qa-modified').textContent = '(edited)';
+    }
+
+    qaViewModal.querySelector('.qa-view-title').textContent = question.question;
+    qaViewModal.querySelector('.qa-view-body').textContent = question.text;
+
+    // make the image gallery if there are images
+    if (question.images.length > 0) {
+        const imageGallery = qaViewModal.querySelector('.qa-view-images');
+        const imgContainer = imageGallery.querySelector('.qa-img-container');
+        const prevBtn = imageGallery.querySelector('.qa-img-prev');
+        const nextBtn = imageGallery.querySelector('.qa-img-next');
+        
+        imageGallery.style.display = 'flex';
+        let currentImageIndex = 0;
+        
+        // Set first image
+        imgContainer.querySelector('img').src = question.images[0];
+        
+        // Hide/show nav buttons based on number of images
+        if (question.images.length === 1) {
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+        } else {
+            prevBtn.style.display = 'flex';
+            nextBtn.style.display = 'flex';
+        }
+        
+        // Previous button click handler
+        prevBtn.onclick = function() {
+            currentImageIndex = (currentImageIndex - 1 + question.img_path.length) % question.img_path.length;
+            imgContainer.querySelector('img').src = question.img_path[currentImageIndex];
+        };
+        
+        // Next button click handler
+        nextBtn.onclick = function() {
+            currentImageIndex = (currentImageIndex + 1) % question.img_path.length;
+            imgContainer.querySelector('img').src = question.img_path[currentImageIndex];
+        };
+    } else {
+        qaViewModal.querySelector('.qa-view-images').style.display = 'none';
+    }
+
+    // populate the vote functionalities
+    qaViewModal.querySelector('.vote-count').textContent = question.vote_count;
+    if (question.user_vote === 1) {
+        qaViewModal.querySelector('.upvote').classList.add('active');
+    } else if (question.user_vote === -1) {
+        qaViewModal.querySelector('.downvote').classList.add('active');
+    }
+
+    // populate the answers section
+    qaViewModal.querySelector('.qa-answers-title').textContent = `${question.answer_count} Answers`;
+
+    let answerTemplate = qaViewModal.querySelector('.qa-answer-card');
+    answerTemplate.remove();
+
+    // populate for each answer
+    let answers = getAnswersForQuestion(questionId); 
+    for (let answer of answers) {
+        const card = answerTemplate.cloneNode(true);
+        if (answer.user_avatar) {
+            card.querySelector('qa-avatar-img').src = 'public' + answer.user_avatar;
+        } else {
+            card.querySelector('qa-avatar-img').src = document.getElementById('default-pfpf').src;
+        }
+        card.querySelector('.qa-username').textContent = answer.username;
+        card.querySelector('.qa-role').textContent = answer.user_role;
+
+        const ansAddedTime = new Date(answer.added_time);
+        card.querySelector('.qa-time').textContent = getRelativeTime(ansAddedTime);
+        card.querySelector('.qa-answer-body').textContent = answer.text;
+
+        qaViewModal.querySelector('.qa-view-answers').appendChild(card);
+    }
+
+
+}
+
+// rendering question cards
 function makeQuestionCard(data, position) {
     // Clone the template
     const card = questionCardTemplate.cloneNode(true); // Use the global variable
@@ -75,6 +201,10 @@ function makeQuestionCard(data, position) {
     card.querySelector('.qa-question-text').textContent = data.questionText;
     
     card.querySelector('.qa-time').textContent = data.timestamp;
+    if (data.modified) {
+        card.querySelector('.qa-modified').textContent = '(edited)';
+    }
+
     card.querySelector('.vote-count').textContent = data.voteCount;
     if (data.voteStatus === 1) {
         card.querySelector('.upvote').classList.add('active');
@@ -106,6 +236,23 @@ function makeQuestionCard(data, position) {
     } else {
         imagePreview.style.display = 'none';
     }
+
+    // add clickable funnctionalities for the question card
+    // Add click handler for upvote button
+    const upvoteBtn = card.querySelector('.upvote');
+    const downvoteBtn = card.querySelector('.downvote');
+
+    // Add click handler for answer button
+    const answerBtn = card.querySelector('.answer-btn');
+    answerBtn.addEventListener('click', function() {
+        answer(data.questionId);
+    });
+
+    // Add click handler for view question button
+    const viewQuestionBtn = card.querySelector('.view-question-btn');
+    viewQuestionBtn.addEventListener('click', function() {
+        viewQuestion(data.questionId);
+    });
     
     // Prepend the card to the .qa-main div
     const qaMain = document.querySelector('.qa-main');
@@ -196,24 +343,29 @@ function parseHashtags() {
 //////////////////////////////////////////////////////////////////////
 // Skeleton card management
 
+let hiddenSkeletons = [];
+
 function showSkeletonCards() {
     const qaMain = document.querySelector('.qa-main');
-    const skeletonCards = qaMain.querySelectorAll('.qa-question-card:not(.template):not([id])');
-    skeletonCards.forEach(card => {
+    hiddenSkeletons.forEach(card => {
+        qaMain.appendChild(card); // Append to ensure it's at the bottom
         card.style.display = 'flex';
     });
+    hiddenSkeletons = [];
 }
 
 function hideSkeletonCards() {
     const qaMain = document.querySelector('.qa-main');
     const skeletonCards = qaMain.querySelectorAll('.qa-question-card:not(.template):not([id])');
+    hiddenSkeletons = Array.from(skeletonCards);
     skeletonCards.forEach(card => {
-        card.style.display = 'none';
+        qaMain.removeChild(card);
     });
 }
 
 //////////////////////////////////////////////////////////////////////
 // Question fetching and lazy loading
+
 
 function fetchQuestions() {
     if (isFetching || !hasMoreQuestions) {
@@ -235,15 +387,20 @@ function fetchQuestions() {
                     // No more questions to load
                     hasMoreQuestions = false;
                 } else {
-                    // Process and display questions
+                    // Process questions
                     data.data.forEach(question => {
+                        if (questions_ids.includes(question.q_id)) {
+                            return; // Skip if already loaded
+                        }
                         const addedTime = new Date(question.added_time);
                         const lastModified = new Date(question.last_modified);
                         let timestamp;
                         if (addedTime.getTime() === lastModified.getTime()) {
                             timestamp = getRelativeTime(addedTime);
+                            modified = false;
                         } else {
-                            timestamp = getRelativeTime(lastModified) + ' [modified]';
+                            timestamp = getRelativeTime(lastModified);
+                            modified = true;
                         }
                         const mappedData = {
                             userID: question.user_id,
@@ -259,9 +416,12 @@ function fetchQuestions() {
                             questionText: question.text,
                             timestamp: timestamp,
                             imagecount: question.img_path ? question.img_path.split(',').length : 0,
-                            firstImage: question.img_path ? question.img_path.split(',')[0] : ''
+                            firstImage: question.img_path ? question.img_path.split(',')[0] : '',
+                            modified: modified
                         };
+                        // show the question card
                         makeQuestionCard(mappedData, -1);
+                        questions_ids.push(question.q_id);
                     });
                     
                     // Update the pointer for next batch
@@ -273,7 +433,7 @@ function fetchQuestions() {
         })
         .catch(error => {
             console.error('Error fetching questions:', error);
-            hideSkeletonCards();
+            showSkeletonCards();
         })
         .finally(() => {
             isFetching = false;
@@ -289,4 +449,36 @@ function handleScroll() {
     if (scrollPosition >= pageHeight - threshold) {
         fetchQuestions();
     }
+}
+
+function loadQuestionDetails(questionId) {
+    fetch(`http://localhost/unihelper/api?controller=qaController&action=getQuestion&questionId=${questionId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                return data.data;
+            } else {
+                return null;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching question details:', error);
+            return null;
+        });
+}
+
+function getAnswersForQuestion(questionId) {
+    fetch(`http://localhost/unihelper/api?controller=qaController&action=getAnswers&questionId=${questionId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                return data.data;
+            } else {
+                return [];
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching answers:', error);
+            return [];
+        });
 }
