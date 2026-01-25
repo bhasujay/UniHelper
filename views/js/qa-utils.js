@@ -1,5 +1,35 @@
 var questions_ids = [];
+
 //////////////////////////////////////////////////////////////////////
+
+function generateMenuDropdown(element, questionUserId, currentUserId, isModerator, isAnswer = false) {
+    let menuContainer = document.querySelector('.qa-menu-dropdown').cloneNode(true);
+    element.appendChild(menuContainer);
+
+    if (questionUserId == currentUserId) {
+        if (isAnswer) {
+            menuContainer.querySelector('.edit-btn').style.display = 'none';
+        } else {
+            menuContainer.querySelector('.edit-btn').style.display = 'block';
+        }
+        menuContainer.querySelector('.delete-btn').style.display = 'block';
+    }
+    if (isModerator) {
+        menuContainer.querySelector('.report-btn').style.display = 'block';
+    }
+
+    menuContainer.querySelector('.close-btn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        menuContainer.style.display = 'none';
+    });
+
+    // Add click event listener to toggle menu
+    element.querySelector('.qa-menu-btn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        menuContainer.style.display = menuContainer.style.display === 'block' ? 'none' : 'block';
+    });
+
+}
 
 function resetAnswerForm() {
     document.getElementById('qaAnswerForm').reset();
@@ -131,7 +161,10 @@ async function viewQuestion(questionId) {
 
     const qaViewModal = document.querySelector('.qa-question-view');
 
+    qaViewModal.id = questionId;
+
     qaViewModal.querySelector('.qa-nav-left-btn').onclick = function() {
+        qaViewModal.id = '';
         goBackFromQuestionView(questionId);
     };
 
@@ -154,6 +187,14 @@ async function viewQuestion(questionId) {
         qaViewModal.querySelector('.qa-time').textContent = getRelativeTime(addedTime);
     } else {
         qaViewModal.querySelector('.qa-modified').textContent = '(edited)';
+    }
+
+    // Create and append the menu container
+    if (question.user_id == userID || isModerator) {
+        qaViewModal.querySelector('.qa-menu-btn').style.display = 'block';
+        
+        // Create and append the menu container
+        generateMenuDropdown(qaViewModal, question.user_id, userID, isModerator);
     }
 
     // Style the title with hashtags
@@ -211,6 +252,16 @@ async function viewQuestion(questionId) {
         qaViewModal.querySelector('.downvote').classList.add('active');
     }
 
+        // Add click handler for upvote button
+    const upvoteBtn = qaViewModal.querySelector('.upvote');
+    const downvoteBtn = qaViewModal.querySelector('.downvote');
+    upvoteBtn.addEventListener('click', function() {
+        submitVote(qaViewModal, this);
+    });
+    downvoteBtn.addEventListener('click', function() {
+        submitVote(qaViewModal, this);
+    });
+
     // populate the answers section
     qaViewModal.querySelector('.qa-answer-count').textContent = `${question.answer_count} Answers`;
 
@@ -241,6 +292,14 @@ async function viewQuestion(questionId) {
             const ansAddedTime = new Date(answer.added_time);
             card.querySelector('.qa-time').textContent = getRelativeTime(ansAddedTime);
             card.querySelector('.qa-answer-body').textContent = answer.text;
+
+            // Create and append the menu container
+            if (answer.user_id == userID || isModerator) {
+                card.querySelector('.qa-menu-btn').style.display = 'block';
+                
+                // Create and append the menu container
+                generateMenuDropdown(card, answer.user_id, userID, isModerator, true);
+            }
 
             qaViewModal.querySelector('.qa-view-answers').appendChild(card);
             card.style.display = 'flex';
@@ -287,6 +346,17 @@ function makeQuestionCard(data, position) {
         card.querySelector('.downvote').classList.add('active');
     }
 
+    // Add click handler for upvote button
+    const upvoteBtn = card.querySelector('.upvote');
+    const downvoteBtn = card.querySelector('.downvote');
+    upvoteBtn.addEventListener('click', function() {
+        submitVote(card, this);
+    });
+    downvoteBtn.addEventListener('click', function() {
+        submitVote(card, this);
+    });
+
+
     card.querySelector('.qa-answer-count').innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
     </svg>${data.answerCount}`;
@@ -312,11 +382,13 @@ function makeQuestionCard(data, position) {
         imagePreview.style.display = 'none';
     }
 
-    // add clickable funnctionalities for the question card
-    // Add click handler for upvote button
-    const upvoteBtn = card.querySelector('.upvote');
-    const downvoteBtn = card.querySelector('.downvote');
-
+    // add clickable functionalities for the question card
+    // Create and append the menu container
+    if (data.userID == userID || isModerator) {
+        card.querySelector('.qa-menu-btn').style.display = 'block';
+        generateMenuDropdown(card, data.userID, userID, isModerator);
+    }
+    
     // Add click handler for answer button
     const answerBtn = card.querySelector('.answer-btn');
     answerBtn.addEventListener('click', function() {
@@ -461,6 +533,7 @@ function fetchQuestions() {
                 if (data.data === null || data.data.length === 0) {
                     // No more questions to load
                     hasMoreQuestions = false;
+                    console.log(questions_ids)
                 } else {
                     // Process questions
                     data.data.forEach(question => {
@@ -557,3 +630,90 @@ async function getAnswersForQuestion(questionId) {
             return [];
         });
 }
+
+async function submitVote(element, clickedBtn) {
+    const questionId = element.id;
+
+    const upvoteBtn   = element.querySelector('.upvote');
+    const downvoteBtn = element.querySelector('.downvote');
+    const voteCountEl = element.querySelector('.vote-count');
+
+    // ---- SNAPSHOT (for rollback) ----
+    const prevCount = voteCountEl.textContent;
+    const prevUp = upvoteBtn.classList.contains('active');
+    const prevDown = downvoteBtn.classList.contains('active');
+
+    let count = parseInt(prevCount, 10);
+
+    const activeBtn =
+        prevUp ? upvoteBtn :
+        prevDown ? downvoteBtn :
+        null;
+
+    let voteValue;
+
+    // ---- STATE TRANSITIONS ----
+
+    // 1. no active vote
+    if (!activeBtn) {
+        if (clickedBtn === upvoteBtn) {
+            voteValue = 1;
+            count += 1;
+            upvoteBtn.classList.add('active');
+        } else {
+            voteValue = -1;
+            count -= 1;
+            downvoteBtn.classList.add('active');
+        }
+    }
+
+    // 2. undo vote
+    else if (activeBtn === clickedBtn) {
+        activeBtn.classList.remove('active');
+
+        if (clickedBtn === upvoteBtn) {
+            voteValue = -1; // backend will delete
+            count -= 1;
+        } else {
+            voteValue = 1;
+            count += 1;
+        }
+    }
+
+    // 3. switch vote (IMPORTANT: ±2)
+    else {
+        activeBtn.classList.remove('active');
+
+        if (clickedBtn === upvoteBtn) {
+            voteValue = 1;
+            count += 2;
+            upvoteBtn.classList.add('active');
+        } else {
+            voteValue = -1;
+            count -= 2;
+            downvoteBtn.classList.add('active');
+        }
+    }
+
+    voteCountEl.textContent = count;
+
+    // ---- REQUEST ----
+    try {
+        const res = await fetch(
+            `http://localhost/unihelper/api?controller=qaController&action=Vote&question_id=${questionId}&vote_value=${voteValue}`,
+            { method: 'GET' }
+        );
+
+        const data = await res.json();
+
+        if (!data.success) throw new Error();
+
+    } catch {
+        // ---- ROLLBACK ----
+        voteCountEl.textContent = prevCount;
+        upvoteBtn.classList.toggle('active', prevUp);
+        downvoteBtn.classList.toggle('active', prevDown);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////

@@ -6,6 +6,9 @@ var batch_limit = 10;
 var isFetching = false;
 var hasMoreQuestions = true;
 var questionModel = true;
+var userID = document.getElementById('profileUserId').textContent;
+var isModerator = document.getElementById('profileModStatus').textContent === '1';
+var menuDropdown = document.querySelector('.qa-menu-dropdown');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -183,6 +186,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     card.querySelector('.qa-time').textContent = 'Just now';
                     card.querySelector('.qa-answer-body').textContent = answerText;
+
+                    // Create and append the menu container
+                    card.querySelector('.qa-menu-btn').style.display = 'block';
+                    generateMenuDropdown(card, userID, userID, isModerator, true);                    
 
                     qaViewModal.querySelector('.qa-view-answers').appendChild(card);
                     card.style.display = 'flex';

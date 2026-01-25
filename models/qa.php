@@ -167,6 +167,68 @@ class Qna extends BaseModel
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function vote($questionId, $userId, $voteValue)
+    {
+        $voteValue = (int)$voteValue;
+        if ($voteValue !== 1 && $voteValue !== -1) {
+            throw new Exception("Invalid vote value");
+        }
+
+        $currentVote = $this->checkUserVoteStatus($questionId, $userId);
+
+        // 1. no existing vote → insert
+        if ($currentVote == 0) {
+            $this->db->prepare(
+                "INSERT INTO question_votes (q_id, user_id, vote)
+                VALUES (:q_id, :user_id, :vote)"
+            )->execute([
+                'q_id' => $questionId,
+                'user_id' => $userId,
+                'vote' => $voteValue
+            ]);
+
+            $delta = $voteValue;
+        }
+
+        // 2. undo vote
+        elseif ($currentVote == $voteValue) {
+            $this->db->prepare(
+                "DELETE FROM question_votes
+                WHERE q_id = :q_id AND user_id = :user_id"
+            )->execute([
+                'q_id' => $questionId,
+                'user_id' => $userId
+            ]);
+
+            $delta = -$currentVote;
+        }
+
+        // 3. switch vote
+        else {
+            $this->db->prepare(
+                "UPDATE question_votes
+                SET vote = :vote
+                WHERE q_id = :q_id AND user_id = :user_id"
+            )->execute([
+                'vote' => $voteValue,
+                'q_id' => $questionId,
+                'user_id' => $userId
+            ]);
+
+            $delta = 2 * $voteValue;
+        }
+
+        $this->db->prepare(
+            "UPDATE questions
+            SET vote_count = vote_count + :delta
+            WHERE q_id = :q_id"
+        )->execute([
+            'delta' => $delta,
+            'q_id' => $questionId
+        ]);
+    }
+
+
     // vote related functions
     public function checkUserVoteStatus($questionId, $userId)
     {

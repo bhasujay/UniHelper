@@ -113,7 +113,7 @@
                     <span class="qa-modified"></span>
                 </div>
             </div>
-            <button class="qa-menu-btn">
+            <button class="qa-menu-btn" style="display: none;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="1"></circle>
                     <circle cx="12" cy="5" r="1"></circle>
@@ -121,7 +121,7 @@
                 </svg>
             </button>
         </div>
-        <h2 class="qa-question-title">Question Title</h3>
+        <h2 class="qa-question-title">Question Title</h2>
         <div class="qa-question-body-container">
             <!-- Image preview on the left, text on the right -->
             <div class="qa-question-image-preview" style="display: none;">
@@ -170,7 +170,7 @@
                             <span class="qa-modified"></span>
                         </div>
                     </div>
-                    <button class="qa-menu-btn">
+                    <button class="qa-menu-btn" style="display: none;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="1"></circle>
                             <circle cx="12" cy="5" r="1"></circle>
@@ -239,7 +239,7 @@
                     <span class="qa-time">1 hour ago</span>
                 </div>
                 <div class="qa-answer-body">Here's how you solve it step by step...</div>
-                <button class="qa-menu-btn">
+                <button class="qa-menu-btn" style="display: none;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="1"></circle>
                         <circle cx="12" cy="5" r="1"></circle>
@@ -249,6 +249,14 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- three dot menu dropdown -->
+<div class="qa-menu-dropdown" style="display: none;">
+    <button class="qa-menu-item close-btn">×</button>
+    <button class="qa-menu-item edit-btn" style="display: none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit</button>
+    <button class="qa-menu-item delete-btn" style="display: none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="m19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Delete</button>
+    <button class="qa-menu-item report-btn" style="display: none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V3"></path><path d="M4 15l8-8 8 8"></path></svg> Report</button>
 </div>
 
 <!------------------------------------------------------------------>
@@ -300,7 +308,7 @@
                         </div>
                         <span class="qa-time skeleton-text skeleton-time"></span>
                     </div>
-                    <button class="qa-menu-btn skeleton-icon">
+                    <button class="qa-menu-btn skeleton-icon" style="display: none;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="1"></circle>
                             <circle cx="12" cy="5" r="1"></circle>

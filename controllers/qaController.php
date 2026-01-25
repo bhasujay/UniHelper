@@ -245,6 +245,28 @@ class QaController
         }
     }
     
+    public function Vote(Request $request)
+    {
+        header('Content-Type: application/json');
+        
+        $questionId = $request->get('question_id');
+        $userId = $request->session('user_id');
+        $voteValue = $request->get('vote_value');
+        
+        try {
+            $this->model->vote($questionId, $userId, $voteValue);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Vote recorded successfully'
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
     public function getTopTags()
     {
         header('Content-Type: application/json');
