@@ -675,11 +675,11 @@ async function submitVote(element, id, clickedBtn) {
     // 1. no active vote
     if (!activeBtn) {
         if (clickedBtn === upvoteBtn) {
-            voteValue = 1;
+            voteValue = 1; // final state
             count += 1;
             upvoteBtn.classList.add('active');
         } else {
-            voteValue = -1;
+            voteValue = -1; // final state
             count -= 1;
             downvoteBtn.classList.add('active');
         }
@@ -689,11 +689,11 @@ async function submitVote(element, id, clickedBtn) {
     else if (activeBtn === clickedBtn) {
         activeBtn.classList.remove('active');
 
+        voteValue = 0; // final state after undo
+
         if (clickedBtn === upvoteBtn) {
-            voteValue = -1; // backend will delete
             count -= 1;
         } else {
-            voteValue = 1;
             count += 1;
         }
     }
@@ -703,11 +703,11 @@ async function submitVote(element, id, clickedBtn) {
         activeBtn.classList.remove('active');
 
         if (clickedBtn === upvoteBtn) {
-            voteValue = 1;
+            voteValue = 1; // final state
             count += 2;
             upvoteBtn.classList.add('active');
         } else {
-            voteValue = -1;
+            voteValue = -1; // final state
             count -= 2;
             downvoteBtn.classList.add('active');
         }
