@@ -146,6 +146,7 @@
 
 <!-- Question main view -->
 <div class="qa-question-view" style="display: none;">
+    <span id="qaViewModalQuestionId" style="display: none;"></span>
     <div class="qa-view-container">
         <!-- Question Section -->
         <div class="qa-view-question">

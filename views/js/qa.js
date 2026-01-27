@@ -162,9 +162,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     const anscount = qaViewModal.querySelector('.qa-answer-count');
                     const currentAnsCount = parseInt(anscount.textContent.match(/\d+/)[0]);
-                    anscount.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg>${currentAnsCount + 1}`;
+                    if (currentAnsCount + 1 == 1) {
+                        anscount.innerHTML = `1 Answer`;
+                    } else {
+                        anscount.innerHTML = `${currentAnsCount + 1} Answers`;
+                    }
                     
                     let answerTemplate = qaViewModal.querySelector('.qa-answer-card');
                     const card = answerTemplate.cloneNode(true);
@@ -398,5 +400,29 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up scroll listener for lazy loading
     window.addEventListener('scroll', handleScroll);
+
+////////////////////////////////////////////////////////////////////////////
+// configure vote buttons in question view modal
+
+    const modal = document.querySelector('.qa-question-view');
+    const questionId = modal.querySelector('#qaViewModalQuestionId');
+
+    // Upvote and Downvote buttons
+    modal.querySelector('.upvote').addEventListener('click', function() {
+        submitVote(modal, questionId.textContent, this);
+    });
+    modal.querySelector('.downvote').addEventListener('click', function() {
+        submitVote(modal, questionId.textContent, this);
+    });
+
+    // Answer button
+    modal.querySelector('.answer-btn').addEventListener('click', function() {
+        answer(questionId.textContent);
+    });
+
+    // Nav-left (back) button
+    modal.querySelector('.qa-nav-left-btn').addEventListener('click', function() {
+        goBackFromQuestionView(questionId.textContent);
+    });
 });
 

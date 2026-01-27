@@ -85,8 +85,6 @@ function resetQuestionView() {
             card.style.display = 'none';
         }
     });
-    
-    qaViewModal.querySelector('.qa-nav-left-btn').onclick = null;
 }
 
 function addImagePreview(file, imageTray, imageAddBox) { // Add parameters
@@ -144,11 +142,33 @@ function goBackFromQuestionView(questionId) {
     document.querySelector('.qa-main').style.display = 'block';
     document.querySelector('.qa-header').style.display = 'block';
     document.querySelector('.qa-sticky-btn').style.display = 'flex';
-    // Scroll to the question card
+
     const questionCard = document.getElementById(questionId);
-    if (questionCard) {
-        questionCard.scrollIntoView({ behavior: 'auto', block: 'center' });
-    }
+    
+    questionCard.querySelector('.upvote').classList.remove('active');
+    questionCard.querySelector('.downvote').classList.remove('active');
+
+    const upvoted = document.querySelector('.qa-question-view .upvote').classList.contains('active');
+    const downvoted = document.querySelector('.qa-question-view .downvote').classList.contains('active');
+    
+    // Update the corresponding question card vote status
+    if (upvoted) {
+        questionCard.querySelector('.upvote').classList.add('active');
+    } 
+    if (downvoted) {
+        questionCard.querySelector('.downvote').classList.add('active');
+    } 
+    
+    const voteCount = document.querySelector('.qa-question-view .vote-count');
+    questionCard.querySelector('.vote-count').textContent = voteCount.textContent;
+    
+    const anwerCount = document.querySelector('.qa-question-view .qa-answer-count');
+    const answerCountNumber = anwerCount.textContent.match(/\d+/)?.[0] || '0';
+    questionCard.querySelector('.qa-answer-count').innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>${answerCountNumber}`;
+    
+    questionCard.scrollIntoView({ behavior: 'auto', block: 'center' });
     resetQuestionView();
 }
 
@@ -160,13 +180,12 @@ async function viewQuestion(questionId) {
     document.querySelector('.qa-sticky-btn').style.display = 'none';
 
     const qaViewModal = document.querySelector('.qa-question-view');
+    qaViewModal.querySelector('#qaViewModalQuestionId').textContent = questionId;
 
-    qaViewModal.id = questionId;
-
-    qaViewModal.querySelector('.qa-nav-left-btn').onclick = function() {
-        qaViewModal.id = '';
-        goBackFromQuestionView(questionId);
-    };
+    // qaViewModal.querySelector('.qa-nav-left-btn').onclick = function() {
+    //     qaViewModal.querySelector('#qaViewModalQuestionId').textContent = '';
+    //     goBackFromQuestionView(questionId);
+    // };
 
     // load the question details from an AJAX call
     const question = await loadQuestionDetails(questionId);
@@ -200,7 +219,6 @@ async function viewQuestion(questionId) {
     // Style the title with hashtags
     const styledTitle = question.question.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
     qaViewModal.querySelector('.qa-view-title').innerHTML = styledTitle;
-
     qaViewModal.querySelector('.qa-view-body').textContent = question.text;
 
     // make the image array
@@ -244,7 +262,7 @@ async function viewQuestion(questionId) {
         qaViewModal.querySelector('.qa-view-images').style.display = 'none';
     }
 
-    // populate the vote functionalities
+    // load the current vote status
     qaViewModal.querySelector('.vote-count').textContent = question.vote_count;
     if (question.user_vote === 1) {
         qaViewModal.querySelector('.upvote').classList.add('active');
@@ -252,15 +270,15 @@ async function viewQuestion(questionId) {
         qaViewModal.querySelector('.downvote').classList.add('active');
     }
 
-        // Add click handler for upvote button
-    const upvoteBtn = qaViewModal.querySelector('.upvote');
-    const downvoteBtn = qaViewModal.querySelector('.downvote');
-    upvoteBtn.addEventListener('click', function() {
-        submitVote(qaViewModal, this);
-    });
-    downvoteBtn.addEventListener('click', function() {
-        submitVote(qaViewModal, this);
-    });
+    // Add click handler for upvote button
+    // const upvoteBtn = qaViewModal.querySelector('.upvote');
+    // const downvoteBtn = qaViewModal.querySelector('.downvote');
+    // upvoteBtn.addEventListener('click', function() {
+    //     submitVote(qaViewModal, questionId, this);
+    // });
+    // downvoteBtn.addEventListener('click', function() {
+    //     submitVote(qaViewModal, questionId, this);
+    // });
 
     // populate the answers section
     qaViewModal.querySelector('.qa-answer-count').textContent = `${question.answer_count} Answers`;
@@ -268,10 +286,10 @@ async function viewQuestion(questionId) {
     let answerTemplate = qaViewModal.querySelector('.qa-answer-card');
     answerTemplate.style.display = 'none';
 
-    const answerBtn = qaViewModal.querySelector('.answer-btn');
-    answerBtn.addEventListener('click', function() {
-        answer(questionId);
-    });
+    // const answerBtn = qaViewModal.querySelector('.answer-btn');
+    // answerBtn.addEventListener('click', function() {
+    //     answer(questionId);
+    // });
 
     // populate for each answer
     let answers = await getAnswersForQuestion(questionId); 
@@ -350,10 +368,10 @@ function makeQuestionCard(data, position) {
     const upvoteBtn = card.querySelector('.upvote');
     const downvoteBtn = card.querySelector('.downvote');
     upvoteBtn.addEventListener('click', function() {
-        submitVote(card, this);
+        submitVote(card, data.questionId, this);
     });
     downvoteBtn.addEventListener('click', function() {
-        submitVote(card, this);
+        submitVote(card, data.questionId, this);
     });
 
 
@@ -631,8 +649,8 @@ async function getAnswersForQuestion(questionId) {
         });
 }
 
-async function submitVote(element, clickedBtn) {
-    const questionId = element.id;
+async function submitVote(element, id, clickedBtn) {
+    const questionId = id;
 
     const upvoteBtn   = element.querySelector('.upvote');
     const downvoteBtn = element.querySelector('.downvote');
