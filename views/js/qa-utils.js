@@ -182,11 +182,6 @@ async function viewQuestion(questionId) {
     const qaViewModal = document.querySelector('.qa-question-view');
     qaViewModal.querySelector('#qaViewModalQuestionId').textContent = questionId;
 
-    // qaViewModal.querySelector('.qa-nav-left-btn').onclick = function() {
-    //     qaViewModal.querySelector('#qaViewModalQuestionId').textContent = '';
-    //     goBackFromQuestionView(questionId);
-    // };
-
     // load the question details from an AJAX call
     const question = await loadQuestionDetails(questionId);
 
@@ -270,26 +265,15 @@ async function viewQuestion(questionId) {
         qaViewModal.querySelector('.downvote').classList.add('active');
     }
 
-    // Add click handler for upvote button
-    // const upvoteBtn = qaViewModal.querySelector('.upvote');
-    // const downvoteBtn = qaViewModal.querySelector('.downvote');
-    // upvoteBtn.addEventListener('click', function() {
-    //     submitVote(qaViewModal, questionId, this);
-    // });
-    // downvoteBtn.addEventListener('click', function() {
-    //     submitVote(qaViewModal, questionId, this);
-    // });
-
     // populate the answers section
-    qaViewModal.querySelector('.qa-answer-count').textContent = `${question.answer_count} Answers`;
+    if (question.answer_count == 1) {
+        qaViewModal.querySelector('.qa-answer-count').textContent = `1 Answer`;
+    } else {
+        qaViewModal.querySelector('.qa-answer-count').textContent = `${question.answer_count} Answers`;
+    }
 
     let answerTemplate = qaViewModal.querySelector('.qa-answer-card');
     answerTemplate.style.display = 'none';
-
-    // const answerBtn = qaViewModal.querySelector('.answer-btn');
-    // answerBtn.addEventListener('click', function() {
-    //     answer(questionId);
-    // });
 
     // populate for each answer
     let answers = await getAnswersForQuestion(questionId); 
