@@ -91,6 +91,14 @@ class DashboardController
         }
 
         $user = $this->user; // Make user available to components
+                
+        // Check for session-stored form errors and data
+        $errors = $_SESSION['form_errors'] ?? null;
+        $formData = $_SESSION['form_data'] ?? null;
+        
+        // Clear session data after retrieving
+        unset($_SESSION['form_errors']);
+        unset($_SESSION['form_data']);
         
         // Capture the component content
         ob_start();
