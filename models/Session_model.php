@@ -15,7 +15,7 @@ class Session_model extends BaseModel {
      * Get all sessions excluding soft-deleted and manually deleted ones
      */
     public function findAll($conditions = [], $limit = null, $offset = null) {
-        $sql = "SELECT s.*, u.firstName as creator_name FROM {$this->table} s 
+        $sql = "SELECT s.*, u.first_name as creator_name FROM {$this->table} s 
                 LEFT JOIN users u ON s.user_id = u.id 
                 WHERE s.deleted_at IS NULL AND s.is_deleted = 0";
         $params = [];
@@ -64,7 +64,7 @@ class Session_model extends BaseModel {
      * Get sessions created by a specific user (includes expired, excludes manually deleted)
      */
     public function findByUserId($userId, $limit = null, $offset = null) {
-        $sql = "SELECT s.*, u.firstName as creator_name FROM {$this->table} s 
+        $sql = "SELECT s.*, u.first_name as creator_name FROM {$this->table} s 
                 LEFT JOIN users u ON s.user_id = u.id 
                 WHERE s.user_id = :user_id AND s.is_deleted = 0 
                 ORDER BY s.date DESC, s.time DESC";
@@ -89,7 +89,7 @@ class Session_model extends BaseModel {
      * Get sessions by university (excludes expired and manually deleted)
      */
     public function findByUniversity($university, $limit = null, $offset = null) {
-        $sql = "SELECT s.*, u.firstName as creator_name FROM {$this->table} s 
+        $sql = "SELECT s.*, u.first_name as creator_name FROM {$this->table} s 
                 LEFT JOIN users u ON s.user_id = u.id 
                 WHERE s.university = :university AND s.deleted_at IS NULL AND s.is_deleted = 0 
                 ORDER BY s.date DESC, s.time DESC";
@@ -127,7 +127,7 @@ class Session_model extends BaseModel {
      * Get sessions by subject (excludes expired and manually deleted)
      */
     public function findBySubject($subject, $limit = null, $offset = null) {
-        $sql = "SELECT s.*, u.firstName as creator_name FROM {$this->table} s 
+        $sql = "SELECT s.*, u.first_name as creator_name FROM {$this->table} s 
                 LEFT JOIN users u ON s.user_id = u.id 
                 WHERE s.subject = :subject AND s.deleted_at IS NULL AND s.is_deleted = 0 
                 ORDER BY s.date DESC, s.time DESC";
