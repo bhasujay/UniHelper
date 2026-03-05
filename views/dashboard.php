@@ -8,6 +8,36 @@
 
     <link rel="stylesheet" href="/unihelper/views/css/style.css">
     <link rel="stylesheet" href="/unihelper/views/css/dashboard.css">
+    <link rel="stylesheet" href="/unihelper/views/css/components/cards.css">
+    <link rel="stylesheet" href="/unihelper/views/css/degree-programs.css">
+    <?php
+    // Load role-specific CSS based on user role
+    $roleMap = [
+        'role-applicant' => 'role-applicant.css',
+        'role-undergrad' => 'role-undergrad.css',
+        'role-profile' => 'role-profile.css',
+        'role-admin' => 'role-admin.css'
+    ];
+    
+    if (isset($user->role) && isset($roleMap[$user->role])) {
+        echo '<link rel="stylesheet" href="/unihelper/views/css/components/' . $roleMap[$user->role] . '">';
+    }
+    
+    // Load component-specific CSS if available
+    if (isset($activeComponent)) {
+        $componentCssPath = __DIR__ . "/css/{$activeComponent}.css";
+        $componentCssComponentPath = __DIR__ . "/css/components/{$activeComponent}.css";
+        
+        // Check in main css folder first
+        if (file_exists($componentCssPath)) {
+            echo '<link rel="stylesheet" href="/unihelper/views/css/' . $activeComponent . '.css">';
+        }
+        // Then check in components folder
+        elseif (file_exists($componentCssComponentPath)) {
+            echo '<link rel="stylesheet" href="/unihelper/views/css/components/' . $activeComponent . '.css">';
+        }
+    }
+    ?>
 </head>
 <body>
     <nav class="nav">

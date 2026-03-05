@@ -11,36 +11,24 @@ class ZScoreModel extends BaseModel {
     
     /**
      * Get Z-Score by user ID
+     * Uses BaseModel::findAll() method
      */
     public function findByUserId($userId) {
-        $sql = "SELECT * FROM {$this->table} WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 1";
-        
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute(['user_id' => $userId]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            throw new Exception("Failed to find Z-Score by user ID: " . $e->getMessage());
-        }
+        $results = $this->findAll(['user_id' => $userId], 1);
+        return !empty($results) ? $results[0] : null;
     }
     
     /**
      * Check if user has existing Z-Score
+     * Uses BaseModel::count() method
      */
     public function userHasZScore($userId) {
-        $sql = "SELECT COUNT(*) FROM {$this->table} WHERE user_id = :user_id";
-        
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute(['user_id' => $userId]);
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            throw new Exception("Failed to check if user has Z-Score: " . $e->getMessage());
-        }
+        return $this->count(['user_id' => $userId]) > 0;
     }
     
     /**
-     * Update Z-Score by user ID (instead of by record ID)
+     * Update Z-Score by user ID
+     * Custom implementation needed because BaseModel::update() uses id, not user_id
      */
     public function updateByUserId($userId, $data) {
         $setClause = [];
@@ -63,6 +51,7 @@ class ZScoreModel extends BaseModel {
     
     /**
      * Delete Z-Score by user ID
+     * Custom implementation needed because BaseModel::delete() uses id, not user_id
      */
     public function deleteByUserId($userId) {
         $sql = "DELETE FROM {$this->table} WHERE user_id = :user_id";
@@ -77,6 +66,7 @@ class ZScoreModel extends BaseModel {
     
     /**
      * Create or update Z-Score (upsert functionality)
+     * Uses BaseModel::create() method
      */
     public function saveZScore($userId, $data) {
         // Check if user already has Z-Score
@@ -84,7 +74,7 @@ class ZScoreModel extends BaseModel {
             // Update existing
             return $this->updateByUserId($userId, $data);
         } else {
-            // Create new
+            // Create new - uses inherited create() method
             $data['user_id'] = $userId;
             return $this->create($data);
         }

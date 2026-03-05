@@ -22,8 +22,12 @@ class Router
             '/api' => ['apiGateway', 'handleRequest'],
             '/profile/update' => ['DashboardController', 'profileUpdate'],
         ],
-        'PUT' => [],
-        'DELETE' => [],
+        'PUT' => [
+            '/api' => ['apiGateway', 'handleRequest'],
+        ],
+        'DELETE' => [
+            '/api' => ['apiGateway', 'handleRequest'],
+        ],
         'DYNAMIC' => [
             '/:component' => ['DashboardController', 'renderComponent'],
             '/this/is/a/test/:id' => ['TestController', 'testMethod']
