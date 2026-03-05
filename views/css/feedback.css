@@ -1,0 +1,425 @@
+
+.feedback-forum-container {
+    padding: 40px;
+    background-color: #1a1a1a;
+    min-height: 100vh;
+    color: #e0e0e0;
+}
+
+.feedback-header {
+    margin-bottom: 40px;
+}
+
+.feedback-header h1 {
+    margin: 0 0 10px 0;
+    color: #ffffff;
+    font-size: 32px;
+    font-weight: 600;
+}
+
+.feedback-header p {
+    margin: 0;
+    color: #888;
+    font-size: 16px;
+}
+
+.feedback-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 40px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #2563eb;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary:hover {
+    background-color: #2a2a2a;
+    border-color: #555;
+}
+
+.feedback-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.feedback-form-section {
+    background-color: #242424;
+    padding: 30px;
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+
+.feedback-form-section h2,
+.feedback-list-section h2 {
+    margin-top: 0;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    color: #e0e0e0;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 12px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #666;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    background-color: #1f1f1f;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.btn-submit {
+    background-color: #2563eb;
+    color: white;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+    flex: 1;
+}
+
+.btn-submit:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-clear {
+    background-color: transparent;
+    color: #e0e0e0;
+    padding: 10px 24px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.btn-clear:hover {
+    background-color: #2a2a2a;
+    border-color: #555;
+}
+
+.feedback-list-section {
+    background-color: #242424;
+    padding: 30px;
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+
+.feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.feedback-item {
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-radius: 6px;
+    border: 1px solid #333;
+}
+
+.feedback-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.feedback-item-title {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.feedback-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.feedback-item-author {
+    font-weight: 500;
+}
+
+.feedback-item-content {
+    color: #d0d0d0;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.feedback-comments {
+    border-top: 1px solid #333;
+    padding-top: 16px;
+    margin-top: 16px;
+}
+
+.feedback-comments-title {
+    color: #e0e0e0;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.comment {
+    background-color: #1f1f1f;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.comment-author {
+    color: #e0e0e0;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.comment-author::before {
+    content: '👤';
+}
+
+.comment-date {
+    color: #888;
+}
+
+.comment-text {
+    color: #d0d0d0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.btn-comment {
+    background-color: #2563eb;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-comment:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-comment-cancel {
+    background-color: transparent;
+    color: #e0e0e0;
+    padding: 8px 16px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.3s ease;
+}
+
+.btn-comment-cancel:hover {
+    background-color: #2a2a2a;
+    border-color: #555;
+}
+
+.empty-state {
+    text-align: center;
+    color: #666;
+    padding: 40px 0;
+    font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .feedback-content {
+        grid-template-columns: 1fr;
+    }
+
+    .feedback-forum-container {
+        padding: 20px;
+    }
+
+    .feedback-form-section,
+    .feedback-list-section {
+        padding: 20px;
+    }
+
+    .feedback-header h1 {
+        font-size: 24px;
+    }
+
+    .feedback-controls {
+        flex-wrap: wrap;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn-submit,
+    .btn-clear {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .feedback-forum-container {
+        padding: 15px;
+    }
+
+    .feedback-header h1 {
+        font-size: 20px;
+    }
+
+    .feedback-header p {
+        font-size: 14px;
+    }
+
+    .feedback-form-section,
+    .feedback-list-section {
+        padding: 15px;
+    }
+
+    .feedback-item-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .comment-header {
+        flex-direction: column;
+        gap: 4px;
+    }
+}
+
+/* Edit and Delete Buttons */
+.feedback-item-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.btn-edit-feedback,
+.btn-delete-feedback {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    color: #888;
+}
+
+.btn-edit-feedback:hover {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+.btn-delete-feedback:hover {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+
+.btn-edit-feedback:active,
+.btn-delete-feedback:active {
+    transform: scale(0.95);
+}
