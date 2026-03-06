@@ -13,8 +13,8 @@ return [
         ['component' => 'qa-forum',        'title' => 'Q&A Forum'],
         ['component' => 'create-session',  'title' => 'Create Session'],
         ['component' => 'peer-learning',    'title' => 'Peer Learning'],
-        ['component' => 'flagged-content', 'title' => 'Flagged Content'],
         ['component' => 'announcements',   'title' => 'Announcements'],
+        ['component' => 'Moderation', 'title' => 'Moderation'],
     ],
     'role-profile' => [
         ['component' => 'qa-forum',        'title' => 'Q&A Forum'],
