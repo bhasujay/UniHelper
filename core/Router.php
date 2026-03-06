@@ -22,6 +22,7 @@ class Router
             '/login' => ['AuthController', 'login'],
             '/api' => ['apiGateway', 'handleRequest'],
             '/profile/update' => ['DashboardController', 'profileUpdate'],
+            '/api/sessions/delete' => ['SessionController', 'deleteSession'],
         ],
         'PUT' => [],
         'DELETE' => [],
