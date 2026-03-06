@@ -2,6 +2,9 @@
 var selectedFiles = [];
 var questionCardTemplate; // Declare globally
 var current_question_pointer = 0;
+var current_question_pointer_temp = 0;
+var currentFilter = 'default'; // default filter
+var currentTag = 'default'; // default tag
 var batch_limit = 10;
 var isFetching = false;
 var hasMoreQuestions = true;
@@ -57,12 +60,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // close askmodal button — also collapse the toggle
-    askmodal.querySelector('.qa-askmodal-close').addEventListener('click', function() {
+    askmodal.querySelector('.qa-askmodal-close').addEventListener('click', async function() {
         const questionTitle = document.getElementById('qa-question-title').textContent.trim();
         const questionBody = document.getElementById('qa-question-body').value.trim();
         
         if (questionTitle || questionBody || selectedFiles.length > 0) {
-            if (!confirm('You have unsaved changes. Are you sure you want to close?')) {
+            if (!await confirm('You have unsaved changes. Are you sure you want to close?')) {
                 return;
             }
         }
@@ -83,12 +86,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Cancel button
     const cancelBtn = document.querySelector('.qa-cancel-btn');
-    cancelBtn.addEventListener('click', function() {
+    cancelBtn.addEventListener('click', async function() {
         const questionTitle = document.getElementById('qa-question-title').textContent.trim();
         const questionBody = document.getElementById('qa-question-body').value.trim();
         
         if (questionTitle || questionBody || selectedFiles.length > 0) {
-            if (!confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+            if (!await confirm('You have unsaved changes. Are you sure you want to cancel?')) {
                 return;
             }
         }
@@ -283,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Extract tags from title at submission time
         const tagMatches = questionTitle.match(/#(\w+)/g);
         const extractedTags = tagMatches ? tagMatches.map(tag => tag.slice(1)) : [];
-        
+
         // Prepare form data
         const formData = new FormData();
         formData.append('question', questionTitle);
@@ -389,7 +392,44 @@ document.addEventListener('DOMContentLoaded', function() {
         tags.forEach(tag => {
             const tagBtn = document.createElement('button');
             tagBtn.className = 'tag-btn';
-            tagBtn.textContent = tag.tag_name;
+            if (tag.post_count > 0) {
+                tagBtn.textContent = tag.tag_name + ` (${tag.post_count})`;
+            } else {
+                tagBtn.textContent = tag.tag_name;
+            }
+            // Make buttons behave like push/toggle buttons and call toggle handlers
+            tagBtn.setAttribute('type', 'button');
+            tagBtn.setAttribute('aria-pressed', 'false');
+
+            tagBtn.addEventListener('click', function() {
+                // Enforce single-active: deactivate all buttons first
+                const buttons = tagsBar.querySelectorAll('.tag-btn');
+                const wasActive = this.classList.contains('active');
+
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.setAttribute('aria-pressed', 'false');
+                });
+
+                if (!wasActive) {
+                    // Activate this one and call handler
+                    this.classList.add('active');
+                    this.setAttribute('aria-pressed', 'true');
+                    tagOnClick(tag.tag_name);
+                } else {
+                    // It was active and is now deactivated
+                    tagOffClick();
+                }
+            });
+
+            // Allow keyboard activation (Enter / Space)
+            tagBtn.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.click();
+                }
+            });
+
             tagsBar.appendChild(tagBtn);
         });
     })
@@ -401,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up scroll listener for lazy loading
     window.addEventListener('scroll', handleScroll);
 
-////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 // configure vote buttons in question view modal
 
     const modal = document.querySelector('.qa-question-view');
@@ -424,5 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
     modal.querySelector('.qa-nav-left-btn').addEventListener('click', function() {
         goBackFromQuestionView(questionId.textContent);
     });
+/////////////////////////////////////////////////////////////////////////////
+
 });
 

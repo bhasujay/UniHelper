@@ -1,34 +1,104 @@
 var questions_ids = [];
+var questions_ids_temp = [];
+var hasMoreQuestions_temp = true;
 
 //////////////////////////////////////////////////////////////////////
 
-function generateMenuDropdown(element, questionUserId, currentUserId, isModerator, isAnswer = false) {
-    let menuContainer = document.querySelector('.qa-menu-dropdown').cloneNode(true);
-    element.appendChild(menuContainer);
+function generateMenuDropdown(element, questionUserId, currentUserId, isModerator, questionId, isAnswer = -1) {
+    let menuContainer = element.querySelector('.qa-menu-dropdown[data-generated="true"]');
+
+    if (!menuContainer) {
+        const template = document.querySelector('.qa-menu-dropdown:not([data-generated="true"])');
+        if (!template) {
+            return;
+        }
+
+        menuContainer = template.cloneNode(true);
+        menuContainer.dataset.generated = 'true';
+        menuContainer.style.display = 'none';
+        element.appendChild(menuContainer);
+    }
+
+    const editBtn = menuContainer.querySelector('.edit-btn');
+    const deleteBtn = menuContainer.querySelector('.delete-btn');
+    const reportBtn = menuContainer.querySelector('.report-btn');
+    const closeBtn = menuContainer.querySelector('.close-btn');
+    const menuBtn = element.querySelector('.qa-menu-btn');
+
+    // Reset visibility so reused dropdowns do not keep stale state.
+    if (editBtn) editBtn.style.display = 'none';
+    if (deleteBtn) deleteBtn.style.display = 'none';
+    if (reportBtn) reportBtn.style.display = 'none';
 
     if (questionUserId == currentUserId) {
-        if (isAnswer) {
-            menuContainer.querySelector('.edit-btn').style.display = 'none';
-        } else {
-            menuContainer.querySelector('.edit-btn').style.display = 'block';
+        if (editBtn) {
+            editBtn.style.display = isAnswer >= 0 ? 'none' : 'block';
         }
-        menuContainer.querySelector('.delete-btn').style.display = 'block';
+        if (deleteBtn) {
+            deleteBtn.style.display = 'block';
+        }
     }
-    if (isModerator) {
-        menuContainer.querySelector('.report-btn').style.display = 'block';
+
+    if (isModerator && reportBtn) {
+        reportBtn.style.display = 'block';
     }
 
-    menuContainer.querySelector('.close-btn').addEventListener('click', function(e) {
-        e.stopPropagation();
-        menuContainer.style.display = 'none';
-    });
+    if (!menuContainer.dataset.initialized) {
+        menuContainer.dataset.initialized = 'true';
 
-    // Add click event listener to toggle menu
-    element.querySelector('.qa-menu-btn').addEventListener('click', function(e) {
-        e.stopPropagation();
-        menuContainer.style.display = menuContainer.style.display === 'block' ? 'none' : 'block';
-    });
+        menuContainer.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const clickedItem = e.target.closest('.qa-menu-item');
+            if (clickedItem && !clickedItem.classList.contains('delete-btn')) {
+                menuContainer.style.display = 'none';
+            }
+        });
 
+        if (closeBtn) {
+            closeBtn.onclick = function(e) {
+                e.stopPropagation();
+                menuContainer.style.display = 'none';
+            };
+        }
+    }
+
+    if (menuBtn) {
+        menuBtn.onclick = function(e) {
+            e.stopPropagation();
+            const shouldOpen = menuContainer.style.display !== 'block';
+
+            document.querySelectorAll('.qa-menu-dropdown[data-generated="true"]').forEach(function(menu) {
+                menu.style.display = 'none';
+            });
+
+            menuContainer.style.display = shouldOpen ? 'block' : 'none';
+        };
+    }
+
+    if (deleteBtn) {
+        deleteBtn.onclick = async function(e) {
+            e.stopPropagation();
+            try {
+                if (isAnswer >= 0) {
+                    await deleteAnswer(isAnswer);
+                } else {
+                    await deleteQuestion(questionId);
+                }
+            } finally {
+                // Hide regardless of success/failure/cancel to avoid stale open menus.
+                menuContainer.style.display = 'none';
+            }
+        };
+    }
+
+    if (!document.body.dataset.qaMenuOutsideBound) {
+        document.body.dataset.qaMenuOutsideBound = 'true';
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.qa-menu-dropdown[data-generated="true"]').forEach(function(menu) {
+                menu.style.display = 'none';
+            });
+        });
+    }
 }
 
 function resetAnswerForm() {
@@ -139,43 +209,70 @@ function answer(questionId) {
 function goBackFromQuestionView(questionId) {
     // show the main qa forum elements
     document.querySelector('.qa-question-view').style.display = 'none';
-    document.querySelector('.qa-main').style.display = 'block';
+    if (currentFilter === 'tag') {
+        document.querySelector('.qa-tag-filter').style.display = 'block';
+    } else if (currentFilter === 'search') {
+        document.querySelector('.qa-search-results').style.display = 'block';
+    } else {
+        document.querySelector('.qa-main').style.display = 'block';
+    }
     document.querySelector('.qa-header').style.display = 'block';
     document.querySelector('.qa-sticky-btn').style.display = 'flex';
 
-    const questionCard = document.getElementById(questionId);
-    
-    questionCard.querySelector('.upvote').classList.remove('active');
-    questionCard.querySelector('.downvote').classList.remove('active');
+    // Duplicate ids can exist across different containers; update every matching card.
+    const questionCards = Array.from(document.querySelectorAll('.qa-question-card'))
+        .filter(card => card.id === String(questionId));
 
     const upvoted = document.querySelector('.qa-question-view .upvote').classList.contains('active');
     const downvoted = document.querySelector('.qa-question-view .downvote').classList.contains('active');
-    
-    // Update the corresponding question card vote status
-    if (upvoted) {
-        questionCard.querySelector('.upvote').classList.add('active');
-    } 
-    if (downvoted) {
-        questionCard.querySelector('.downvote').classList.add('active');
-    } 
-    
-    const voteCount = document.querySelector('.qa-question-view .vote-count');
-    questionCard.querySelector('.vote-count').textContent = voteCount.textContent;
-    
+    const voteCountText = document.querySelector('.qa-question-view .vote-count').textContent;
     const anwerCount = document.querySelector('.qa-question-view .qa-answer-count');
     const answerCountNumber = anwerCount.textContent.match(/\d+/)?.[0] || '0';
-    questionCard.querySelector('.qa-answer-count').innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    let lastVisibleCard = null;
+    
+    questionCards.forEach(questionCard => {
+        questionCard.querySelector('.upvote').classList.remove('active');
+        questionCard.querySelector('.downvote').classList.remove('active');
+
+        if (upvoted) {
+            questionCard.querySelector('.upvote').classList.add('active');
+        }
+        if (downvoted) {
+            questionCard.querySelector('.downvote').classList.add('active');
+        }
+
+        questionCard.querySelector('.vote-count').textContent = voteCountText;
+
+        questionCard.querySelector('.qa-answer-count').innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
     </svg>${answerCountNumber}`;
-    
-    questionCard.scrollIntoView({ behavior: 'auto', block: 'center' });
+
+        // Scroll every match; hidden containers won't move viewport.
+        questionCard.scrollIntoView({ behavior: 'auto', block: 'center' });
+
+        if (questionCard.offsetParent !== null) {
+            lastVisibleCard = questionCard;
+        }
+    });
+
+    // Ensure final position lands on a visible card.
+    if (lastVisibleCard) {
+        lastVisibleCard.scrollIntoView({ behavior: 'auto', block: 'center' });
+    }
+
     resetQuestionView();
 }
 
 // rendering the question view page
 async function viewQuestion(questionId) {
     // hide the main qa forum elements
-    document.querySelector('.qa-main').style.display = 'none';
+    if (currentFilter === 'tag') {
+        document.querySelector('.qa-tag-filter').style.display = 'none';
+    } else if (currentFilter === 'search') {
+        document.querySelector('.qa-search-results').style.display = 'none';
+    } else {
+        document.querySelector('.qa-main').style.display = 'none';
+    }
     document.querySelector('.qa-header').style.display = 'none';
     document.querySelector('.qa-sticky-btn').style.display = 'none';
 
@@ -208,7 +305,7 @@ async function viewQuestion(questionId) {
         qaViewModal.querySelector('.qa-menu-btn').style.display = 'block';
         
         // Create and append the menu container
-        generateMenuDropdown(qaViewModal, question.user_id, userID, isModerator);
+        generateMenuDropdown(qaViewModal, question.user_id, userID, isModerator, questionId);
     }
 
     // Style the title with hashtags
@@ -300,7 +397,7 @@ async function viewQuestion(questionId) {
                 card.querySelector('.qa-menu-btn').style.display = 'block';
                 
                 // Create and append the menu container
-                generateMenuDropdown(card, answer.user_id, userID, isModerator, true);
+                generateMenuDropdown(card, answer.user_id, userID, isModerator, questionId, answer.a_id);
             }
 
             qaViewModal.querySelector('.qa-view-answers').appendChild(card);
@@ -388,7 +485,7 @@ function makeQuestionCard(data, position) {
     // Create and append the menu container
     if (data.userID == userID || isModerator) {
         card.querySelector('.qa-menu-btn').style.display = 'block';
-        generateMenuDropdown(card, data.userID, userID, isModerator);
+        generateMenuDropdown(card, data.userID, userID, isModerator, data.questionId);
     }
     
     // Add click handler for answer button
@@ -403,12 +500,20 @@ function makeQuestionCard(data, position) {
         viewQuestion(data.questionId);
     });
     
-    // Prepend the card to the .qa-main div
-    const qaMain = document.querySelector('.qa-main');
+    // Prepend the card to the cuurent filter
+    let holder;
+    if (currentFilter === 'default') {
+        holder = document.querySelector('.qa-main');
+    } else if (currentFilter === 'search') {
+        holder = document.querySelector('.qa-search-results');
+    } else if (currentFilter === 'tag') {
+        holder = document.querySelector('.qa-tag-filter');
+    }
+
     if (position === 0) {
-        qaMain.prepend(card);
+        holder.prepend(card);
     } else if (position === -1) {
-        qaMain.appendChild(card);
+        holder.appendChild(card);
     }
 }
 
@@ -524,11 +629,14 @@ function fetchQuestions() {
     isFetching = true;
     showSkeletonCards();
 
-    const url = `http://localhost/unihelper/api?controller=qaController&action=getQuestions&offset=${current_question_pointer}&limit=${batch_limit}`;
+    const url = `http://localhost/unihelper/api?controller=qaController&action=getQuestions&offset=${current_question_pointer}&limit=${batch_limit}&tag=${currentTag}`;
 
     fetch(url)
         .then(response => response.json())
         .then(data => {
+
+            console.log('Fetched questions:', data);
+
             hideSkeletonCards();
 
             if (data.success) {
@@ -537,7 +645,7 @@ function fetchQuestions() {
                     hasMoreQuestions = false;
                     console.log(questions_ids)
                 } else {
-                    // Process questions
+                    // Process questions iteratively and render cards
                     data.data.forEach(question => {
                         if (questions_ids.includes(question.q_id)) {
                             return; // Skip if already loaded
@@ -719,3 +827,74 @@ async function submitVote(element, id, clickedBtn) {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+// tag filtering
+
+function tagOnClick(tag) {
+    // Update current filter
+    currentFilter = 'tag';
+    currentTag = tag;
+    current_question_pointer_temp = current_question_pointer;
+    current_question_pointer = 0;
+    questions_ids_temp = [...questions_ids];
+    questions_ids = [];
+    hasMoreQuestions_temp = hasMoreQuestions;
+    hasMoreQuestions = true;
+    // hide the main question list and show the tag filter container
+    document.querySelector('.qa-main').style.display = 'none';
+    document.querySelector('.qa-tag-filter').style.display = 'block';
+    document.querySelector('.qa-sticky-btn').style.display = 'none';
+    document.querySelector('.qa-tag-filter').innerHTML = '';
+    fetchQuestions();
+}
+
+function tagOffClick() {
+    // Reset to default filter
+    currentFilter = 'default';
+    currentTag = 'default';
+    current_question_pointer = current_question_pointer_temp;
+    questions_ids = [...questions_ids_temp];
+    hasMoreQuestions = hasMoreQuestions_temp;
+    // show the main question list and hide the tag filter container
+    document.querySelector('.qa-main').style.display = 'block';
+    document.querySelector('.qa-tag-filter').style.display = 'none';
+    document.querySelector('.qa-sticky-btn').style.display = 'flex';
+    // placeholder for resetting filter function
+}
+
+// deleting a question
+async function deleteQuestion(questionId) {
+    if (!await confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
+        return false;
+    }
+
+    try {
+        const response = await fetch(`http://localhost/unihelper/api?controller=qaController&action=deleteQuestion&questionId=${questionId}`, {
+            method: 'GET'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            // Remove every matching card because the same question can appear in multiple containers.
+            const questionCards = Array.from(document.querySelectorAll('.qa-question-card'))
+                .filter(card => card.id === String(questionId));
+            questionCards.forEach(card => card.remove());
+            showToast('Question deleted successfully.', 'success');
+            return true;
+        }
+
+        showToast('Failed to delete the question. Please try again.', 'error');
+        return false;
+    } catch (error) {
+        console.error('Error deleting question:', error);
+        showToast('Failed to delete the question. Please try again.', 'error');
+        return false;
+    }
+}
+
+// deleting an answer
+async function deleteAnswer(answerId) {
+    if (!await confirm('Are you sure you want to delete this answer? This action cannot be undone.')) {
+        return;
+    }
+}

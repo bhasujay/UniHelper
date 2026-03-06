@@ -14,6 +14,7 @@ class QaController
 {
     private $model;
     private $userModel;
+    private $request;
     
     public function __construct()
     {
@@ -64,13 +65,22 @@ class QaController
         
         try {
             // Prepare data for insertion
+            // Read tags from the Request object (raw POST values are preserved
+            // by `Request::getBody()` so JSON won't be mangled)
+            $tagsRaw = $request->get('tags') ?? '[]';
+            $tags = json_decode($tagsRaw, true);
+            if (!is_array($tags)) {
+                $tags = [];
+            }
+
             $data = [
                 'user_id' => $request->session('user_id'),
                 'question' => $question,
                 'text' => $text,
-                'img_path' => null // Will be updated after upload
+                'img_path' => null, // Will be updated after upload
+                'tags' => $tags
             ];
-            
+
             // Create question
             $questionId = $this->model->create($data);
             
@@ -159,10 +169,11 @@ class QaController
     {
         $offset = $request->get('offset');
         $limit = $request->get('limit');
+        $tag = $request->get('tag');
         header('Content-Type: application/json');
         
         try {
-            $questions = $this->model->getQuestionBatch($offset, $limit);
+            $questions = $this->model->getQuestionBatch($offset, $limit, $tag);
 
             // For each question, get the vote status for the current user
             foreach ($questions as &$question) {
@@ -173,8 +184,6 @@ class QaController
                 $question['moderator_status'] = $data['moderator'];
                 $question['user_avatar'] = $data['profile_picture'];
             }
-
-
 
             echo json_encode([
             'success' => true,
@@ -276,6 +285,28 @@ class QaController
             echo json_encode([
                 'success' => true,
                 'data' => $tags
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function deleteQuestion(Request $request)
+    {
+        header('Content-Type: application/json');
+        
+        $questionId = $request->get('questionId');
+        $userId = $request->session('user_id');
+        
+        try {
+            $test = $this->model->deleteQuestion($questionId, $userId);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Question deleted successfully',
+                'data' => $test
             ]);
         } catch (\Exception $e) {
             echo json_encode([

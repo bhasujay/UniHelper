@@ -112,7 +112,7 @@
         <!-- Minimal footer -->
         <div class="sidebar-footer">
             <div class="sidebar-footer-logo">UniHelper</div>
-            <a href="mailto:unihelper@gmail.com" class="sidebar-footer-link">Support: unihelper@gmail.com</a>
+            <a href="mailto:project.unihelper@gmail.com" class="sidebar-footer-link">Support: project.unihelper@gmail.com</a>
             <div class="sidebar-footer-copy">&copy; <?= date('Y') ?> UniHelper</div>
         </div>
     </aside>
@@ -197,6 +197,100 @@
                 });
             }
         });
+    </script>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="confirmation-modal">
+        <div class="confirmation-modal-content" role="dialog" aria-modal="true" aria-labelledby="confirmationTitle" aria-describedby="confirmationMessage">
+            <h3 id="confirmationTitle" class="confirmation-modal-title">Please Confirm</h3>
+            <p id="confirmationMessage" class="confirmation-modal-message"></p>
+            <div class="confirmation-modal-actions">
+                <button id="cancelButton" type="button" class="btn btn-outline">Cancel</button>
+                <button id="confirmButton" type="button" class="btn btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Confirmation Modal Functionality
+        (function() {
+            const modal = document.getElementById('confirmationModal');
+            const messageEl = document.getElementById('confirmationMessage');
+            const confirmButton = document.getElementById('confirmButton');
+            const cancelButton = document.getElementById('cancelButton');
+
+            if (!modal || !messageEl || !confirmButton || !cancelButton) {
+                return;
+            }
+
+            const nativeConfirm = window.confirm.bind(window);
+            let activeResolver = null;
+            const pendingQueue = [];
+
+            function openModal(message, resolve) {
+                activeResolver = resolve;
+                messageEl.textContent = typeof message === 'string' ? message : String(message ?? '');
+                modal.classList.add('show');
+                cancelButton.focus();
+            }
+
+            function closeModal(confirmed) {
+                if (!activeResolver) {
+                    return;
+                }
+
+                const resolve = activeResolver;
+                activeResolver = null;
+                modal.classList.remove('show');
+                resolve(confirmed);
+
+                if (pendingQueue.length > 0) {
+                    const nextItem = pendingQueue.shift();
+                    openModal(nextItem.message, nextItem.resolve);
+                }
+            }
+
+            function confirmWithModal(message) {
+                return new Promise((resolve) => {
+                    pendingQueue.push({ message, resolve });
+
+                    if (!activeResolver) {
+                        const nextItem = pendingQueue.shift();
+                        openModal(nextItem.message, nextItem.resolve);
+                    }
+                });
+            }
+
+            confirmButton.addEventListener('click', () => closeModal(true));
+            cancelButton.addEventListener('click', () => closeModal(false));
+
+            // Clicking outside the dialog acts as cancel.
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal(false);
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (!modal.classList.contains('show')) {
+                    return;
+                }
+
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    closeModal(false);
+                }
+
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    closeModal(true);
+                }
+            });
+
+            window.nativeConfirm = nativeConfirm;
+            window.confirm = confirmWithModal;
+        })();
+
     </script>
 
     <!-- Error Modal Script -->

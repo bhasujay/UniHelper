@@ -1,7 +1,6 @@
 .qa-main {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem 1.5rem;
     padding-top: 0.75rem;
     position: relative;
 }
@@ -1009,9 +1008,6 @@
 }
 
 @media (max-width: 768px) {
-    .qa-main {
-        padding: 1rem;
-    }
 
     .qa-sticky-container {
         position: relative;

@@ -24,9 +24,45 @@ class Qna extends BaseModel
         if (!isset($data['status'])) {
             $data['status'] = 'normal';
         }
-        
+
+        // Extract tags (if any) and remove them from $data so parent::create
+        // does not try to insert a non-existent 'tags' column into questions
+        $tags = [];
+        if (isset($data['tags']) && is_array($data['tags'])) {
+            $tags = $data['tags'];
+        }
+        if (isset($data['tags'])) {
+            unset($data['tags']);
+        }
+
         // Call parent create
         $questionId = parent::create($data);
+
+        // Insert tags skipping duplicates (MySQL 8.0+ supports INSERT IGNORE or ON DUPLICATE KEY UPDATE)
+        $tagStmt = $this->db->prepare("INSERT IGNORE INTO tags (tag_name) VALUES (:tag_name)");
+        foreach ($tags as $tag) {
+            $tagStmt->execute(['tag_name' => $tag]);
+        }
+        // Get tag IDs
+        $tagIds = [];
+        $stmt = $this->db->prepare("SELECT tag_id FROM tags WHERE tag_name = :tag_name");
+        foreach ($tags as $tag) {
+            $stmt->execute(['tag_name' => $tag]);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if ($result) {
+                $tagIds[] = $result['tag_id'];
+            }
+        }
+        // update the post count for each tag
+        $updateTagStmt = $this->db->prepare("UPDATE tags SET post_count = post_count + 1 WHERE tag_id = :tag_id");
+        foreach ($tagIds as $tagId) {
+            $updateTagStmt->execute(['tag_id' => $tagId]);
+        }
+        // Insert into question_tags
+        $questionTagStmt = $this->db->prepare("INSERT INTO qa_tag (q_id, tag_id) VALUES (:q_id, :tag_id)");
+        foreach ($tagIds as $tagId) {
+            $questionTagStmt->execute(['q_id' => $questionId, 'tag_id' => $tagId]);
+        }
         
         // Now update the timestamps using MySQL's NOW()
         $sql = "UPDATE questions SET added_time = NOW(), last_modified = NOW() WHERE q_id = :id";
@@ -112,27 +148,38 @@ class Qna extends BaseModel
         return !empty($imagePaths) ? implode(',', $imagePaths) : null;
     }
 
-    public function getAllQuestions()
-    {
-        $sql = "SELECT * FROM questions ORDER BY added_time DESC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-    public function getQuestionBatch(int $offset, int $limit = 10): array
+    public function getQuestionBatch(int $offset, int $limit, string $tag): array
     {
         // we only take normal questions
         // reported questions are only accessible to admins
+        if ($tag === 'default') {
+            $sql = "
+                SELECT *
+                FROM questions
+                WHERE status = 'normal'
+                ORDER BY vote_count DESC, answer_count DESC, added_time DESC, last_modified DESC
+                LIMIT :offset, :limit
+            ";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+            $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        // if filter is not default, we filter by tag
         $sql = "
-            SELECT *
-            FROM questions
-            WHERE status = 'normal'
-            ORDER BY vote_count DESC, answer_count DESC, added_time DESC, last_modified DESC
+            SELECT q.* 
+            FROM questions q JOIN qa_tag qt ON q.q_id = qt.q_id JOIN tags t ON t.tag_id = qt.tag_id
+            WHERE q.status = 'normal' AND t.tag_name = :tag
+            ORDER BY q.vote_count DESC, q.answer_count DESC, q.added_time DESC, q.last_modified DESC
             LIMIT :offset, :limit
         ";
 
         $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':tag', $tag, \PDO::PARAM_STR);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->execute();
@@ -221,7 +268,6 @@ class Qna extends BaseModel
         ]);
     }
 
-
     // vote related functions
     public function checkUserVoteStatus($questionId, $userId)
     {
@@ -234,6 +280,71 @@ class Qna extends BaseModel
         
         // Return the vote value if found, otherwise 0 (no vote)
         return $result ? (int)$result['vote'] : 0;
+    }
+
+    public function deleteQuestion($questionId, $userId)
+    {
+        // Get the question first to verify it exists and check ownership
+        $question = $this->getQuestionById($questionId);
+        // send the question data to the logger for debugging
+        if (!$question) {
+            throw new \Exception('Question not found');
+        }
+        
+        // Check if user has permission to delete (owner or admin)
+        // For now, only the owner can delete their own question
+        // You can add admin check here later
+        if ($question['user_id'] != $userId) {
+            throw new \Exception('You do not have permission to delete this question');
+        }
+        
+        // Get associated tags to update their post counts
+        $sql = "SELECT t.tag_id FROM tags t JOIN qa_tag qt ON t.tag_id = qt.tag_id WHERE qt.q_id = :questionId";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':questionId', (int)$questionId, \PDO::PARAM_INT);
+        $stmt->execute();
+        $tagIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+        // Handle the image deletion
+        if ($question['img_path']) {
+            $imagePaths = explode(',', $question['img_path']);
+            foreach ($imagePaths as $path) {
+                $fullPath = dirname(__DIR__) . '/' . $path;
+                if (file_exists($fullPath)) {
+                    unlink($fullPath);
+                }
+            }
+            
+            // Try to remove the question directory if empty
+            $questionDir = dirname(__DIR__) . '/public/uploads/qnaImages/' . $questionId;
+            if (file_exists($questionDir) && is_dir($questionDir)) {
+                @rmdir($questionDir);
+            }
+        }
+
+        // Delete the question (this will also delete entries in qa_tag, answers, and votes due to foreign key constraints)
+        $deleteSql = "DELETE FROM questions WHERE q_id = :questionId";
+        $deleteStmt = $this->db->prepare($deleteSql);
+        $deleteStmt->bindValue(':questionId', (int)$questionId, \PDO::PARAM_INT);
+        $deleteStmt->execute();
+        
+        // Check if deletion was successful
+        $rowsAffected = $deleteStmt->rowCount();
+        if ($rowsAffected === 0) {
+            throw new \Exception('Failed to delete question - no rows affected');
+        }
+
+        // Update post counts for associated tags
+        if (!empty($tagIds)) {
+            $updateTagSql = "UPDATE tags SET post_count = post_count - 1 WHERE tag_id IN (" . implode(',', array_map('intval', $tagIds)) . ")";
+            $this->db->exec($updateTagSql);
+        }
+
+        // delete the tags that are no longer associated with any questions
+        $cleanupTagSql = "DELETE FROM tags WHERE post_count <= 0";
+        $this->db->exec($cleanupTagSql);
+
+        return true;
     }
 
 }

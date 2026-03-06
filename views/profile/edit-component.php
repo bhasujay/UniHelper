@@ -210,8 +210,8 @@ $majors = (new app\models\Major())->getAll();
     }
 
     // Remove profile image
-    function removeProfileImage() {
-        if (!confirm('Are you sure you want to remove your profile photo?')) {
+    async function removeProfileImage() {
+        if (!await confirm('Are you sure you want to remove your profile photo?')) {
             return;
         }
 

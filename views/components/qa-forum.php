@@ -260,7 +260,7 @@
 
 <!-- Q&A Forum -->
 <div class="qa-header">
-    <h1 class="qa-title">Q&A forum</h1>
+    <h1 class="qa-title">Q&A Forum</h1>
     <div class="qa-controls">
         <div class="qa-searchbar">
             <input type="text" placeholder="" class="search-input">
@@ -277,6 +277,7 @@
     </div>
 </div>
 
+<!-- main bucket -->
 <div class="qa-main">
      <!-- Skeletal loading figures -->
 
@@ -340,8 +341,12 @@
     <?php endfor; ?>
 </div>
 
+<!-- tag filter bucket -->
+<div class="qa-tag-filter" style="display: none;">
+    <!-- for the tag filter results -->
+</div>
 
-
-<div class="qa-search-results qa-main" aria-hidden="true">
+<!-- search result bucket -->
+<div class="qa-search-results" style ="display: none;">
     <!-- for the search results -->
 </div>
