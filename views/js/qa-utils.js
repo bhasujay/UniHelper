@@ -377,6 +377,8 @@ async function viewQuestion(questionId) {
     if (answers != null) {
         for (let answer of answers) {
             const card = answerTemplate.cloneNode(true);
+            // set the answer id as the id of the card for easy reference when editing/deleting
+            card.id = `answer-${answer.a_id}`;
             if (answer.user_avatar) {
                 card.querySelector('.qa-avatar-img').src = 'public' + answer.user_avatar;
             } else {
@@ -896,6 +898,39 @@ async function deleteQuestion(questionId) {
 // deleting an answer
 async function deleteAnswer(answerId) {
     if (!await confirm('Are you sure you want to delete this answer? This action cannot be undone.')) {
-        return;
+        return false;
+    }
+
+    try {
+        const response = await fetch(`http://localhost/unihelper/api?controller=qaController&action=deleteAnswer&answerId=${answerId}`, {
+            method: 'GET'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            // Remove the answer card
+            const answerCard = document.getElementById(`answer-${answerId}`);
+            if (answerCard) {
+                answerCard.remove();
+            }
+            // also reduce the answer count in the question view
+            const answerCountEl = document.querySelector('.qa-question-view .qa-answer-count');
+            let answerCount = parseInt(answerCountEl.textContent) || 0;
+            answerCount = Math.max(0, answerCount - 1);
+            if (answerCount === 1) {
+                answerCountEl.textContent = `1 Answer`;
+            } else {
+                answerCountEl.textContent = `${answerCount} Answers`;
+            }
+            showToast('Answer deleted successfully.', 'success');
+            return true;
+        }
+
+        showToast('Failed to delete the answer. Please try again.', 'error');
+        return false;
+    } catch (error) {
+        console.error('Error deleting answer:', error);
+        showToast('Failed to delete the answer. Please try again.', 'error');
+        return false;
     }
 }

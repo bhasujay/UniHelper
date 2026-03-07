@@ -295,7 +295,9 @@ class Qna extends BaseModel
         // For now, only the owner can delete their own question
         // You can add admin check here later
         if ($question['user_id'] != $userId) {
-            throw new \Exception('You do not have permission to delete this question');
+            if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+                throw new \Exception('You do not have permission to delete this question');
+            }
         }
         
         // Get associated tags to update their post counts
@@ -346,5 +348,50 @@ class Qna extends BaseModel
 
         return true;
     }
+
+    public function deleteAnswer($answerId, $userId)
+    {
+        // Get the answer first to verify it exists and check ownership
+        $sql = "SELECT * FROM answers WHERE a_id = :answerId";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':answerId', (int)$answerId, \PDO::PARAM_INT);
+        $stmt->execute();
+        $answer = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        if (!$answer) {
+            throw new \Exception('Answer not found');
+        }
+        
+        // Check if user has permission to delete (owner or admin)
+        // For now, only the owner can delete their own answer
+        // You can add admin check here later
+        if ($answer['user_id'] != $userId) {
+            if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+                throw new \Exception('You do not have permission to delete this answer');
+            }
+        }
+        
+        // Delete the answer
+        $deleteSql = "DELETE FROM answers WHERE a_id = :answerId";
+        $deleteStmt = $this->db->prepare($deleteSql);
+        $deleteStmt->bindValue(':answerId', (int)$answerId, \PDO::PARAM_INT);
+        $deleteStmt->execute();
+        
+        // Check if deletion was successful
+        $rowsAffected = $deleteStmt->rowCount();
+        if ($rowsAffected === 0) {
+            throw new \Exception('Failed to delete answer - no rows affected');
+        }
+
+        // Update the answer count in the questions table
+        $updateSql = "UPDATE questions 
+                      SET answer_count = answer_count - 1 
+                      WHERE q_id = :q_id";
+        $updateStmt = $this->db->prepare($updateSql);
+        $updateStmt->execute(['q_id' => $answer['q_id']]);
+
+        return true;
+    }
+
 
 }

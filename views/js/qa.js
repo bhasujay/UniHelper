@@ -173,6 +173,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     let answerTemplate = qaViewModal.querySelector('.qa-answer-card');
                     const card = answerTemplate.cloneNode(true);
+                    // set the answer id as the id of the card for easy reference when editing/deleting
+                    card.id = `answer-${data.data.a_id}`;
+
                     let user_avatar = document.getElementsByClassName('profile-img')[0].src;
                     let defaultAvatar = document.getElementById('default-pfp').src;
 
@@ -194,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // Create and append the menu container
                     card.querySelector('.qa-menu-btn').style.display = 'block';
-                    generateMenuDropdown(card, userID, userID, isModerator, true);                    
+                    generateMenuDropdown(card, userID, userID, isModerator, questionId, data.data.a_id);                    
 
                     qaViewModal.querySelector('.qa-view-answers').appendChild(card);
                     card.style.display = 'flex';

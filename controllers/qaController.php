@@ -154,7 +154,7 @@ class QaController
             echo json_encode([
                 'success' => true,
                 'message' => 'Answer posted successfully',
-                'data' => ['answer_id' => $answerId]
+                'data' => ['a_id' => $answerId]
             ]);
             
         } catch (\Exception $e) {
@@ -306,6 +306,28 @@ class QaController
             echo json_encode([
                 'success' => true,
                 'message' => 'Question deleted successfully',
+                'data' => $test
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function deleteAnswer(Request $request)
+    {
+        header('Content-Type: application/json');
+        
+        $answerId = $request->get('answerId');
+        $userId = $request->session('user_id');
+        
+        try {
+            $test = $this->model->deleteAnswer($answerId, $userId);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Answer deleted successfully',
                 'data' => $test
             ]);
         } catch (\Exception $e) {
