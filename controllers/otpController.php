@@ -75,7 +75,8 @@ public function generateOtpAction(Request $request)
     } catch (\Exception $e) {
         echo json_encode([
             'success' => false,
-            'message' => 'Failed to generate OTP.'
+            'message' => 'Failed to generate OTP.',
+            'error' => $e->getMessage()
         ]);
         exit;
     }

@@ -1,4 +1,7 @@
 <?php
+require_once dirname(__DIR__, 2) . '/models/base-model.php';
+require_once dirname(__DIR__, 2) . '/models/wishlistModel.php';
+
 use app\models\WishlistModel;
 
 $items = [];
@@ -61,3 +64,5 @@ if (isset($_SESSION['user_id'])) {
         <?php endif; ?>
     </div>
 </div>
+
+<script src="views/js/degree-programs.js"></script>
