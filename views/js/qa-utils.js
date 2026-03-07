@@ -879,6 +879,7 @@ async function deleteQuestion(questionId) {
             const questionCards = Array.from(document.querySelectorAll('.qa-question-card'))
                 .filter(card => card.id === String(questionId));
             questionCards.forEach(card => card.remove());
+            goBackFromQuestionView(questionId); // Ensure we exit the question view if we're in it
             showToast('Question deleted successfully.', 'success');
             return true;
         }
