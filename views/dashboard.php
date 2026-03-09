@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Prevent FOUC: apply saved theme before CSS loads -->
+    <script>
+        (function() {
+            var t = localStorage.getItem('unihelper-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <base href="/unihelper/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,6 +56,14 @@
                 </div>
             </div>
             <div class="nav-right">
+                <!-- Notification Bell Button -->
+                <button id="notificationBellBtn" class="notification-bell-btn" type="button" aria-label="Notifications">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span id="notificationDot" class="notification-dot"></span>
+                </button>
                 <div class="profile-container" id="profileDropdownTrigger">
                     <div class="profile-picture" >
                         <img class="profile-img" src="<?= htmlspecialchars($user->profilePicture ? "/unihelper/public/" . $user->profilePicture : '/unihelper/views/assets/default-pfp.png') ?>">
@@ -167,18 +182,28 @@
 
     <!-- Dashboard scripts -->
     <script>
-        // Theme toggle button
+        // Theme toggle button - switches between dark/light themes
         document.addEventListener('DOMContentLoaded', function() {
             const themeToggleBtn = document.getElementById('themeToggleBtn');
             const themeIconDark  = document.getElementById('themeIconDark');
             const themeIconLight = document.getElementById('themeIconLight');
 
             if (themeToggleBtn && themeIconDark && themeIconLight) {
+                // Sync icon state with current theme
+                var current = document.documentElement.getAttribute('data-theme') || 'dark';
+                themeIconDark.style.display  = current === 'dark' ? '' : 'none';
+                themeIconLight.style.display = current === 'light' ? '' : 'none';
+
                 themeToggleBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    const showingDark = themeIconDark.style.display !== 'none';
-                    themeIconDark.style.display  = showingDark ? 'none' : '';
-                    themeIconLight.style.display = showingDark ? ''     : 'none';
+                    var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+                    var newTheme = isDark ? 'light' : 'dark';
+
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('unihelper-theme', newTheme);
+
+                    themeIconDark.style.display  = newTheme === 'dark' ? '' : 'none';
+                    themeIconLight.style.display = newTheme === 'light' ? '' : 'none';
                 });
             }
         });
@@ -354,10 +379,99 @@
 
     </script>
 
-    <!-- Notification Model -->
-    <div id="notificationModal" class="notification-modal">
-        <!-- Implementation goes here -->
+    <!-- Notification Modal -->
+    <div id="notificationModalOverlay" class="notification-modal-overlay">
+        <div id="notificationModal" class="notification-modal">
+            <!-- Modal Header -->
+            <div class="notification-modal-header">
+                <h2 class="notification-modal-title">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    Notifications
+                </h2>
+                <button id="notificationModalClose" class="notification-modal-close" type="button" aria-label="Close notifications">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="notification-tabs">
+                <button class="notification-tab active" data-tab="new" type="button">
+                    New
+                    <span id="newNotifCount" class="notification-tab-badge" style="display:none;">0</span>
+                </button>
+                <button class="notification-tab" data-tab="opened" type="button">
+                    Opened
+                </button>
+                <div class="notification-tab-indicator"></div>
+            </div>
+
+            <!-- Tab Panels -->
+            <div class="notification-panels">
+                <!-- New Notifications Panel -->
+                <div id="notifPanelNew" class="notification-panel active" data-panel="new">
+                    <div class="notification-list" id="newNotifList">
+                        <!-- Items will be cloned from the template and appended here -->
+                    </div>
+                    <div class="notification-empty" id="newNotifEmpty">
+                        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                        <p>No new notifications</p>
+                        <span>You're all caught up!</span>
+                    </div>
+                </div>
+
+                <!-- Opened Notifications Panel -->
+                <div id="notifPanelOpened" class="notification-panel" data-panel="opened">
+                    <div class="notification-list" id="openedNotifList">
+                        <!-- Items will be cloned from the template and appended here -->
+                    </div>
+                    <div class="notification-empty" id="openedNotifEmpty">
+                        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        <p>No opened notifications</p>
+                        <span>Notifications you've read will appear here</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Notification Item Template (hidden, cloned by JS) -->
+    <template id="notificationItemTemplate">
+        <div class="notification-item" data-notif-id="">
+            <div class="notification-item-icon">
+                <!-- Icon will be set by JS based on type -->
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <div class="notification-item-body">
+                <p class="notification-item-title">Notification Title</p>
+                <p class="notification-item-message">Notification message goes here.</p>
+                <span class="notification-item-time">Just now</span>
+            </div>
+            <button class="notification-item-action" type="button" aria-label="Mark as read">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </button>
+        </div>
+    </template>
+
+    <script src="/unihelper/views/js/notification.js"></script>
 
     <!-- Error Modal Script -->
     <?php if (isset($error) && !empty($error)): ?>
