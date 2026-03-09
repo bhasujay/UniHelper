@@ -441,6 +441,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial fetch of questions
     fetchQuestions();
     
+    // Deep-link support: if ?question=<id> was passed, auto-open that question
+    // once the initial batch of questions has been rendered.
+    (function handleDeepLinkQuestion() {
+        const main = document.getElementById('dashboardMain');
+        if (!main) return;
+
+        let pageParams;
+        try { pageParams = JSON.parse(main.dataset.pageParams || '{}'); }
+        catch (_) { return; }
+
+        const targetId = pageParams.question;
+        if (!targetId) return;
+
+        // Store as a global so goBackFromQuestionView knows this was a deep link
+        window._deepLinkQuestionId = String(targetId);
+
+        // Wait for the initial fetchQuestions() to finish, then open the question.
+        // We poll isFetching because fetchQuestions() is async/callback-based.
+        const waitAndOpen = setInterval(function() {
+            if (!isFetching) {
+                clearInterval(waitAndOpen);
+                viewQuestion(targetId).then(function() {
+                    // If an answer ID was also provided, scroll to that answer
+                    const answerId = pageParams.answer;
+                    if (answerId) {
+                        const answerEl = document.getElementById('answer-' + answerId);
+                        if (answerEl) {
+                            answerEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                });
+
+                // Clean the URL so a refresh won't re-trigger the deep link
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState({}, '', cleanUrl);
+            }
+        }, 100);
+    })();
+
     // Set up scroll listener for lazy loading
     window.addEventListener('scroll', handleScroll);
 

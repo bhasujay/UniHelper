@@ -228,6 +228,73 @@ function goBackFromQuestionView(questionId) {
     const voteCountText = document.querySelector('.qa-question-view .vote-count').textContent;
     const anwerCount = document.querySelector('.qa-question-view .qa-answer-count');
     const answerCountNumber = anwerCount.textContent.match(/\d+/)?.[0] || '0';
+
+    // ---- Deep-link fallback: card not in the feed ----
+    if (questionCards.length === 0 && window._deepLinkQuestionId === String(questionId)) {
+        // We came via a direct link — the card was never in the feed.
+        // Fetch it, build the card, prepend it to .qa-main, and scroll to it.
+        loadQuestionDetails(questionId).then(function(question) {
+            if (!question) {
+                // Question may have been deleted in the meantime — just reset.
+                resetQuestionView();
+                return;
+            }
+
+            const addedTime  = new Date(question.added_time);
+            const lastModified = new Date(question.last_modified);
+            let timestamp, modified;
+            if (addedTime.getTime() === lastModified.getTime()) {
+                timestamp = getRelativeTime(addedTime);
+                modified = false;
+            } else {
+                timestamp = getRelativeTime(lastModified);
+                modified = true;
+            }
+
+            const mappedData = {
+                userID:          question.user_id,
+                username:        question.username,
+                user_role:       question.user_role,
+                moderator_status: question.moderator_status || '0',
+                user_avatar:     question.user_avatar,
+                questionId:      question.q_id,
+                voteCount:       parseInt(voteCountText, 10),
+                voteStatus:      upvoted ? 1 : (downvoted ? -1 : 0),
+                answerCount:     parseInt(answerCountNumber, 10),
+                questionTitle:   question.question,
+                questionText:    question.text,
+                timestamp:       timestamp,
+                imagecount:      question.img_path ? question.img_path.split(',').length : 0,
+                firstImage:      question.img_path ? question.img_path.split(',')[0] : '',
+                modified:        modified
+            };
+
+            // Temporarily force the default filter so the card goes into .qa-main
+            const prevFilter = currentFilter;
+            currentFilter = 'default';
+            makeQuestionCard(mappedData, 0); // prepend
+            currentFilter = prevFilter;
+
+            // Track the id so it won't be duplicated on future fetches
+            if (!questions_ids.includes(question.q_id)) {
+                questions_ids.push(question.q_id);
+            }
+
+            // Scroll to the newly created card
+            const newCard = document.getElementById(String(questionId));
+            if (newCard) {
+                newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // Clear the deep link flag — it has been handled
+            delete window._deepLinkQuestionId;
+        });
+
+        resetQuestionView();
+        return;
+    }
+
+    // ---- Normal flow: card exists in the feed ----
     let lastVisibleCard = null;
     
     questionCards.forEach(questionCard => {
