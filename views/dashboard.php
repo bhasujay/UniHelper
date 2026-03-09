@@ -94,13 +94,23 @@
                                 </svg>
                                 Edit Profile
                             </a>
-                            <a href="profile/change-password" class="dropdown-item">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            <button class="dropdown-item theme-toggle-btn" id="themeToggleBtn" type="button">
+                                <svg id="themeIconDark" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                                 </svg>
-                                Change Password
-                            </a>
+                                <svg id="themeIconLight" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                                Change Theme
+                            </button>
                             <div class="dropdown-divider"></div>
                             <a href="/UniHelper/logout" class="dropdown-item">
                                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -147,50 +157,31 @@
         </div>
     </aside>
 
-    <main class="main-content">
+    <main class="main-content"
+          id="dashboardMain"
+          data-component="<?= htmlspecialchars($activeComponent ?? '') ?>"
+          data-page-params="<?= htmlspecialchars(json_encode($pageParams ?? [], JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>">
         <?php if (isset($content)) echo $content; ?>
     </main>
 
-    <!-- Toast Notification Container -->
-    <div id="toastContainer" class="toast-container"></div>
 
+    <!-- Dashboard scripts -->
     <script>
-        // Toast Notification Function
-        function showToast(message, type = 'success', duration = 5000) {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            
-            const typeText = type === 'success' ? 'Success' : 'Error';
-            
-            toast.innerHTML = `
-                <div>
-                    <div class="toast-type">${typeText}</div>
-                    <div class="toast-message">${message}</div>
-                </div>
-                <button class="toast-close" aria-label="Close">&times;</button>
-            `;
-            
-            container.appendChild(toast);
-            
-            // Close button handler
-            const closeBtn = toast.querySelector('.toast-close');
-            closeBtn.addEventListener('click', () => {
-                removeToast(toast);
-            });
-            
-            // Auto-remove after duration
-            setTimeout(() => {
-                removeToast(toast);
-            }, duration);
-        }
-        
-        function removeToast(toast) {
-            toast.classList.add('hiding');
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        }
+        // Theme toggle button
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const themeIconDark  = document.getElementById('themeIconDark');
+            const themeIconLight = document.getElementById('themeIconLight');
+
+            if (themeToggleBtn && themeIconDark && themeIconLight) {
+                themeToggleBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const showingDark = themeIconDark.style.display !== 'none';
+                    themeIconDark.style.display  = showingDark ? 'none' : '';
+                    themeIconLight.style.display = showingDark ? ''     : 'none';
+                });
+            }
+        });
 
         // Profile dropdown functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -229,6 +220,47 @@
         });
     </script>
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+    <script>
+        // Toast Notification Function
+        function showToast(message, type = 'success', duration = 5000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const typeText = type === 'success' ? 'Success' : 'Error';
+            
+            toast.innerHTML = `
+                <div>
+                    <div class="toast-type">${typeText}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" aria-label="Close">&times;</button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Close button handler
+            const closeBtn = toast.querySelector('.toast-close');
+            closeBtn.addEventListener('click', () => {
+                removeToast(toast);
+            });
+            
+            // Auto-remove after duration
+            setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+        }
+        
+        function removeToast(toast) {
+            toast.classList.add('hiding');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+    </script>
+
     <!-- Confirmation Modal -->
     <div id="confirmationModal" class="confirmation-modal">
         <div class="confirmation-modal-content" role="dialog" aria-modal="true" aria-labelledby="confirmationTitle" aria-describedby="confirmationMessage">
@@ -240,7 +272,6 @@
             </div>
         </div>
     </div>
-
     <script>
         // Confirmation Modal Functionality
         (function() {
@@ -323,6 +354,11 @@
 
     </script>
 
+    <!-- Notification Model -->
+    <div id="notificationModal" class="notification-modal">
+        <!-- Implementation goes here -->
+    </div>
+
     <!-- Error Modal Script -->
     <?php if (isset($error) && !empty($error)): ?>
     <style>
@@ -390,5 +426,6 @@
         });
     </script>
     <?php endif; ?>
+
 </body>
 </html>
