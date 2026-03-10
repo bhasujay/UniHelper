@@ -4,8 +4,6 @@ return [
         ['component' => 'qa-forum',           'title' => 'Q&A Forum'],
         ['component' => 'z-score-checker',    'title' => 'Z-Score Checker'],
         ['component' => 'degree-programs',    'title' => 'Degree Programs'],
-        ['component' => 'wishlist',           'title' => 'Wishlist'],
-        ['component' => 'find-applicant',     'title' => 'Find Applicants'],
         ['component' => 'unicode-generator',  'title' => 'Unicode Generator'],
         ['component' => 'connect-undergrads', 'title' => 'Connect with Undergrads'],
         ['component' => 'announcements',      'title' => 'Announcements'],

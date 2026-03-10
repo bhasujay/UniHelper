@@ -47,6 +47,8 @@
 
   /* Light Theme */
   [data-theme="light"] {
+    --primary: #00b4e5; /* Darker primary for better visibility in light theme */
+    --accent: #005fbd; /* Darker accent for light theme */
     --background: #f2f4f8;
     --foreground: #1c1f2b;
     --muted-foreground: #5f6577;

@@ -372,6 +372,7 @@ async function viewQuestion(questionId) {
     if (addedTime.getTime() === lastModified.getTime()) {
         qaViewModal.querySelector('.qa-time').textContent = getRelativeTime(addedTime);
     } else {
+        qaViewModal.querySelector('.qa-time').textContent = getRelativeTime(lastModified);
         qaViewModal.querySelector('.qa-modified').textContent = '(edited)';
     }
 
