@@ -3,3 +3,4 @@
 !/public/uploads/.gitkeep
 .env
 /tables/*
+/tools/*

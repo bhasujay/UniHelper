@@ -34,8 +34,9 @@ class AuthController
                 return $this->render('login.php', ['error' => 'Invalid email or password']);
             }
 
-            // Verify the password using the same method as registration
-            $passwordVerified = hash_equals($hashedPassword, $foundUser->password_hash);
+            // Double-hash: server hashes the client's SHA-256 hash again
+            $serverHash = hash('sha256', $hashedPassword);
+            $passwordVerified = hash_equals($serverHash, $foundUser->password_hash);
             
             if ($foundUser && $passwordVerified) {
                 // Login successful
@@ -81,8 +82,9 @@ class AuthController
                 $user->profileRole = $request->get('role');
             }
 
-            // Handle password (already hashed by JavaScript)
-            $user->password_hash = $request->get('hashed_password');
+            // Handle password: client sends SHA-256 hash, server hashes it again
+            $clientHash = $request->get('hashed_password');
+            $user->password_hash = hash('sha256', $clientHash);
 
             // Validate data
             $errors = $user->validate();
