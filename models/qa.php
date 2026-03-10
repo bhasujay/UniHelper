@@ -282,6 +282,102 @@ class Qna extends BaseModel
         return $result ? (int)$result['vote'] : 0;
     }
 
+    // Delete all images associated with a question (used for edit & delete flows)
+    public function deleteQuestionImages($questionId)
+    {
+        $uploadDir = dirname(__DIR__) . '/public/uploads/qnaImages/' . $questionId;
+        if (file_exists($uploadDir) && is_dir($uploadDir)) {
+            // Delete all files in the directory
+            $files = glob($uploadDir . '/*');
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+            // Remove the directory itself
+            @rmdir($uploadDir);
+        }
+    }
+
+    // Update question fields and set last_modified to NOW()
+    public function updateQuestion($questionId, $data)
+    {
+        $setClauses = [];
+        $params = ['id' => $questionId];
+
+        foreach ($data as $column => $value) {
+            $setClauses[] = "{$column} = :{$column}";
+            $params[$column] = $value;
+        }
+
+        $setClauses[] = "last_modified = NOW()";
+        $setString = implode(', ', $setClauses);
+
+        $sql = "UPDATE questions SET {$setString} WHERE q_id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    // Re-evaluate tags on edit: remove old tags, add new ones
+    public function reEvaluateTags($questionId, $newTags)
+    {
+        // 1. Get existing tag IDs for this question
+        $sql = "SELECT t.tag_id FROM tags t JOIN qa_tag qt ON t.tag_id = qt.tag_id WHERE qt.q_id = :questionId";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':questionId', (int)$questionId, \PDO::PARAM_INT);
+        $stmt->execute();
+        $oldTagIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+        // 2. Decrement post_count for old tags
+        if (!empty($oldTagIds)) {
+            $updateTagSql = "UPDATE tags SET post_count = post_count - 1 WHERE tag_id IN (" . implode(',', array_map('intval', $oldTagIds)) . ")";
+            $this->db->exec($updateTagSql);
+        }
+
+        // 3. Delete qa_tag entries for this question
+        $deleteQaTagSql = "DELETE FROM qa_tag WHERE q_id = :questionId";
+        $deleteStmt = $this->db->prepare($deleteQaTagSql);
+        $deleteStmt->bindValue(':questionId', (int)$questionId, \PDO::PARAM_INT);
+        $deleteStmt->execute();
+
+        // 4. Clean up tags with post_count <= 0
+        $cleanupTagSql = "DELETE FROM tags WHERE post_count <= 0";
+        $this->db->exec($cleanupTagSql);
+
+        // 5. Insert new tags (same pattern as create)
+        if (!empty($newTags)) {
+            $tagStmt = $this->db->prepare("INSERT IGNORE INTO tags (tag_name) VALUES (:tag_name)");
+            foreach ($newTags as $tag) {
+                $tagStmt->execute(['tag_name' => $tag]);
+            }
+
+            // Get tag IDs
+            $tagIds = [];
+            $stmt = $this->db->prepare("SELECT tag_id FROM tags WHERE tag_name = :tag_name");
+            foreach ($newTags as $tag) {
+                $stmt->execute(['tag_name' => $tag]);
+                $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+                if ($result) {
+                    $tagIds[] = $result['tag_id'];
+                }
+            }
+
+            // Increment post_count for new tags
+            $updateTagStmt = $this->db->prepare("UPDATE tags SET post_count = post_count + 1 WHERE tag_id = :tag_id");
+            foreach ($tagIds as $tagId) {
+                $updateTagStmt->execute(['tag_id' => $tagId]);
+            }
+
+            // Insert into qa_tag
+            $questionTagStmt = $this->db->prepare("INSERT INTO qa_tag (q_id, tag_id) VALUES (:q_id, :tag_id)");
+            foreach ($tagIds as $tagId) {
+                $questionTagStmt->execute(['q_id' => $questionId, 'tag_id' => $tagId]);
+            }
+        }
+    }
+
     public function deleteQuestion($questionId, $userId)
     {
         // Get the question first to verify it exists and check ownership
@@ -309,19 +405,7 @@ class Qna extends BaseModel
 
         // Handle the image deletion
         if ($question['img_path']) {
-            $imagePaths = explode(',', $question['img_path']);
-            foreach ($imagePaths as $path) {
-                $fullPath = dirname(__DIR__) . '/' . $path;
-                if (file_exists($fullPath)) {
-                    unlink($fullPath);
-                }
-            }
-            
-            // Try to remove the question directory if empty
-            $questionDir = dirname(__DIR__) . '/public/uploads/qnaImages/' . $questionId;
-            if (file_exists($questionDir) && is_dir($questionDir)) {
-                @rmdir($questionDir);
-            }
+            $this->deleteQuestionImages($questionId);
         }
 
         // Delete the question (this will also delete entries in qa_tag, answers, and votes due to foreign key constraints)

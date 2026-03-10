@@ -337,5 +337,118 @@ class QaController
             ]);
         }
     }
+
+    public function editQuestion(Request $request)
+    {
+        header('Content-Type: application/json');
+        
+        // Check if user is logged in
+        if (!$request->session('user_id')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'You must be logged in to edit a question'
+            ]);
+            return;
+        }
+        
+        $questionId = $request->get('question_id');
+        $userId = $request->session('user_id');
+        
+        if (!$questionId) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Question ID is required'
+            ]);
+            return;
+        }
+        
+        // Verify ownership or admin
+        $question = $this->model->getQuestionById($questionId);
+        if (!$question) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Question not found'
+            ]);
+            return;
+        }
+        
+        if ($question['user_id'] != $userId) {
+            if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You do not have permission to edit this question'
+                ]);
+                return;
+            }
+        }
+        
+        // Validate input
+        $questionTitle = trim($request->get('question') ?? '');
+        $text = trim($request->get('text') ?? '');
+        
+        if (!$questionTitle || !$text) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Question title and description are required'
+            ]);
+            return;
+        }
+        
+        if (strlen($questionTitle) < 10 || strlen($questionTitle) > 512) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Question title must be between 10 and 512 characters'
+            ]);
+            return;
+        }
+        
+        if (strlen($text) < 10) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Description must be at least 10 characters'
+            ]);
+            return;
+        }
+        
+        try {
+            // Re-evaluate tags: decrement old, add new
+            $tagsRaw = $request->get('tags') ?? '[]';
+            $tags = json_decode($tagsRaw, true);
+            if (!is_array($tags)) {
+                $tags = [];
+            }
+            $this->model->reEvaluateTags($questionId, $tags);
+
+            // Delete existing images (if any)
+            $this->model->deleteQuestionImages($questionId);
+            
+            // Handle new image uploads (re-save whatever the client sent)
+            $imagePaths = null;
+            if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
+                $imagePaths = $this->model->handleImageUploads($_FILES['images'], $questionId);
+            }
+            
+            // Update the question (only question, text, img_path + last_modified via model)
+            $updateData = [
+                'question' => $questionTitle,
+                'text' => $text,
+                'img_path' => $imagePaths
+            ];
+            
+            $this->model->updateQuestion($questionId, $updateData);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Question updated successfully',
+                'data' => ['question_id' => $questionId]
+            ]);
+            
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to update question: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
 

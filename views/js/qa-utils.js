@@ -91,6 +91,14 @@ function generateMenuDropdown(element, questionUserId, currentUserId, isModerato
         };
     }
 
+    if (editBtn) {
+        editBtn.onclick = async function(e) {
+            e.stopPropagation();
+            menuContainer.style.display = 'none';
+            await editQuestion(questionId);
+        };
+    }
+
     if (!document.body.dataset.qaMenuOutsideBound) {
         document.body.dataset.qaMenuOutsideBound = 'true';
         document.addEventListener('click', function() {
@@ -1000,4 +1008,102 @@ async function deleteAnswer(answerId) {
         showToast('Failed to delete the answer. Please try again.', 'error');
         return false;
     }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Edit question
+
+var isEditMode = false;
+var editingQuestionId = null;
+
+async function editQuestion(questionId) {
+    // Fetch the full question data using existing function
+    const question = await loadQuestionDetails(questionId);
+    if (!question) {
+        showToast('Failed to load question data for editing.', 'error');
+        return;
+    }
+
+    // Set edit mode flags
+    isEditMode = true;
+    editingQuestionId = questionId;
+
+    // Change the modal title temporarily
+    const modalTitle = document.querySelector('.qa-askmodal-title');
+    modalTitle.textContent = 'Edit Question';
+
+    // Change submit button text
+    const submitBtn = document.querySelector('#qaQuestionForm button[type="submit"]');
+    submitBtn.textContent = 'Update Question';
+
+    // Populate the form with existing data
+    const titleDiv = document.getElementById('qa-question-title');
+    titleDiv.textContent = question.question;
+    parseHashtags(); // Re-style any hashtags in the title
+
+    const bodyTextarea = document.getElementById('qa-question-body');
+    bodyTextarea.value = question.text;
+
+    // Clear current selectedFiles and image previews
+    selectedFiles = [];
+    document.querySelectorAll('.qa-image-preview').forEach(preview => preview.remove());
+
+    // Load existing images as File objects
+    const imageTray = document.querySelector('.qa-image-tray');
+    const imageAddBox = document.querySelector('.qa-image-add-box');
+
+    if (question.img_path) {
+        const imagePaths = question.img_path.split(',');
+        for (let i = 0; i < imagePaths.length; i++) {
+            const path = imagePaths[i].trim();
+            if (!path) continue;
+            try {
+                const file = await urlToFile(path, `image_${i}`);
+                selectedFiles.push(file);
+                addImagePreview(file, imageTray, imageAddBox);
+            } catch (err) {
+                console.error('Failed to load image for editing:', path, err);
+            }
+        }
+    }
+
+    // Show the ask modal
+    const askmodal = document.querySelector('.qa-askmodal');
+    askmodal.style.display = 'flex';
+}
+
+// Helper: convert an image URL/path to a File object
+async function urlToFile(path, fallbackName) {
+    // Build full URL from the relative path
+    const url = window.location.origin + '/unihelper/' + path;
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    // Extract filename and extension from the path
+    const parts = path.split('/');
+    const fileName = parts[parts.length - 1] || fallbackName;
+    const ext = fileName.split('.').pop().toLowerCase();
+
+    const mimeMap = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp'
+    };
+    const mime = mimeMap[ext] || blob.type || 'image/jpeg';
+
+    return new File([blob], fileName, { type: mime });
+}
+
+function resetEditMode() {
+    isEditMode = false;
+    editingQuestionId = null;
+
+    // Restore original modal title and submit button text
+    const modalTitle = document.querySelector('.qa-askmodal-title');
+    modalTitle.textContent = 'Ask a Question';
+
+    const submitBtn = document.querySelector('#qaQuestionForm button[type="submit"]');
+    submitBtn.textContent = 'Post Question';
 }

@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.classList.remove('expanded');
         btn.classList.remove('hover');
         resetForm();
+        resetEditMode();
     });
     
     
@@ -101,6 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.classList.remove('expanded');
         btn.classList.remove('hover');
         resetForm();
+        resetEditMode();
     });
     
     // Cancel button for answer modal
@@ -286,6 +288,117 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Branch: Edit mode vs Create mode
+        if (isEditMode && editingQuestionId) {
+            handleEditSubmit(questionTitle, questionBody, askmodal, btn, isExpanded);
+        } else {
+            handleCreateSubmit(questionTitle, questionBody, askmodal, btn, isExpanded);
+        }
+    });
+
+    // ---- Edit Submit Handler ----
+    async function handleEditSubmit(questionTitle, questionBody, askmodal, btn, isExpanded) {
+        // Ask for confirmation
+        if (!await confirm('Are you sure you want to update this question?')) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('question_id', editingQuestionId);
+        formData.append('question', questionTitle);
+        formData.append('text', questionBody);
+
+        // Extract tags from title (same as create flow)
+        const tagMatches = questionTitle.match(/#(\w+)/g);
+        const extractedTags = tagMatches ? tagMatches.map(tag => tag.slice(1)) : [];
+        formData.append('tags', JSON.stringify(extractedTags));
+
+        // Add all selected images (could be unchanged originals or new ones)
+        selectedFiles.forEach((file, index) => {
+            formData.append('images[]', file);
+        });
+
+        const submitBtn = questionForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Updating...';
+
+        try {
+            const response = await fetch('http://localhost/unihelper/api?controller=qaController&action=editQuestion', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                showToast('Question updated successfully!', 'success');
+
+                // Update all matching question cards in the feed
+                const questionCards = Array.from(document.querySelectorAll('.qa-question-card'))
+                    .filter(card => card.id === String(editingQuestionId));
+
+                const styledTitle = questionTitle.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
+
+                questionCards.forEach(card => {
+                    card.querySelector('.qa-question-title').innerHTML = styledTitle;
+                    card.querySelector('.qa-question-text').textContent = questionBody;
+                    card.querySelector('.qa-modified').textContent = '(edited)';
+
+                    // Update image preview on the card
+                    const imagePreview = card.querySelector('.qa-question-image-preview');
+                    const imageCount = card.querySelector('.qa-image-count');
+                    const img = imagePreview.querySelector('img');
+
+                    if (selectedFiles.length > 0) {
+                        imagePreview.style.display = 'block';
+                        // Build server path for first image
+                        const firstExt = selectedFiles[0].name.split('.').pop();
+                        img.src = `public/uploads/qnaImages/${editingQuestionId}/0.${firstExt}`;
+                        img.style.maxWidth = '75px';
+                        img.style.height = 'auto';
+                        if (selectedFiles.length > 1) {
+                            img.classList.add('darkened');
+                            imageCount.style.display = 'block';
+                            imageCount.textContent = `+${selectedFiles.length - 1}`;
+                        } else {
+                            img.classList.remove('darkened');
+                            imageCount.style.display = 'none';
+                        }
+                    } else {
+                        imagePreview.style.display = 'none';
+                    }
+                });
+
+                // If the question view modal was open, update it too
+                const qaViewModal = document.querySelector('.qa-question-view');
+                const viewQuestionId = qaViewModal.querySelector('#qaViewModalQuestionId').textContent;
+                if (qaViewModal.style.display === 'flex' && viewQuestionId == editingQuestionId) {
+                    qaViewModal.querySelector('.qa-view-title').innerHTML = styledTitle;
+                    qaViewModal.querySelector('.qa-view-body').textContent = questionBody;
+                    qaViewModal.querySelector('.qa-modified').textContent = '(edited)';
+                }
+
+                // Close modal and reset
+                askmodal.style.display = 'none';
+                isExpanded = false;
+                btn.classList.remove('expanded');
+                btn.classList.remove('hover');
+                resetForm();
+                resetEditMode();
+            } else {
+                showToast('Error: ' + (data.message || 'Failed to update question'), 'error');
+            }
+        } catch (error) {
+            console.error('Error updating question:', error);
+            showToast('An error occurred while updating your question. Please try again.', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+        }
+    }
+
+    // ---- Create Submit Handler (original logic extracted) ----
+    function handleCreateSubmit(questionTitle, questionBody, askmodal, btn, isExpanded) {
         // Extract tags from title at submission time
         const tagMatches = questionTitle.match(/#(\w+)/g);
         const extractedTags = tagMatches ? tagMatches.map(tag => tag.slice(1)) : [];
@@ -294,7 +407,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         formData.append('question', questionTitle);
         formData.append('text', questionBody);
-        formData.append('tags', JSON.stringify(extractedTags)); // Extract tags here
+        formData.append('tags', JSON.stringify(extractedTags));
         
         // Add all selected images
         selectedFiles.forEach((file, index) => {
@@ -348,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     questionText: questionBody,
                     timestamp: 'Just now',
                     imagecount: selectedFiles.length,
-                    firstImage: firstImagePath,  // Use server path format instead of blob URL
+                    firstImage: firstImagePath,
                     modified: false
                 };
                 
@@ -367,14 +480,13 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error submitting question:', error);
-            console.log(data.message);
             showToast('An error occurred while submitting your question. Please try again.', 'error');
         })
         .finally(() => {
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
         });
-    });
+    }
 
 /////////////////////////////////////////////////////////////////////////////
     
