@@ -111,6 +111,11 @@ class AuthController
                 return $this->render('register.php', ['error' => 'Email already exists']);
             }
 
+            // Check if phone already exists
+            if ($user->phoneExists($user->phone)) {
+                return $this->render('register.php', ['error' => 'Phone number already exists']);
+            }
+
             // Save user
             if ($user->save()) {
                 // Registration successful
@@ -158,6 +163,39 @@ class AuthController
     // password change
     public function changePassword(Request $request)
     { 
+    }
+
+    // API: Check if email or phone already exists
+    public function checkExistsAction(Request $request)
+    {
+        header('Content-Type: application/json');
+
+        $field = $request->get('field'); // 'email' or 'phone'
+        $value = $request->get('value');
+
+        if (!$field || !$value) {
+            echo json_encode(['exists' => false, 'error' => 'Missing parameters']);
+            exit;
+        }
+
+        $user = new User();
+
+        if ($field === 'email') {
+            $exists = $user->emailExists($value);
+            echo json_encode([
+                'exists' => $exists,
+                'message' => $exists ? 'This email is already registered.' : ''
+            ]);
+        } elseif ($field === 'phone') {
+            $exists = $user->phoneExists($value);
+            echo json_encode([
+                'exists' => $exists,
+                'message' => $exists ? 'This phone number is already registered.' : ''
+            ]);
+        } else {
+            echo json_encode(['exists' => false, 'error' => 'Invalid field']);
+        }
+        exit;
     }
 
     // to reload the views with data/errors

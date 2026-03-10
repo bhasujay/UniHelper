@@ -57,8 +57,18 @@
                             </div>
                             <div class="form-group">
                                 <label for="phone" class="form-label required">Contact Number</label>
-                                <div class="form-input-with-icon">
-                                    <input type="tel" id="phone" name="phone" class="form-input" placeholder="Enter your phone number" required>
+                                <div class="form-input-with-icon input-tooltip-wrapper">
+                                    <input type="tel" id="phone" name="phone" class="form-input" placeholder="Enter your phone number" required style="padding-right: 2.5rem;">
+                                    <button type="button" class="input-tooltip-btn" tabindex="-1" aria-label="Phone number info">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                        </svg>
+                                    </button>
+                                    <div class="input-tooltip-popup">
+                                        💬 Use a <strong>WhatsApp-registered</strong> number if you'd like it to be your contact in the network.
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -641,3 +641,170 @@
     margin-top: 15px;
     font-size: 14px;
   }
+
+/* ===== Toast Notifications (for auth pages) ===== */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10005;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    min-width: 300px;
+    max-width: 400px;
+    padding: 16px 16px 16px 20px;
+    border-radius: 8px;
+    background-color: var(--card, #1a1a2e);
+    border: 1px solid var(--border, rgba(164, 109, 255, 0.2));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    animation: toastSlideIn 0.3s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.toast::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+}
+
+.toast.hiding {
+    animation: toastSlideOut 0.3s ease-out forwards;
+}
+
+.toast-success::before { background-color: #4caf50; }
+.toast-error::before   { background-color: #f44336; }
+
+.toast-type {
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.toast-success .toast-type { color: #4caf50; }
+.toast-error .toast-type   { color: #f44336; }
+
+.toast-message {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--foreground, #e0e0e0);
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: var(--muted-foreground, #999);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-left: auto;
+}
+
+.toast-close:hover { opacity: 1; }
+
+@keyframes toastSlideIn {
+    from { transform: translateX(400px); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes toastSlideOut {
+    from { transform: translateX(0);     opacity: 1; }
+    to   { transform: translateX(400px); opacity: 0; }
+}
+
+/* ===== Inline Input Tooltip (info icon inside input) ===== */
+.input-tooltip-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-tooltip-btn {
+    position: absolute;
+    right: 0.6rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    color: var(--muted-foreground, #888);
+    opacity: 0.6;
+    transition: opacity 0.2s, color 0.2s;
+}
+
+.input-tooltip-btn:hover,
+.input-tooltip-btn:focus {
+    opacity: 1;
+    color: var(--primary, #a46dff);
+}
+
+/* The tooltip popup */
+.input-tooltip-popup {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    background: var(--card, #1a1a2e);
+    border: 1px solid var(--border, rgba(164, 109, 255, 0.2));
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: var(--foreground, #e0e0e0);
+    line-height: 1.45;
+    width: 260px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+}
+
+/* Small arrow pointing up */
+.input-tooltip-popup::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 12px;
+    width: 10px;
+    height: 10px;
+    background: var(--card, #1a1a2e);
+    border-left: 1px solid var(--border, rgba(164, 109, 255, 0.2));
+    border-top: 1px solid var(--border, rgba(164, 109, 255, 0.2));
+    transform: rotate(45deg);
+}
+
+/* Show on hover of the button */
+.input-tooltip-btn:hover + .input-tooltip-popup,
+.input-tooltip-btn:focus + .input-tooltip-popup,
+.input-tooltip-popup:hover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}

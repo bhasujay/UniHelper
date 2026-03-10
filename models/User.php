@@ -116,6 +116,22 @@ class User
         }
     }
 
+    // Check if phone already exists
+    public function phoneExists($phone)
+    {
+        try {
+            $sql = "SELECT COUNT(*) FROM users WHERE phone = :phone";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':phone', $phone);
+            $stmt->execute();
+            
+            return $stmt->fetchColumn() > 0;
+        } catch (\PDOException $e) {
+            error_log("User phoneExists error: " . $e->getMessage());
+            return false;
+        }
+    }
+
     // Validate user data
     public function validate()
     {
