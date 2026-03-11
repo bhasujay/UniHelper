@@ -26,10 +26,6 @@
         'role-admin' => 'role-admin.css'
     ];
     
-    if (isset($user->role) && isset($roleMap[$user->role])) {
-        echo '<link rel="stylesheet" href="/unihelper/views/css/components/' . $roleMap[$user->role] . '">';
-    }
-    
     // Load component-specific CSS if available
     if (isset($activeComponent)) {
         $componentCssPath = __DIR__ . "/css/{$activeComponent}.css";

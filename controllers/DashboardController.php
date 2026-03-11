@@ -217,11 +217,24 @@ class DashboardController
         header('Location: /UniHelper/profile/view');
         exit;
     }
-
-    public function handleDashboardAction(Request $request)
+    
+    // Dynamic profile view (e.g., /view/profile/3)
+    public function viewProfile($params)
     {
-        
-    }
+        $this->activeComponent = 'profile-global';
 
+        // Collect any query-string parameters
+        $request = new Request();
+        foreach ($_GET as $key => $value) {
+            $this->queryParams[$key] = $request->get($key);
+        }
+
+        // Merge dynamic parameters (like 'id') so they are available in the view
+        $this->queryParams = array_merge($this->queryParams, $params);
+
+        // Load the profile global component
+        $content = $this->loadComponent('profile/profile-global', $this->queryParams);
+        return $this->renderDashboard($content, $this->role_data[$this->user->role]);
+    }
 
 }

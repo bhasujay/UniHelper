@@ -16,7 +16,6 @@ class Router
             '/profile/view' => ['DashboardController', 'profileIndex'],
             '/profile/edit' => ['DashboardController', 'profileIndex'],
             '/profile/change-password' => ['DashboardController', 'profileIndex'],
-            '/view/profile/:id' => ['DashboardController', 'viewProfile'], // dynamic route example
         ],
         'POST' => [
             '/register' => ['AuthController', 'register'],
@@ -33,6 +32,7 @@ class Router
         ],
         'DYNAMIC' => [
             '/:component' => ['DashboardController', 'renderComponent'],
+            '/view/profile/:id' => ['DashboardController', 'viewProfile'],
             '/this/is/a/test/:id' => ['TestController', 'testMethod']
         ]
     ];

@@ -67,7 +67,7 @@
                                         </svg>
                                     </button>
                                     <div class="input-tooltip-popup">
-                                        💬 Use a <strong>WhatsApp-registered</strong> number if you'd like it to be your contact in the network.
+                                        💬 Use a <strong>WhatsApp-registered Sri Lankan</strong> number if you'd like it to be your contact in the network.
                                     </div>
                                 </div>
                             </div>
