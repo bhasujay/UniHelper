@@ -135,6 +135,8 @@ class DashboardController
             $component = 'edit-component';
         } elseif ($req === 'view') {
             $component = 'profile-component';
+        } elseif ($req === 'change-password') {
+            $component = 'change-password-component';
         }
 
         $activeComponent = $component;
