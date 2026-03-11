@@ -707,7 +707,7 @@ function fetchQuestions() {
     isFetching = true;
     showSkeletonCards();
 
-    const url = `http://localhost/unihelper/api?controller=qaController&action=getQuestions&offset=${current_question_pointer}&limit=${batch_limit}&tag=${currentTag}`;
+    const url = `/unihelper/api?controller=qaController&action=getQuestions&offset=${current_question_pointer}&limit=${batch_limit}&tag=${currentTag}`;
 
     fetch(url)
         .then(response => response.json())
@@ -788,7 +788,7 @@ function handleScroll() {
 }
 
 async function loadQuestionDetails(questionId) {
-    return fetch(`http://localhost/unihelper/api?controller=qaController&action=getQuestion&questionId=${questionId}`)
+    return fetch(`/unihelper/api?controller=qaController&action=getQuestion&questionId=${questionId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -804,7 +804,7 @@ async function loadQuestionDetails(questionId) {
 }
 
 async function getAnswersForQuestion(questionId) {
-    return fetch(`http://localhost/unihelper/api?controller=qaController&action=getAnswers&questionId=${questionId}`)
+    return fetch(`/unihelper/api?controller=qaController&action=getAnswers&questionId=${questionId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -888,7 +888,7 @@ async function submitVote(element, id, clickedBtn) {
     // ---- REQUEST ----
     try {
         const res = await fetch(
-            `http://localhost/unihelper/api?controller=qaController&action=Vote&question_id=${questionId}&vote_value=${voteValue}`,
+            `/unihelper/api?controller=qaController&action=Vote&question_id=${questionId}&vote_value=${voteValue}`,
             { method: 'GET' }
         );
 
@@ -947,7 +947,7 @@ async function deleteQuestion(questionId) {
     }
 
     try {
-        const response = await fetch(`http://localhost/unihelper/api?controller=qaController&action=deleteQuestion&questionId=${questionId}`, {
+        const response = await fetch(`/unihelper/api?controller=qaController&action=deleteQuestion&questionId=${questionId}`, {
             method: 'GET'
         });
         const data = await response.json();
@@ -978,7 +978,7 @@ async function deleteAnswer(answerId) {
     }
 
     try {
-        const response = await fetch(`http://localhost/unihelper/api?controller=qaController&action=deleteAnswer&answerId=${answerId}`, {
+        const response = await fetch(`/unihelper/api?controller=qaController&action=deleteAnswer&answerId=${answerId}`, {
             method: 'GET'
         });
         const data = await response.json();

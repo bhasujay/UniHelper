@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.textContent = 'Submitting...';
         
         // AJAX submission
-        fetch('http://localhost/unihelper/api?controller=qaController&action=answerQuestion', {
+        fetch('/unihelper/api?controller=qaController&action=answerQuestion', {
             method: 'POST',
             body: formData
         })
@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.textContent = 'Updating...';
 
         try {
-            const response = await fetch('http://localhost/unihelper/api?controller=qaController&action=editQuestion', {
+            const response = await fetch('/unihelper/api?controller=qaController&action=editQuestion', {
                 method: 'POST',
                 body: formData
             });
@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.textContent = 'Submitting...';
         
         // AJAX submission
-        fetch('http://localhost/unihelper/api?controller=qaController&action=create', {
+        fetch('/unihelper/api?controller=qaController&action=create', {
             method: 'POST',
             body: formData
         })
@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Make the data object for question card
                 const fullAvatarSrc = document.getElementsByClassName('profile-img')[0].src;
-                const baseUrl = 'http://localhost/unihelper/public/';
+                const baseUrl = '/unihelper/public/';
                 let user_avatar;
                 
                 if (fullAvatarSrc.includes('/views/assets/')) {
