@@ -358,13 +358,25 @@ async function viewQuestion(questionId) {
     const question = await loadQuestionDetails(questionId);
 
     // copy avatar src from the question card into the view modal
+    const viewAvatarImg = qaViewModal.querySelector('.qa-avatar-img');
     if (question.user_avatar) {
-        qaViewModal.querySelector('.qa-avatar-img').src = 'public' + question.user_avatar;
+        viewAvatarImg.src = 'public' + question.user_avatar;
     } else {
-        qaViewModal.querySelector('.qa-avatar-img').src = document.getElementById('default-pfp').src;
+        viewAvatarImg.src = document.getElementById('default-pfp').src;
     }
-    qaViewModal.querySelector('.qa-username').textContent = question.username;
+    const viewUsernameEl = qaViewModal.querySelector('.qa-username');
+    viewUsernameEl.textContent = question.username;
     qaViewModal.querySelector('.qa-role').textContent = question.user_role;
+
+    const viewProfileUrl = `/unihelper/view/profile/${question.user_id}`;
+    viewAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = viewProfileUrl; };
+    viewAvatarImg.parentElement.style.cursor = 'pointer';
+    viewUsernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = viewProfileUrl; };
+    viewUsernameEl.style.cursor = 'pointer';
+    viewUsernameEl.style.textDecoration = 'underline';
+    viewUsernameEl.style.textDecorationColor = 'transparent';
+    viewUsernameEl.onmouseenter = () => viewUsernameEl.style.textDecorationColor = 'currentColor';
+    viewUsernameEl.onmouseleave = () => viewUsernameEl.style.textDecorationColor = 'transparent';
     
 
     const addedTime = new Date(question.added_time);
@@ -455,16 +467,28 @@ async function viewQuestion(questionId) {
             const card = answerTemplate.cloneNode(true);
             // set the answer id as the id of the card for easy reference when editing/deleting
             card.id = `answer-${answer.a_id}`;
+            const ansAvatarImg = card.querySelector('.qa-avatar-img');
             if (answer.user_avatar) {
-                card.querySelector('.qa-avatar-img').src = 'public' + answer.user_avatar;
+                ansAvatarImg.src = 'public' + answer.user_avatar;
             } else {
-                card.querySelector('.qa-avatar-img').src = document.getElementById('default-pfp').src;
+                ansAvatarImg.src = document.getElementById('default-pfp').src;
             }
             if (answer.username.length >12) {
                 answer.username = answer.username.split(' ')[0];
             }
-            card.querySelector('.qa-username').textContent = answer.username;
+            const ansUsernameEl = card.querySelector('.qa-username');
+            ansUsernameEl.textContent = answer.username;
             card.querySelector('.qa-role').textContent = answer.user_role;
+
+            const ansProfileUrl = `/unihelper/view/profile/${answer.user_id}`;
+            ansAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
+            ansAvatarImg.parentElement.style.cursor = 'pointer';
+            ansUsernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
+            ansUsernameEl.style.cursor = 'pointer';
+            ansUsernameEl.style.textDecoration = 'underline';
+            ansUsernameEl.style.textDecorationColor = 'transparent';
+            ansUsernameEl.onmouseenter = () => ansUsernameEl.style.textDecorationColor = 'currentColor';
+            ansUsernameEl.onmouseleave = () => ansUsernameEl.style.textDecorationColor = 'transparent';
 
             const ansAddedTime = new Date(answer.added_time);
             card.querySelector('.qa-time').textContent = getRelativeTime(ansAddedTime);
@@ -498,13 +522,25 @@ function makeQuestionCard(data, position) {
 
     // Populate user info
     card.querySelector('#qa-user-id').value = data.userID;
+    const avatarImg = card.querySelector('.qa-avatar-img');
     if (data.user_avatar) {
-        card.querySelector('.qa-avatar-img').src = 'public' + data.user_avatar;
+        avatarImg.src = 'public' + data.user_avatar;
     } else {
-        card.querySelector('.qa-avatar-img').src = document.getElementById('default-pfp').src;
+        avatarImg.src = document.getElementById('default-pfp').src;
     }
-    card.querySelector('.qa-username').textContent = data.username;
+    const usernameEl = card.querySelector('.qa-username');
+    usernameEl.textContent = data.username;
     card.querySelector('.qa-role').textContent = data.user_role;
+
+    const profileUrl = `/unihelper/view/profile/${data.userID}`;
+    avatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = profileUrl; };
+    avatarImg.parentElement.style.cursor = 'pointer';
+    usernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = profileUrl; };
+    usernameEl.style.cursor = 'pointer';
+    usernameEl.style.textDecoration = 'underline';
+    usernameEl.style.textDecorationColor = 'transparent';
+    usernameEl.onmouseenter = () => usernameEl.style.textDecorationColor = 'currentColor';
+    usernameEl.onmouseleave = () => usernameEl.style.textDecorationColor = 'transparent';
     
     // Populate question content
     const styledTitle = data.questionTitle.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');

@@ -181,18 +181,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     let user_avatar = document.getElementsByClassName('profile-img')[0].src;
                     let defaultAvatar = document.getElementById('default-pfp').src;
 
+                    const ansAvatarImg = card.querySelector('.qa-avatar-img');
                     if (user_avatar.includes('/uploads')) {
-                        card.querySelector('.qa-avatar-img').src = user_avatar;
+                        ansAvatarImg.src = user_avatar;
                     } else {
-                        card.querySelector('.qa-avatar-img').src = defaultAvatar;
+                        ansAvatarImg.src = defaultAvatar;
                     }
                     let username = document.getElementById('profileName').textContent;
                     if (username.length >12) {
                         username = username.split(' ')[0];
                     }
                     let role = document.getElementById('profileRole').textContent;
-                    card.querySelector('.qa-username').textContent = username;
+                    const ansUsernameEl = card.querySelector('.qa-username');
+                    ansUsernameEl.textContent = username;
                     card.querySelector('.qa-role').textContent = role;
+
+                    const ansProfileUrl = `/unihelper/view/profile/${userID}`;
+                    ansAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
+                    ansAvatarImg.parentElement.style.cursor = 'pointer';
+                    ansUsernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
+                    ansUsernameEl.style.cursor = 'pointer';
+                    ansUsernameEl.style.textDecoration = 'underline';
+                    ansUsernameEl.style.textDecorationColor = 'transparent';
+                    ansUsernameEl.onmouseenter = () => ansUsernameEl.style.textDecorationColor = 'currentColor';
+                    ansUsernameEl.onmouseleave = () => ansUsernameEl.style.textDecorationColor = 'transparent';
 
                     card.querySelector('.qa-time').textContent = 'Just now';
                     card.querySelector('.qa-answer-body').textContent = answerText;
