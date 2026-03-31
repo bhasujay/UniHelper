@@ -842,3 +842,43 @@
         transform: rotate(360deg);
     }
 }
+
+/* ====================================
+   Eligible Programs Modal Styles
+   ==================================== */
+
+#eligibleProgramsModal .modal-body {
+    background: var(--bg);
+}
+
+#eligibleProgramsModal .search-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+#eligibleProgramsModal .degree-program-card {
+    margin-bottom: 0;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+    #eligibleProgramsModal .search-results {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    #eligibleProgramsModal .modal-content {
+        width: 98vw !important;
+        max-width: 98vw !important;
+    }
+    
+    #eligibleProgramsModal .search-results {
+        grid-template-columns: 1fr;
+    }
+    
+    #eligibleProgramsModal .modal-body {
+        padding: 20px !important;
+    }
+}

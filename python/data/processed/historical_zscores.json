@@ -1,0 +1,2762 @@
+{
+  "MEDICINE\n(University of Colombo)": {
+    "program_id": 101,
+    "name": "MEDICINE",
+    "university": "University Of Colombo",
+    "districts": {
+      "COLOMBO": {
+        "2022": 2.4516,
+        "2023": 1.3093,
+        "2025": 2.3517
+      },
+      "GAMPAHA": {
+        "2022": 2.4412,
+        "2023": 1.3078,
+        "2025": 2.4035
+      },
+      "KALUTARA": {
+        "2022": 2.4446,
+        "2023": 1.3678,
+        "2025": 2.3684
+      },
+      "MATALE": {
+        "2022": 2.4981,
+        "2023": 1.3244,
+        "2025": 2.7472
+      },
+      "KANDY": {
+        "2022": 2.5501,
+        "2023": 1.3143,
+        "2025": 2.5573
+      },
+      "NUWARA ELIYA": {
+        "2022": null,
+        "2023": null,
+        "2025": 2.4495
+      },
+      "GALLE": {
+        "2022": 2.4478,
+        "2023": 1.319,
+        "2025": 2.3763
+      },
+      "MATARA": {
+        "2022": 2.4552,
+        "2023": 1.3708,
+        "2025": 2.3541
+      },
+      "HAMBANTOTA": {
+        "2022": 2.4711,
+        "2023": 1.3232,
+        "2025": 2.3528
+      },
+      "JAFFNA": {
+        "2022": 2.4504,
+        "2023": 1.3191,
+        "2025": 2.36
+      },
+      "KILINOCHCHI": {
+        "2022": null,
+        "2023": null,
+        "2025": 2.4083
+      },
+      "MANNAR": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": 2.5134,
+        "2023": 1.6092,
+        "2025": 2.424
+      },
+      "TRINCOMALEE": {
+        "2022": 2.4637,
+        "2023": null,
+        "2025": 2.3765
+      },
+      "BATTICALOA": {
+        "2022": 2.4902,
+        "2023": 1.3336,
+        "2025": 2.3823
+      },
+      "AMPARA": {
+        "2022": 2.4374,
+        "2023": 1.3531,
+        "2025": 2.4008
+      },
+      "PUTTALAM": {
+        "2022": 2.4946,
+        "2023": 1.3607,
+        "2025": 2.4331
+      },
+      "KURUNEGALA": {
+        "2022": 2.445,
+        "2023": 1.3087,
+        "2025": 2.3664
+      },
+      "ANURADHAPURA": {
+        "2022": 2.5446,
+        "2023": 1.3081,
+        "2025": 2.3916
+      },
+      "POLONNARUWA": {
+        "2022": 2.4695,
+        "2023": null,
+        "2025": 2.3838
+      },
+      "BADULLA": {
+        "2022": 2.5455,
+        "2023": 1.3153,
+        "2025": 2.3702
+      },
+      "MONARAGALA": {
+        "2022": null,
+        "2023": 1.4399,
+        "2025": 2.3627
+      },
+      "KEGALLE": {
+        "2022": 2.4552,
+        "2023": 1.3316,
+        "2025": 2.4686
+      },
+      "RATNAPURA": {
+        "2022": 2.4542,
+        "2023": 1.3136,
+        "2025": 2.3684
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "MEDICINE\n(University of Peradeniya)": {
+    "program_id": 106,
+    "name": "MEDICINE",
+    "university": "University Of Peradeniya",
+    "districts": {
+      "COLOMBO": {
+        "2022": 2.2279,
+        "2023": 0.9957,
+        "2025": 2.1679
+      },
+      "GAMPAHA": {
+        "2022": 2.2147,
+        "2023": 1.0597,
+        "2025": 2.2114
+      },
+      "KALUTARA": {
+        "2022": 2.2204,
+        "2023": 1.1115,
+        "2025": 2.202
+      },
+      "MATALE": {
+        "2022": 2.215,
+        "2023": null,
+        "2025": 2.2337
+      },
+      "KANDY": {
+        "2022": 2.2216,
+        "2023": 1.0452,
+        "2025": 2.1677
+      },
+      "NUWARA ELIYA": {
+        "2022": 2.2598,
+        "2023": 0.7393,
+        "2025": 2.2599
+      },
+      "GALLE": {
+        "2022": 2.2429,
+        "2023": 1.208,
+        "2025": 2.1838
+      },
+      "MATARA": {
+        "2022": 2.2225,
+        "2023": null,
+        "2025": 2.1711
+      },
+      "HAMBANTOTA": {
+        "2022": 2.2646,
+        "2023": null,
+        "2025": 2.1721
+      },
+      "JAFFNA": {
+        "2022": 2.212,
+        "2023": 1.0424,
+        "2025": 2.1763
+      },
+      "KILINOCHCHI": {
+        "2022": 2.3267,
+        "2023": 0.7644,
+        "2025": 2.212
+      },
+      "MANNAR": {
+        "2022": null,
+        "2023": 1.0269,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": 2.2786,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": 2.2496,
+        "2023": 0.7387,
+        "2025": 2.1704
+      },
+      "TRINCOMALEE": {
+        "2022": 2.248,
+        "2023": 0.7827,
+        "2025": null
+      },
+      "BATTICALOA": {
+        "2022": 2.2518,
+        "2023": 1.0522,
+        "2025": 2.1818
+      },
+      "AMPARA": {
+        "2022": 2.2384,
+        "2023": 0.9723,
+        "2025": 2.1724
+      },
+      "PUTTALAM": {
+        "2022": 2.2805,
+        "2023": 0.5638,
+        "2025": 2.1971
+      },
+      "KURUNEGALA": {
+        "2022": 2.2114,
+        "2023": 1.2342,
+        "2025": 2.1739
+      },
+      "ANURADHAPURA": {
+        "2022": 2.2347,
+        "2023": 1.1234,
+        "2025": 2.1711
+      },
+      "POLONNARUWA": {
+        "2022": 2.2591,
+        "2023": 0.7616,
+        "2025": null
+      },
+      "BADULLA": {
+        "2022": 2.2159,
+        "2023": 1.151,
+        "2025": 2.1702
+      },
+      "MONARAGALA": {
+        "2022": 2.241,
+        "2023": 0.9637,
+        "2025": 2.2093
+      },
+      "KEGALLE": {
+        "2022": 2.215,
+        "2023": 1.2728,
+        "2025": 2.1976
+      },
+      "RATNAPURA": {
+        "2022": 2.2112,
+        "2023": 1.1071,
+        "2025": 2.1907
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "MEDICINE\n(University of Sri Jayewardenepura)": {
+    "program_id": 107,
+    "name": "MEDICINE",
+    "university": "University of Sri Jayewardenepura",
+    "districts": {
+      "COLOMBO": {
+        "2022": 2.1465,
+        "2023": null,
+        "2025": 2.1207
+      },
+      "GAMPAHA": {
+        "2022": 2.1566,
+        "2023": null,
+        "2025": 2.1252
+      },
+      "KALUTARA": {
+        "2022": 2.1474,
+        "2023": null,
+        "2025": 2.1212
+      },
+      "MATALE": {
+        "2022": 2.1943,
+        "2023": null,
+        "2025": null
+      },
+      "KANDY": {
+        "2022": 2.1512,
+        "2023": null,
+        "2025": 2.1276
+      },
+      "NUWARA ELIYA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "GALLE": {
+        "2022": 2.1503,
+        "2023": null,
+        "2025": 2.1311
+      },
+      "MATARA": {
+        "2022": 2.1557,
+        "2023": null,
+        "2025": 2.1209
+      },
+      "HAMBANTOTA": {
+        "2022": 2.1643,
+        "2023": null,
+        "2025": 2.1361
+      },
+      "JAFFNA": {
+        "2022": 2.1968,
+        "2023": null,
+        "2025": 2.1271
+      },
+      "KILINOCHCHI": {
+        "2022": 2.1972,
+        "2023": null,
+        "2025": 2.1622
+      },
+      "MANNAR": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": 2.1503,
+        "2023": null,
+        "2025": 2.1323
+      },
+      "TRINCOMALEE": {
+        "2022": 2.1783,
+        "2023": null,
+        "2025": 2.1392
+      },
+      "BATTICALOA": {
+        "2022": 2.1621,
+        "2023": null,
+        "2025": null
+      },
+      "AMPARA": {
+        "2022": 2.169,
+        "2023": null,
+        "2025": 2.1247
+      },
+      "PUTTALAM": {
+        "2022": 2.1698,
+        "2023": null,
+        "2025": 2.1336
+      },
+      "KURUNEGALA": {
+        "2022": 2.1529,
+        "2023": null,
+        "2025": 2.1206
+      },
+      "ANURADHAPURA": {
+        "2022": 2.185,
+        "2023": null,
+        "2025": 2.1316
+      },
+      "POLONNARUWA": {
+        "2022": 2.1774,
+        "2023": null,
+        "2025": 2.1368
+      },
+      "BADULLA": {
+        "2022": 2.1671,
+        "2023": null,
+        "2025": 2.1237
+      },
+      "MONARAGALA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "KEGALLE": {
+        "2022": 2.1465,
+        "2023": null,
+        "2025": 2.1405
+      },
+      "RATNAPURA": {
+        "2022": 2.1586,
+        "2023": null,
+        "2025": 2.1236
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "MEDICINE\n(University of Kelaniya)": {
+    "program_id": 212,
+    "name": "MEDICINE",
+    "university": "University of Kelaniya",
+    "districts": {
+      "COLOMBO": {
+        "2022": 2.0526,
+        "2023": null,
+        "2025": 2.0428
+      },
+      "GAMPAHA": {
+        "2022": 2.0517,
+        "2023": null,
+        "2025": 2.0445
+      },
+      "KALUTARA": {
+        "2022": 2.0514,
+        "2023": null,
+        "2025": 2.0467
+      },
+      "MATALE": {
+        "2022": 2.0612,
+        "2023": null,
+        "2025": 2.0418
+      },
+      "KANDY": {
+        "2022": 2.0545,
+        "2023": null,
+        "2025": 2.0483
+      },
+      "NUWARA ELIYA": {
+        "2022": 2.0969,
+        "2023": null,
+        "2025": 2.0845
+      },
+      "GALLE": {
+        "2022": 2.0791,
+        "2023": null,
+        "2025": 2.0613
+      },
+      "MATARA": {
+        "2022": 2.0508,
+        "2023": null,
+        "2025": 2.0722
+      },
+      "HAMBANTOTA": {
+        "2022": 2.0508,
+        "2023": null,
+        "2025": 2.0422
+      },
+      "JAFFNA": {
+        "2022": null,
+        "2023": null,
+        "2025": 2.0406
+      },
+      "KILINOCHCHI": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MANNAR": {
+        "2022": 2.1087,
+        "2023": null,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "TRINCOMALEE": {
+        "2022": 2.0533,
+        "2023": null,
+        "2025": 2.0601
+      },
+      "BATTICALOA": {
+        "2022": 2.0571,
+        "2023": null,
+        "2025": 2.0717
+      },
+      "AMPARA": {
+        "2022": 2.0536,
+        "2023": null,
+        "2025": 2.0475
+      },
+      "PUTTALAM": {
+        "2022": 2.0552,
+        "2023": null,
+        "2025": 2.048
+      },
+      "KURUNEGALA": {
+        "2022": 2.0517,
+        "2023": null,
+        "2025": 2.0443
+      },
+      "ANURADHAPURA": {
+        "2022": 2.0651,
+        "2023": null,
+        "2025": 2.0417
+      },
+      "POLONNARUWA": {
+        "2022": 2.1071,
+        "2023": null,
+        "2025": 2.0664
+      },
+      "BADULLA": {
+        "2022": 2.0619,
+        "2023": null,
+        "2025": 2.0538
+      },
+      "MONARAGALA": {
+        "2022": 2.1015,
+        "2023": null,
+        "2025": 2.0473
+      },
+      "KEGALLE": {
+        "2022": 2.06,
+        "2023": null,
+        "2025": 2.0547
+      },
+      "RATNAPURA": {
+        "2022": 2.0526,
+        "2023": null,
+        "2025": 2.0406
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "MEDICINE\n(University of Jaffna)": {
+    "program_id": 213,
+    "name": "MEDICINE",
+    "university": "University Of Jaffana ",
+    "districts": {
+      "COLOMBO": {
+        "2022": 1.879,
+        "2023": null,
+        "2025": 1.8869
+      },
+      "GAMPAHA": {
+        "2022": 1.7278,
+        "2023": null,
+        "2025": 1.714
+      },
+      "KALUTARA": {
+        "2022": 1.784,
+        "2023": null,
+        "2025": 1.8709
+      },
+      "MATALE": {
+        "2022": 1.7073,
+        "2023": null,
+        "2025": 1.7284
+      },
+      "KANDY": {
+        "2022": 1.8169,
+        "2023": null,
+        "2025": 1.8282
+      },
+      "NUWARA ELIYA": {
+        "2022": 1.7308,
+        "2023": null,
+        "2025": 1.717
+      },
+      "GALLE": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.8401
+      },
+      "MATARA": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.8572
+      },
+      "HAMBANTOTA": {
+        "2022": 1.7765,
+        "2023": null,
+        "2025": null
+      },
+      "JAFFNA": {
+        "2022": 1.8724,
+        "2023": null,
+        "2025": 1.8586
+      },
+      "KILINOCHCHI": {
+        "2022": 1.7943,
+        "2023": null,
+        "2025": 1.7451
+      },
+      "MANNAR": {
+        "2022": 1.7335,
+        "2023": null,
+        "2025": 1.7074
+      },
+      "MULLAITIVU": {
+        "2022": 1.8819,
+        "2023": null,
+        "2025": 1.7788
+      },
+      "VAVUNIYA": {
+        "2022": 1.8433,
+        "2023": null,
+        "2025": 1.7107
+      },
+      "TRINCOMALEE": {
+        "2022": 1.7138,
+        "2023": null,
+        "2025": 1.7719
+      },
+      "BATTICALOA": {
+        "2022": 1.8226,
+        "2023": null,
+        "2025": 1.8126
+      },
+      "AMPARA": {
+        "2022": 1.8321,
+        "2023": null,
+        "2025": 1.8552
+      },
+      "PUTTALAM": {
+        "2022": 1.7175,
+        "2023": null,
+        "2025": 1.7079
+      },
+      "KURUNEGALA": {
+        "2022": 1.8028,
+        "2023": null,
+        "2025": 1.8295
+      },
+      "ANURADHAPURA": {
+        "2022": 1.7109,
+        "2023": null,
+        "2025": 1.7114
+      },
+      "POLONNARUWA": {
+        "2022": 1.7355,
+        "2023": null,
+        "2025": 1.7588
+      },
+      "BADULLA": {
+        "2022": 1.7099,
+        "2023": null,
+        "2025": 1.7435
+      },
+      "MONARAGALA": {
+        "2022": 1.7277,
+        "2023": null,
+        "2025": 1.7114
+      },
+      "KEGALLE": {
+        "2022": 1.8226,
+        "2023": null,
+        "2025": 1.8298
+      },
+      "RATNAPURA": {
+        "2022": 1.752,
+        "2023": null,
+        "2025": 1.8102
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "MEDICINE\n(University of Ruhuna)": {
+    "program_id": 214,
+    "name": "MEDICINE",
+    "university": "University Of Ruhuna",
+    "districts": {
+      "COLOMBO": {
+        "2022": 1.9559,
+        "2023": null,
+        "2025": 1.9739
+      },
+      "GAMPAHA": {
+        "2022": 1.955,
+        "2023": null,
+        "2025": 1.9826
+      },
+      "KALUTARA": {
+        "2022": 1.9559,
+        "2023": null,
+        "2025": 1.9765
+      },
+      "MATALE": {
+        "2022": 1.9778,
+        "2023": null,
+        "2025": 2.0065
+      },
+      "KANDY": {
+        "2022": 1.9598,
+        "2023": null,
+        "2025": 1.9735
+      },
+      "NUWARA ELIYA": {
+        "2022": 1.9775,
+        "2023": null,
+        "2025": 1.9828
+      },
+      "GALLE": {
+        "2022": 1.9552,
+        "2023": null,
+        "2025": 1.9731
+      },
+      "MATARA": {
+        "2022": 1.955,
+        "2023": null,
+        "2025": 1.981
+      },
+      "HAMBANTOTA": {
+        "2022": 1.9606,
+        "2023": null,
+        "2025": 1.9723
+      },
+      "JAFFNA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "KILINOCHCHI": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MANNAR": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": 2.0336
+      },
+      "VAVUNIYA": {
+        "2022": 1.9671,
+        "2023": null,
+        "2025": null
+      },
+      "TRINCOMALEE": {
+        "2022": 2.0044,
+        "2023": null,
+        "2025": null
+      },
+      "BATTICALOA": {
+        "2022": 1.9614,
+        "2023": null,
+        "2025": 1.9984
+      },
+      "AMPARA": {
+        "2022": 1.9566,
+        "2023": null,
+        "2025": 1.9871
+      },
+      "PUTTALAM": {
+        "2022": 1.9578,
+        "2023": null,
+        "2025": 1.9981
+      },
+      "KURUNEGALA": {
+        "2022": 1.9594,
+        "2023": null,
+        "2025": 1.9761
+      },
+      "ANURADHAPURA": {
+        "2022": 1.9552,
+        "2023": null,
+        "2025": 1.984
+      },
+      "POLONNARUWA": {
+        "2022": null,
+        "2023": null,
+        "2025": 2.0015
+      },
+      "BADULLA": {
+        "2022": 1.9626,
+        "2023": null,
+        "2025": 1.99
+      },
+      "MONARAGALA": {
+        "2022": 1.9757,
+        "2023": null,
+        "2025": 1.9904
+      },
+      "KEGALLE": {
+        "2022": 1.9616,
+        "2023": null,
+        "2025": 1.9739
+      },
+      "RATNAPURA": {
+        "2022": 1.9571,
+        "2023": null,
+        "2025": 1.9796
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "MEDICINE\n(University of Moratuwa)": {
+    "program_id": 215,
+    "name": "MEDICINE",
+    "university": "University Of Moratuwa",
+    "districts": {
+      "COLOMBO": {
+        "2022": 1.8732,
+        "2023": null,
+        "2025": 1.9185
+      },
+      "GAMPAHA": {
+        "2022": 1.8707,
+        "2023": null,
+        "2025": 1.9296
+      },
+      "KALUTARA": {
+        "2022": 1.8732,
+        "2023": null,
+        "2025": 1.9184
+      },
+      "MATALE": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "KANDY": {
+        "2022": 1.8827,
+        "2023": null,
+        "2025": 1.9209
+      },
+      "NUWARA ELIYA": {
+        "2022": 1.9286,
+        "2023": null,
+        "2025": 1.9703
+      },
+      "GALLE": {
+        "2022": 1.8728,
+        "2023": null,
+        "2025": 1.9167
+      },
+      "MATARA": {
+        "2022": 1.913,
+        "2023": null,
+        "2025": 1.9168
+      },
+      "HAMBANTOTA": {
+        "2022": 1.9222,
+        "2023": null,
+        "2025": 1.9306
+      },
+      "JAFFNA": {
+        "2022": 2.0797,
+        "2023": null,
+        "2025": null
+      },
+      "KILINOCHCHI": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MANNAR": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": 1.8938,
+        "2023": null,
+        "2025": null
+      },
+      "TRINCOMALEE": {
+        "2022": 1.8843,
+        "2023": null,
+        "2025": 1.9246
+      },
+      "BATTICALOA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "AMPARA": {
+        "2022": 1.8997,
+        "2023": null,
+        "2025": 1.9159
+      },
+      "PUTTALAM": {
+        "2022": 1.9381,
+        "2023": null,
+        "2025": 1.9373
+      },
+      "KURUNEGALA": {
+        "2022": 1.8901,
+        "2023": null,
+        "2025": 1.9395
+      },
+      "ANURADHAPURA": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.9326
+      },
+      "POLONNARUWA": {
+        "2022": 1.9909,
+        "2023": null,
+        "2025": 1.9504
+      },
+      "BADULLA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MONARAGALA": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.9518
+      },
+      "KEGALLE": {
+        "2022": 1.9286,
+        "2023": null,
+        "2025": 1.9234
+      },
+      "RATNAPURA": {
+        "2022": 1.8706,
+        "2023": null,
+        "2025": 1.9182
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "MEDICINE\n(Eastern University, Sri Lanka)": {
+    "program_id": 216,
+    "name": "MEDICINE",
+    "university": "University of Eastern",
+    "districts": {
+      "COLOMBO": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.9521
+      },
+      "GAMPAHA": {
+        "2022": 1.6406,
+        "2023": null,
+        "2025": null
+      },
+      "KALUTARA": {
+        "2022": 1.7783,
+        "2023": null,
+        "2025": null
+      },
+      "MATALE": {
+        "2022": 1.6524,
+        "2023": null,
+        "2025": null
+      },
+      "KANDY": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.8334
+      },
+      "NUWARA ELIYA": {
+        "2022": 1.4296,
+        "2023": null,
+        "2025": 1.5393
+      },
+      "GALLE": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MATARA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "HAMBANTOTA": {
+        "2022": 1.8366,
+        "2023": null,
+        "2025": null
+      },
+      "JAFFNA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "KILINOCHCHI": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MANNAR": {
+        "2022": 1.6845,
+        "2023": null,
+        "2025": 1.6131
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": 1.9934,
+        "2023": null,
+        "2025": 1.5661
+      },
+      "TRINCOMALEE": {
+        "2022": 1.737,
+        "2023": null,
+        "2025": 1.6629
+      },
+      "BATTICALOA": {
+        "2022": 1.8413,
+        "2023": null,
+        "2025": 1.7625
+      },
+      "AMPARA": {
+        "2022": 1.8169,
+        "2023": null,
+        "2025": 1.807
+      },
+      "PUTTALAM": {
+        "2022": 1.6762,
+        "2023": null,
+        "2025": 1.6559
+      },
+      "KURUNEGALA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "ANURADHAPURA": {
+        "2022": 1.5146,
+        "2023": null,
+        "2025": 1.6606
+      },
+      "POLONNARUWA": {
+        "2022": 1.4283,
+        "2023": null,
+        "2025": 1.5814
+      },
+      "BADULLA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MONARAGALA": {
+        "2022": 1.6018,
+        "2023": null,
+        "2025": 1.6362
+      },
+      "KEGALLE": {
+        "2022": 1.8207,
+        "2023": null,
+        "2025": null
+      },
+      "RATNAPURA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "MEDICINE\n(Rajarata University of Sri Lanka)": {
+    "program_id": 217,
+    "name": "MEDICINE",
+    "university": "University of Rajarata",
+    "districts": {
+      "COLOMBO": {
+        "2022": 1.8772,
+        "2023": null,
+        "2025": 1.8923
+      },
+      "GAMPAHA": {
+        "2022": 1.8547,
+        "2023": null,
+        "2025": 1.8819
+      },
+      "KALUTARA": {
+        "2022": 1.8995,
+        "2023": null,
+        "2025": 1.891
+      },
+      "MATALE": {
+        "2022": 1.8604,
+        "2023": null,
+        "2025": 1.8807
+      },
+      "KANDY": {
+        "2022": 1.8509,
+        "2023": null,
+        "2025": 1.8844
+      },
+      "NUWARA ELIYA": {
+        "2022": 1.9025,
+        "2023": null,
+        "2025": 1.8987
+      },
+      "GALLE": {
+        "2022": 1.9071,
+        "2023": null,
+        "2025": 1.8821
+      },
+      "MATARA": {
+        "2022": 1.9079,
+        "2023": null,
+        "2025": 1.8937
+      },
+      "HAMBANTOTA": {
+        "2022": 1.8525,
+        "2023": null,
+        "2025": 1.9324
+      },
+      "JAFFNA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "KILINOCHCHI": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MANNAR": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.9274
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": 1.998,
+        "2023": null,
+        "2025": 2.0263
+      },
+      "TRINCOMALEE": {
+        "2022": 1.862,
+        "2023": null,
+        "2025": 1.8836
+      },
+      "BATTICALOA": {
+        "2022": 1.8601,
+        "2023": null,
+        "2025": 1.8925
+      },
+      "AMPARA": {
+        "2022": 1.8566,
+        "2023": null,
+        "2025": 1.8837
+      },
+      "PUTTALAM": {
+        "2022": 1.8496,
+        "2023": null,
+        "2025": 1.8784
+      },
+      "KURUNEGALA": {
+        "2022": 1.8596,
+        "2023": null,
+        "2025": 1.8789
+      },
+      "ANURADHAPURA": {
+        "2022": 1.8506,
+        "2023": null,
+        "2025": 1.8784
+      },
+      "POLONNARUWA": {
+        "2022": 1.9345,
+        "2023": null,
+        "2025": 1.885
+      },
+      "BADULLA": {
+        "2022": 1.8525,
+        "2023": null,
+        "2025": 1.8807
+      },
+      "MONARAGALA": {
+        "2022": 1.8706,
+        "2023": null,
+        "2025": 1.9014
+      },
+      "KEGALLE": {
+        "2022": 1.851,
+        "2023": null,
+        "2025": 1.8802
+      },
+      "RATNAPURA": {
+        "2022": 1.8509,
+        "2023": null,
+        "2025": 1.8772
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "MEDICINE\n(Wayamba University of Sri Lanka)": {
+    "program_id": 219,
+    "name": "MEDICINE",
+    "university": "University of Wayamba",
+    "districts": {
+      "COLOMBO": {
+        "2022": 1.9152,
+        "2023": null,
+        "2025": 1.8844
+      },
+      "GAMPAHA": {
+        "2022": 1.689,
+        "2023": null,
+        "2025": 1.7779
+      },
+      "KALUTARA": {
+        "2022": 1.7711,
+        "2023": null,
+        "2025": 1.8591
+      },
+      "MATALE": {
+        "2022": 1.6921,
+        "2023": null,
+        "2025": 1.7754
+      },
+      "KANDY": {
+        "2022": 1.8229,
+        "2023": null,
+        "2025": 1.8131
+      },
+      "NUWARA ELIYA": {
+        "2022": 1.7319,
+        "2023": null,
+        "2025": 1.7931
+      },
+      "GALLE": {
+        "2022": 1.8661,
+        "2023": null,
+        "2025": 1.8312
+      },
+      "MATARA": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.8604
+      },
+      "HAMBANTOTA": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.7989
+      },
+      "JAFFNA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "KILINOCHCHI": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MANNAR": {
+        "2022": 1.8481,
+        "2023": null,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "TRINCOMALEE": {
+        "2022": 1.7552,
+        "2023": null,
+        "2025": 1.7862
+      },
+      "BATTICALOA": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.7993
+      },
+      "AMPARA": {
+        "2022": 1.8216,
+        "2023": null,
+        "2025": 1.8152
+      },
+      "PUTTALAM": {
+        "2022": 1.6873,
+        "2023": null,
+        "2025": 1.7751
+      },
+      "KURUNEGALA": {
+        "2022": 1.8038,
+        "2023": null,
+        "2025": 1.8186
+      },
+      "ANURADHAPURA": {
+        "2022": 1.6969,
+        "2023": null,
+        "2025": 1.779
+      },
+      "POLONNARUWA": {
+        "2022": 1.6921,
+        "2023": null,
+        "2025": 1.78
+      },
+      "BADULLA": {
+        "2022": 1.6892,
+        "2023": null,
+        "2025": null
+      },
+      "MONARAGALA": {
+        "2022": 1.6948,
+        "2023": null,
+        "2025": 1.8033
+      },
+      "KEGALLE": {
+        "2022": 1.7702,
+        "2023": null,
+        "2025": 1.8206
+      },
+      "RATNAPURA": {
+        "2022": 1.7803,
+        "2023": null,
+        "2025": 1.7887
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "MEDICINE\n(Uva Wellassa University of Sri Lanka)": {
+    "program_id": 220,
+    "name": "MEDICINE",
+    "university": "University of Uva Wellassa",
+    "districts": {
+      "COLOMBO": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.8893
+      },
+      "GAMPAHA": {
+        "2022": 1.6473,
+        "2023": null,
+        "2025": 1.7173
+      },
+      "KALUTARA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MATALE": {
+        "2022": 1.652,
+        "2023": null,
+        "2025": null
+      },
+      "KANDY": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "NUWARA ELIYA": {
+        "2022": 1.383,
+        "2023": null,
+        "2025": 1.5388
+      },
+      "GALLE": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.8352
+      },
+      "MATARA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "HAMBANTOTA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "JAFFNA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "KILINOCHCHI": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MANNAR": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "TRINCOMALEE": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "BATTICALOA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "AMPARA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "PUTTALAM": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.682
+      },
+      "KURUNEGALA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "ANURADHAPURA": {
+        "2022": 1.5985,
+        "2023": null,
+        "2025": null
+      },
+      "POLONNARUWA": {
+        "2022": 1.3959,
+        "2023": null,
+        "2025": 1.5233
+      },
+      "BADULLA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MONARAGALA": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.7301
+      },
+      "KEGALLE": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "RATNAPURA": {
+        "2022": 1.8407,
+        "2023": null,
+        "2025": 1.8748
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "DENTAL SURGERY\n(University of Peradeniya)": {
+    "program_id": 221,
+    "name": "DENTAL SURGERY",
+    "university": "University Of Peradeniya",
+    "districts": {
+      "COLOMBO": {
+        "2022": 1.8311,
+        "2023": null,
+        "2025": 1.8293
+      },
+      "GAMPAHA": {
+        "2022": 1.6275,
+        "2023": null,
+        "2025": 1.6946
+      },
+      "KALUTARA": {
+        "2022": 1.7698,
+        "2023": null,
+        "2025": 1.8356
+      },
+      "MATALE": {
+        "2022": 1.6329,
+        "2023": null,
+        "2025": 1.7257
+      },
+      "KANDY": {
+        "2022": 1.786,
+        "2023": null,
+        "2025": 1.7962
+      },
+      "NUWARA ELIYA": {
+        "2022": 1.3891,
+        "2023": null,
+        "2025": null
+      },
+      "GALLE": {
+        "2022": 1.8319,
+        "2023": null,
+        "2025": 1.8171
+      },
+      "MATARA": {
+        "2022": 1.8405,
+        "2023": null,
+        "2025": 1.8302
+      },
+      "HAMBANTOTA": {
+        "2022": 1.7587,
+        "2023": null,
+        "2025": 1.7758
+      },
+      "JAFFNA": {
+        "2022": 1.8086,
+        "2023": null,
+        "2025": 1.8361
+      },
+      "KILINOCHCHI": {
+        "2022": 1.666,
+        "2023": null,
+        "2025": 1.6782
+      },
+      "MANNAR": {
+        "2022": 1.6619,
+        "2023": null,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": 1.7586,
+        "2023": null,
+        "2025": 1.6538
+      },
+      "VAVUNIYA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "TRINCOMALEE": {
+        "2022": 1.6686,
+        "2023": null,
+        "2025": null
+      },
+      "BATTICALOA": {
+        "2022": 1.7962,
+        "2023": null,
+        "2025": 1.7593
+      },
+      "AMPARA": {
+        "2022": 1.7816,
+        "2023": null,
+        "2025": 1.7938
+      },
+      "PUTTALAM": {
+        "2022": 1.6623,
+        "2023": null,
+        "2025": 1.6545
+      },
+      "KURUNEGALA": {
+        "2022": 1.786,
+        "2023": null,
+        "2025": 1.8112
+      },
+      "ANURADHAPURA": {
+        "2022": 1.5063,
+        "2023": null,
+        "2025": 1.6592
+      },
+      "POLONNARUWA": {
+        "2022": 1.3714,
+        "2023": null,
+        "2025": null
+      },
+      "BADULLA": {
+        "2022": 1.6678,
+        "2023": null,
+        "2025": 1.7375
+      },
+      "MONARAGALA": {
+        "2022": 1.5849,
+        "2023": null,
+        "2025": null
+      },
+      "KEGALLE": {
+        "2022": 1.7513,
+        "2023": null,
+        "2025": 1.8058
+      },
+      "RATNAPURA": {
+        "2022": 1.7434,
+        "2023": null,
+        "2025": 1.7637
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "DENTAL SURGERY\n(University of Sri Jayewardenepura)": {
+    "program_id": 222,
+    "name": "DENTAL SURGERY",
+    "university": "University of Sri Jayewardenepura",
+    "districts": {
+      "COLOMBO": {
+        "2022": 1.8337,
+        "2023": null,
+        "2025": 1.8283
+      },
+      "GAMPAHA": {
+        "2022": 1.6219,
+        "2023": null,
+        "2025": null
+      },
+      "KALUTARA": {
+        "2022": 1.7682,
+        "2023": null,
+        "2025": 1.835
+      },
+      "MATALE": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.7263
+      },
+      "KANDY": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "NUWARA ELIYA": {
+        "2022": 1.3789,
+        "2023": null,
+        "2025": 1.5299
+      },
+      "GALLE": {
+        "2022": 1.834,
+        "2023": null,
+        "2025": null
+      },
+      "MATARA": {
+        "2022": 1.8535,
+        "2023": null,
+        "2025": null
+      },
+      "HAMBANTOTA": {
+        "2022": 1.8254,
+        "2023": null,
+        "2025": null
+      },
+      "JAFFNA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "KILINOCHCHI": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MANNAR": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.5449
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": 1.8206,
+        "2023": null,
+        "2025": 1.5526
+      },
+      "TRINCOMALEE": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.6355
+      },
+      "BATTICALOA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "AMPARA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "PUTTALAM": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "KURUNEGALA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "ANURADHAPURA": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.6397
+      },
+      "POLONNARUWA": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.5004
+      },
+      "BADULLA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MONARAGALA": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.6241
+      },
+      "KEGALLE": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "RATNAPURA": {
+        "2022": 1.7317,
+        "2023": null,
+        "2025": null
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "VETERINARY SCIENCE\n(University of Peradeniya)": {
+    "program_id": 223,
+    "name": "VETERINARY SCIENCE",
+    "university": "University Of Peradeniya",
+    "districts": {
+      "COLOMBO": {
+        "2022": 1.7345,
+        "2023": 0.8117,
+        "2025": 1.7683
+      },
+      "GAMPAHA": {
+        "2022": 1.6011,
+        "2023": 0.8117,
+        "2025": 1.666
+      },
+      "KALUTARA": {
+        "2022": 1.7211,
+        "2023": 0.8117,
+        "2025": 1.7739
+      },
+      "MATALE": {
+        "2022": 1.5648,
+        "2023": 0.8117,
+        "2025": 1.7064
+      },
+      "KANDY": {
+        "2022": 1.7446,
+        "2023": 0.8117,
+        "2025": 1.7766
+      },
+      "NUWARA ELIYA": {
+        "2022": 1.3253,
+        "2023": 0.8117,
+        "2025": 1.5014
+      },
+      "GALLE": {
+        "2022": 1.7523,
+        "2023": 0.8117,
+        "2025": 1.7758
+      },
+      "MATARA": {
+        "2022": 1.7211,
+        "2023": 0.8117,
+        "2025": 1.7843
+      },
+      "HAMBANTOTA": {
+        "2022": 1.7457,
+        "2023": 0.8117,
+        "2025": 1.7739
+      },
+      "JAFFNA": {
+        "2022": 1.737,
+        "2023": 0.8117,
+        "2025": 1.7256
+      },
+      "KILINOCHCHI": {
+        "2022": 1.647,
+        "2023": 0.8117,
+        "2025": 1.6525
+      },
+      "MANNAR": {
+        "2022": 1.541,
+        "2023": 0.8117,
+        "2025": 1.5081
+      },
+      "MULLAITIVU": {
+        "2022": 1.6464,
+        "2023": 0.8117,
+        "2025": 1.6381
+      },
+      "VAVUNIYA": {
+        "2022": 1.7615,
+        "2023": 0.8117,
+        "2025": 1.513
+      },
+      "TRINCOMALEE": {
+        "2022": 1.6649,
+        "2023": 0.8117,
+        "2025": 1.6335
+      },
+      "BATTICALOA": {
+        "2022": 1.7456,
+        "2023": 0.8117,
+        "2025": 1.714
+      },
+      "AMPARA": {
+        "2022": 1.7268,
+        "2023": 0.8117,
+        "2025": 1.7754
+      },
+      "PUTTALAM": {
+        "2022": 1.6574,
+        "2023": 0.8117,
+        "2025": 1.6325
+      },
+      "KURUNEGALA": {
+        "2022": 1.7427,
+        "2023": 0.8117,
+        "2025": 1.7795
+      },
+      "ANURADHAPURA": {
+        "2022": 1.4687,
+        "2023": 0.8117,
+        "2025": 1.6258
+      },
+      "POLONNARUWA": {
+        "2022": 1.332,
+        "2023": 0.8117,
+        "2025": 1.4618
+      },
+      "BADULLA": {
+        "2022": 1.6002,
+        "2023": 0.8117,
+        "2025": 1.7199
+      },
+      "MONARAGALA": {
+        "2022": 1.5756,
+        "2023": 0.8117,
+        "2025": 1.5953
+      },
+      "KEGALLE": {
+        "2022": 1.7214,
+        "2023": 0.8117,
+        "2025": 1.7593
+      },
+      "RATNAPURA": {
+        "2022": 1.7202,
+        "2023": 0.8117,
+        "2025": 1.7556
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "AGRICULTURE\n(University of Jaffna)": {
+    "program_id": 224,
+    "name": "AGRICULTURE",
+    "university": "University Of Jaffana ",
+    "districts": {
+      "COLOMBO": {
+        "2022": 0.4638,
+        "2023": null,
+        "2025": 0.7425
+      },
+      "GAMPAHA": {
+        "2022": 0.4618,
+        "2023": null,
+        "2025": 0.7549
+      },
+      "KALUTARA": {
+        "2022": 0.6491,
+        "2023": null,
+        "2025": 0.8398
+      },
+      "MATALE": {
+        "2022": 0.656,
+        "2023": null,
+        "2025": 0.8328
+      },
+      "KANDY": {
+        "2022": 0.7642,
+        "2023": null,
+        "2025": 0.877
+      },
+      "NUWARA ELIYA": {
+        "2022": 0.4627,
+        "2023": null,
+        "2025": 0.7491
+      },
+      "GALLE": {
+        "2022": 0.6394,
+        "2023": null,
+        "2025": 0.7838
+      },
+      "MATARA": {
+        "2022": 0.6099,
+        "2023": null,
+        "2025": 0.8417
+      },
+      "HAMBANTOTA": {
+        "2022": 0.8231,
+        "2023": null,
+        "2025": 0.9608
+      },
+      "JAFFNA": {
+        "2022": 0.6679,
+        "2023": null,
+        "2025": 0.7592
+      },
+      "KILINOCHCHI": {
+        "2022": 0.5958,
+        "2023": null,
+        "2025": 1.3605
+      },
+      "MANNAR": {
+        "2022": 0.4667,
+        "2023": null,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": 0.6176,
+        "2023": null,
+        "2025": 0.9905
+      },
+      "VAVUNIYA": {
+        "2022": 0.5199,
+        "2023": null,
+        "2025": 0.7733
+      },
+      "TRINCOMALEE": {
+        "2022": 0.4674,
+        "2023": null,
+        "2025": 0.8475
+      },
+      "BATTICALOA": {
+        "2022": 0.5724,
+        "2023": null,
+        "2025": 0.7507
+      },
+      "AMPARA": {
+        "2022": 0.5844,
+        "2023": null,
+        "2025": 0.7714
+      },
+      "PUTTALAM": {
+        "2022": 0.4726,
+        "2023": null,
+        "2025": 0.7433
+      },
+      "KURUNEGALA": {
+        "2022": 0.6497,
+        "2023": null,
+        "2025": 0.8194
+      },
+      "ANURADHAPURA": {
+        "2022": 0.4627,
+        "2023": null,
+        "2025": 0.7443
+      },
+      "POLONNARUWA": {
+        "2022": 0.5278,
+        "2023": null,
+        "2025": 0.8022
+      },
+      "BADULLA": {
+        "2022": 0.5294,
+        "2023": null,
+        "2025": 0.7521
+      },
+      "MONARAGALA": {
+        "2022": 0.4781,
+        "2023": null,
+        "2025": 0.7433
+      },
+      "KEGALLE": {
+        "2022": 0.6261,
+        "2023": null,
+        "2025": 0.9638
+      },
+      "RATNAPURA": {
+        "2022": 0.5341,
+        "2023": null,
+        "2025": 0.7841
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "AGRICULTURE\n(Eastern University, Sri Lanka)": {
+    "program_id": 225,
+    "name": "AGRICULTURE",
+    "university": "University of Eastern",
+    "districts": {
+      "COLOMBO": {
+        "2022": 0.4158,
+        "2023": null,
+        "2025": 0.6968
+      },
+      "GAMPAHA": {
+        "2022": 0.4227,
+        "2023": null,
+        "2025": 0.6345
+      },
+      "KALUTARA": {
+        "2022": 0.7903,
+        "2023": null,
+        "2025": null
+      },
+      "MATALE": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "KANDY": {
+        "2022": 0.6029,
+        "2023": null,
+        "2025": 0.8219
+      },
+      "NUWARA ELIYA": {
+        "2022": 0.3495,
+        "2023": null,
+        "2025": 0.5643
+      },
+      "GALLE": {
+        "2022": 0.6045,
+        "2023": null,
+        "2025": 0.7825
+      },
+      "MATARA": {
+        "2022": 0.5849,
+        "2023": null,
+        "2025": null
+      },
+      "HAMBANTOTA": {
+        "2022": 0.6204,
+        "2023": null,
+        "2025": 0.8399
+      },
+      "JAFFNA": {
+        "2022": 0.6728,
+        "2023": null,
+        "2025": null
+      },
+      "KILINOCHCHI": {
+        "2022": 0.4655,
+        "2023": null,
+        "2025": 0.5012
+      },
+      "MANNAR": {
+        "2022": 0.3943,
+        "2023": null,
+        "2025": 0.6012
+      },
+      "MULLAITIVU": {
+        "2022": 0.7097,
+        "2023": null,
+        "2025": 0.6048
+      },
+      "VAVUNIYA": {
+        "2022": 0.4281,
+        "2023": null,
+        "2025": 0.6219
+      },
+      "TRINCOMALEE": {
+        "2022": 0.473,
+        "2023": null,
+        "2025": 0.7006
+      },
+      "BATTICALOA": {
+        "2022": 0.5697,
+        "2023": null,
+        "2025": 0.7402
+      },
+      "AMPARA": {
+        "2022": 0.6102,
+        "2023": null,
+        "2025": 0.7663
+      },
+      "PUTTALAM": {
+        "2022": 0.3803,
+        "2023": null,
+        "2025": 0.6287
+      },
+      "KURUNEGALA": {
+        "2022": 0.627,
+        "2023": null,
+        "2025": 0.8324
+      },
+      "ANURADHAPURA": {
+        "2022": 0.4504,
+        "2023": null,
+        "2025": 0.7483
+      },
+      "POLONNARUWA": {
+        "2022": 0.322,
+        "2023": null,
+        "2025": 0.6254
+      },
+      "BADULLA": {
+        "2022": 0.5394,
+        "2023": null,
+        "2025": 0.7949
+      },
+      "MONARAGALA": {
+        "2022": 0.4486,
+        "2023": null,
+        "2025": 0.7379
+      },
+      "KEGALLE": {
+        "2022": 0.6326,
+        "2023": null,
+        "2025": 1.2661
+      },
+      "RATNAPURA": {
+        "2022": 0.5334,
+        "2023": null,
+        "2025": 0.7971
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "AGRICULTURE\n(Rajarata University of Sri Lanka)": {
+    "program_id": 226,
+    "name": "AGRICULTURE",
+    "university": "University of Rajarata",
+    "districts": {
+      "COLOMBO": {
+        "2022": 0.5911,
+        "2023": null,
+        "2025": 0.856
+      },
+      "GAMPAHA": {
+        "2022": 0.5781,
+        "2023": null,
+        "2025": 0.8515
+      },
+      "KALUTARA": {
+        "2022": 0.5987,
+        "2023": null,
+        "2025": 0.8497
+      },
+      "MATALE": {
+        "2022": 0.6104,
+        "2023": null,
+        "2025": 0.867
+      },
+      "KANDY": {
+        "2022": 0.6183,
+        "2023": null,
+        "2025": 0.8461
+      },
+      "NUWARA ELIYA": {
+        "2022": 0.6258,
+        "2023": null,
+        "2025": 0.9644
+      },
+      "GALLE": {
+        "2022": 0.5857,
+        "2023": null,
+        "2025": 0.856
+      },
+      "MATARA": {
+        "2022": 0.5798,
+        "2023": null,
+        "2025": 0.8463
+      },
+      "HAMBANTOTA": {
+        "2022": 0.6221,
+        "2023": null,
+        "2025": 0.8448
+      },
+      "JAFFNA": {
+        "2022": 0.7215,
+        "2023": null,
+        "2025": null
+      },
+      "KILINOCHCHI": {
+        "2022": 0.8534,
+        "2023": null,
+        "2025": null
+      },
+      "MANNAR": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": null,
+        "2023": null,
+        "2025": 0.8461
+      },
+      "TRINCOMALEE": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "BATTICALOA": {
+        "2022": null,
+        "2023": null,
+        "2025": 0.9077
+      },
+      "AMPARA": {
+        "2022": 0.5905,
+        "2023": null,
+        "2025": 0.87
+      },
+      "PUTTALAM": {
+        "2022": 0.6016,
+        "2023": null,
+        "2025": 0.8554
+      },
+      "KURUNEGALA": {
+        "2022": 0.6299,
+        "2023": null,
+        "2025": 0.8432
+      },
+      "ANURADHAPURA": {
+        "2022": 0.6045,
+        "2023": null,
+        "2025": 0.8446
+      },
+      "POLONNARUWA": {
+        "2022": 0.6089,
+        "2023": null,
+        "2025": 0.8535
+      },
+      "BADULLA": {
+        "2022": 0.593,
+        "2023": null,
+        "2025": 0.8443
+      },
+      "MONARAGALA": {
+        "2022": 0.5756,
+        "2023": null,
+        "2025": 0.9645
+      },
+      "KEGALLE": {
+        "2022": 0.5952,
+        "2023": null,
+        "2025": 0.8481
+      },
+      "RATNAPURA": {
+        "2022": 0.5829,
+        "2023": null,
+        "2025": 0.8679
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "AGRICULTURE\n(Wayamba University of Sri Lanka)": {
+    "program_id": 228,
+    "name": "AGRICULTURE",
+    "university": "University of Wayamba",
+    "districts": {
+      "COLOMBO": {
+        "2022": 0.5923,
+        "2023": null,
+        "2025": 0.774
+      },
+      "GAMPAHA": {
+        "2022": 0.6036,
+        "2023": null,
+        "2025": 0.775
+      },
+      "KALUTARA": {
+        "2022": 0.5923,
+        "2023": null,
+        "2025": 0.8456
+      },
+      "MATALE": {
+        "2022": 0.6231,
+        "2023": null,
+        "2025": 0.7815
+      },
+      "KANDY": {
+        "2022": 0.6098,
+        "2023": null,
+        "2025": 0.8226
+      },
+      "NUWARA ELIYA": {
+        "2022": 0.6297,
+        "2023": null,
+        "2025": 0.7928
+      },
+      "GALLE": {
+        "2022": 0.5863,
+        "2023": null,
+        "2025": 0.7868
+      },
+      "MATARA": {
+        "2022": 0.5887,
+        "2023": null,
+        "2025": 0.8255
+      },
+      "HAMBANTOTA": {
+        "2022": 0.6287,
+        "2023": null,
+        "2025": 1.03
+      },
+      "JAFFNA": {
+        "2022": 0.6797,
+        "2023": null,
+        "2025": 0.8245
+      },
+      "KILINOCHCHI": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MANNAR": {
+        "2022": 0.8777,
+        "2023": null,
+        "2025": 0.8114
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": 0.782
+      },
+      "VAVUNIYA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "TRINCOMALEE": {
+        "2022": 0.69,
+        "2023": null,
+        "2025": null
+      },
+      "BATTICALOA": {
+        "2022": 0.5791,
+        "2023": null,
+        "2025": 0.8639
+      },
+      "AMPARA": {
+        "2022": 0.5914,
+        "2023": null,
+        "2025": 0.7766
+      },
+      "PUTTALAM": {
+        "2022": 0.5783,
+        "2023": null,
+        "2025": 0.8088
+      },
+      "KURUNEGALA": {
+        "2022": 0.6308,
+        "2023": null,
+        "2025": 0.814
+      },
+      "ANURADHAPURA": {
+        "2022": 0.5884,
+        "2023": null,
+        "2025": 0.7754
+      },
+      "POLONNARUWA": {
+        "2022": 0.5797,
+        "2023": null,
+        "2025": 0.8033
+      },
+      "BADULLA": {
+        "2022": 0.5809,
+        "2023": null,
+        "2025": 0.7997
+      },
+      "MONARAGALA": {
+        "2022": 0.6198,
+        "2023": null,
+        "2025": 0.7842
+      },
+      "KEGALLE": {
+        "2022": 0.5924,
+        "2023": null,
+        "2025": 0.8788
+      },
+      "RATNAPURA": {
+        "2022": 0.5902,
+        "2023": null,
+        "2025": 0.7971
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "FOOD SCIENCE & NUTRITION\n(Wayamba University of Sri Lanka)": {
+    "program_id": 229,
+    "name": "FOOD SCIENCE & NUTRITION",
+    "university": "University of Wayamba",
+    "districts": {
+      "COLOMBO": {
+        "2022": 1.0529,
+        "2023": null,
+        "2025": 1.2507
+      },
+      "GAMPAHA": {
+        "2022": 1.1113,
+        "2023": null,
+        "2025": 1.2023
+      },
+      "KALUTARA": {
+        "2022": 1.2161,
+        "2023": null,
+        "2025": 1.3034
+      },
+      "MATALE": {
+        "2022": 1.1317,
+        "2023": null,
+        "2025": 1.1976
+      },
+      "KANDY": {
+        "2022": 1.0935,
+        "2023": null,
+        "2025": 1.27
+      },
+      "NUWARA ELIYA": {
+        "2022": 1.0887,
+        "2023": null,
+        "2025": 1.15
+      },
+      "GALLE": {
+        "2022": 1.1207,
+        "2023": null,
+        "2025": 1.2983
+      },
+      "MATARA": {
+        "2022": 1.1777,
+        "2023": null,
+        "2025": 1.2954
+      },
+      "HAMBANTOTA": {
+        "2022": 1.1177,
+        "2023": null,
+        "2025": 1.2782
+      },
+      "JAFFNA": {
+        "2022": 1.2116,
+        "2023": null,
+        "2025": 1.3383
+      },
+      "KILINOCHCHI": {
+        "2022": 0.7893,
+        "2023": null,
+        "2025": 1.0777
+      },
+      "MANNAR": {
+        "2022": 1.1268,
+        "2023": null,
+        "2025": 1.1288
+      },
+      "MULLAITIVU": {
+        "2022": 0.9533,
+        "2023": null,
+        "2025": 0.9761
+      },
+      "VAVUNIYA": {
+        "2022": 0.9612,
+        "2023": null,
+        "2025": 1.3072
+      },
+      "TRINCOMALEE": {
+        "2022": 1.1347,
+        "2023": null,
+        "2025": 1.2216
+      },
+      "BATTICALOA": {
+        "2022": 1.175,
+        "2023": null,
+        "2025": 1.1667
+      },
+      "AMPARA": {
+        "2022": 1.2193,
+        "2023": null,
+        "2025": 1.3276
+      },
+      "PUTTALAM": {
+        "2022": 1.1472,
+        "2023": null,
+        "2025": 1.182
+      },
+      "KURUNEGALA": {
+        "2022": 1.1517,
+        "2023": null,
+        "2025": 1.2634
+      },
+      "ANURADHAPURA": {
+        "2022": 1.0755,
+        "2023": null,
+        "2025": 1.2263
+      },
+      "POLONNARUWA": {
+        "2022": 1.111,
+        "2023": null,
+        "2025": 1.0015
+      },
+      "BADULLA": {
+        "2022": 1.117,
+        "2023": null,
+        "2025": 1.2661
+      },
+      "MONARAGALA": {
+        "2022": 1.2099,
+        "2023": null,
+        "2025": 1.2477
+      },
+      "KEGALLE": {
+        "2022": 1.1986,
+        "2023": null,
+        "2025": 1.2787
+      },
+      "RATNAPURA": {
+        "2022": 1.1127,
+        "2023": null,
+        "2025": 1.2552
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  },
+  "BIOLOGICAL SCIENCE\n(University of Colombo)": {
+    "program_id": 230,
+    "name": "BIOLOGICAL SCIENCE",
+    "university": "University Of Colombo",
+    "districts": {
+      "COLOMBO": {
+        "2022": 1.5982,
+        "2023": null,
+        "2025": 1.6763
+      },
+      "GAMPAHA": {
+        "2022": 1.6014,
+        "2023": null,
+        "2025": null
+      },
+      "KALUTARA": {
+        "2022": 1.5932,
+        "2023": null,
+        "2025": 1.6801
+      },
+      "MATALE": {
+        "2022": null,
+        "2023": null,
+        "2025": 1.676
+      },
+      "KANDY": {
+        "2022": 1.6031,
+        "2023": null,
+        "2025": 1.6828
+      },
+      "NUWARA ELIYA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "GALLE": {
+        "2022": 1.5974,
+        "2023": null,
+        "2025": 1.7027
+      },
+      "MATARA": {
+        "2022": 1.6141,
+        "2023": null,
+        "2025": 1.6879
+      },
+      "HAMBANTOTA": {
+        "2022": 1.6106,
+        "2023": null,
+        "2025": 1.6831
+      },
+      "JAFFNA": {
+        "2022": 1.6491,
+        "2023": null,
+        "2025": 1.7169
+      },
+      "KILINOCHCHI": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MANNAR": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "MULLAITIVU": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "VAVUNIYA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "TRINCOMALEE": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "BATTICALOA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "AMPARA": {
+        "2022": 1.6068,
+        "2023": null,
+        "2025": 1.679
+      },
+      "PUTTALAM": {
+        "2022": 1.617,
+        "2023": null,
+        "2025": null
+      },
+      "KURUNEGALA": {
+        "2022": 1.6216,
+        "2023": null,
+        "2025": 1.6782
+      },
+      "ANURADHAPURA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "POLONNARUWA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "BADULLA": {
+        "2022": 1.6537,
+        "2023": null,
+        "2025": 1.6993
+      },
+      "MONARAGALA": {
+        "2022": null,
+        "2023": null,
+        "2025": null
+      },
+      "KEGALLE": {
+        "2022": 1.618,
+        "2023": null,
+        "2025": 1.7219
+      },
+      "RATNAPURA": {
+        "2022": 1.5955,
+        "2023": null,
+        "2025": 1.6789
+      },
+      "* Selection 100% on an all Island Merit Basis           # Courses of Study for which the subject oriented Practical Tests / Aptitude Tests were conducted. NQC - No Qualified Candidates. This may be due to the following reasons.\n1.  District quota for a given course of study in a given district has already been filled by the students of that district.\n2.  Number of places in a given course of study in a given university has already been filled by the students with higher Z-scores from other districts.\n3.  No candidates who have satisfied the minimum requirements for admission for a given course of study from that district.\nNote :\nCertain courses of study are not conducted in all three languages. Therefore some students may not get selected to such courses of study in some universities, even though they have obtained the minimum Z-score required to get selected.": {
+        "2022": null
+      },
+      "COURSE OF STUDY\nDISTRICT": {
+        "2023": null
+      }
+    }
+  }
+}

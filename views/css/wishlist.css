@@ -1,0 +1,21 @@
+/* Wishlist Component Styles */
+/* This file imports degree-programs styles since wishlist uses the same card structure */
+
+@import 'degree-programs.css';
+
+/* Additional wishlist-specific styles can be added here */
+.wishlist-page {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Override mode toggle for wishlist-only view */
+.wishlist-page .mode-toggle {
+    display: none;
+}
+
+/* Override search section for wishlist-only view */
+.wishlist-page .page-search-section {
+    display: none;
+}
