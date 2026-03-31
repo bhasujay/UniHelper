@@ -131,17 +131,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log('🎯🎯🎯 ABOUT TO CALL API FUNCTIONS 🎯🎯🎯');
             
-            // Send data to backend API - Use different endpoints for create vs update
-            console.log('🔧 Form submitted, checking if user has existing data:', !!submittedZScoreData);
-            if (submittedZScoreData) {
-                // User is updating existing Z-Score
-                console.log('🔄 Updating existing Z-Score');
-                updateZScoreToAPI(formData);
-            } else {
-                // User is creating new Z-Score
-                console.log('➕ Creating new Z-Score');
-                saveZScoreToAPI(formData);
-            }
+            // Send data to backend API using ZScoreController
+            console.log('🔧 Form submitted, saving Z-Score data');
+            saveZScoreToAPI(formData);
         });
     }
     
@@ -155,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Store the submitted data globally so buttons can access it
 let submittedZScoreData = null;
+let listenersInitialized = false; // Flag to prevent multiple listener additions
 
 // Function to update Z-Score card after submission
 function updateZScoreCard(formData) {
@@ -182,10 +175,12 @@ function updateZScoreCard(formData) {
     document.querySelector('.subject2-value').textContent = submittedZScoreData.subject2;
     document.querySelector('.subject3-value').textContent = submittedZScoreData.subject3;
     
-    // Add event listeners after a small delay to ensure DOM is updated
-    setTimeout(() => {
-        addButtonEventListeners();
-    }, 100);
+    // Only add event listeners once
+    if (!listenersInitialized) {
+        setTimeout(() => {
+            addButtonEventListeners();
+        }, 100);
+    }
 }
 
 // Function to reset Z-Score card to initial state
@@ -198,16 +193,57 @@ function resetZScoreCard() {
     
     // Clear stored data
     submittedZScoreData = null;
+    
+    // Reset the listeners flag so they can be re-added when needed
+    listenersInitialized = false;
 }
 
 // Function to add event listeners to the submitted card buttons
 function addButtonEventListeners() {
+    // Prevent adding listeners multiple times
+    if (listenersInitialized) {
+        console.log('⚠️ Event listeners already initialized, skipping...');
+        return;
+    }
+    
+    console.log('✅ Initializing button event listeners...');
+    
     // Find Eligible Degrees button
     const findDegreesBtn = document.getElementById('findDegreesBtn');
     if (findDegreesBtn) {
-        findDegreesBtn.addEventListener('click', function() {
+        findDegreesBtn.addEventListener('click', async function() {
             console.log('Find Eligible Degrees clicked');
-            alert('Finding eligible degrees for Z-Score: ' + submittedZScoreData.zScore);
+            
+            // Show loading state
+            this.disabled = true;
+            const originalText = this.innerHTML;
+            this.innerHTML = '<span class="spinner-small"></span> Finding programs...';
+            
+            try {
+                // Call the PHP API to find eligible degrees
+                const response = await fetch('/UniHelper/api?controller=ZScoreController&action=findEligibleDegrees');
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const data = result.data;
+                    
+                    // Display results
+                    if (data.total_eligible > 0) {
+                        displayEligiblePrograms(data);
+                    } else {
+                        alert(`No eligible programs found for your Z-Score of ${data.user_zscore}.\n\nTry exploring other streams or check back later for updates.`);
+                    }
+                } else {
+                    alert('Error: ' + (result.message || 'Failed to find eligible programs'));
+                }
+            } catch (error) {
+                console.error('Error finding eligible degrees:', error);
+                alert('Failed to find eligible programs. Please try again.');
+            } finally {
+                // Restore button state
+                this.disabled = false;
+                this.innerHTML = originalText;
+            }
         });
     }
     
@@ -247,6 +283,10 @@ function addButtonEventListeners() {
             }
         });
     }
+    
+    // Mark listeners as initialized
+    listenersInitialized = true;
+    console.log('✅ Event listeners initialized successfully');
 }
 
 // API Functions
@@ -254,8 +294,9 @@ async function saveZScoreToAPI(formData) {
     console.log('🚀🚀🚀 API FUNCTION CALLED - saveZScoreToAPI 🚀🚀🚀');
     console.log('🚀 saveZScoreToAPI called with formData:', formData);
     try {
-        console.log('📡 Sending POST request to /UniHelper/api/z-score/save');
-        const response = await fetch('/UniHelper/api/z-score/save', {
+        // Updated to use ZScoreController
+        console.log('📡 Sending POST request to /UniHelper/api?controller=ZScoreController&action=saveZScore');
+        const response = await fetch('/UniHelper/api?controller=ZScoreController&action=saveZScore', {
             method: 'POST',
             body: formData
         });
@@ -286,7 +327,8 @@ async function updateZScoreToAPI(formData) {
         console.log('🚀🚀🚀 API FUNCTION CALLED - updateZScoreToAPI 🚀🚀🚀');
         console.log('🚀 updateZScoreToAPI called with formData:', formData);
         
-        const response = await fetch('/UniHelper/api/z-score/update', {
+        // Updated to use ZScoreController
+        const response = await fetch('/UniHelper/api?controller=ZScoreController&action=saveZScore', {
             method: 'POST',
             body: formData
         });
@@ -313,7 +355,8 @@ async function updateZScoreToAPI(formData) {
 
 async function loadZScoreFromAPI() {
     try {
-        const response = await fetch('/UniHelper/api/z-score/get');
+        // Updated to use ZScoreController
+        const response = await fetch('/UniHelper/api?controller=ZScoreController&action=getZScore');
         const result = await response.json();
         
         if (result.success && result.data) {
@@ -346,7 +389,8 @@ async function loadZScoreFromAPI() {
 
 async function deleteZScoreFromAPI() {
     try {
-        const response = await fetch('/UniHelper/api/z-score/delete', {
+        // Updated to use ZScoreController
+        const response = await fetch('/UniHelper/api?controller=ZScoreController&action=deleteZScore', {
             method: 'DELETE'
         });
         
@@ -361,5 +405,91 @@ async function deleteZScoreFromAPI() {
     } catch (error) {
         console.error('Error deleting Z-Score:', error);
         alert('Error removing Z-Score. Please try again.');
+    }
+}
+
+// Function to display eligible programs in a modal or section
+function displayEligiblePrograms(data) {
+    const { user_zscore, user_stream, user_district, eligible_programs, total_eligible } = data;
+    
+    // Populate summary section
+    document.getElementById('resultZScore').textContent = user_zscore;
+    document.getElementById('resultStream').textContent = user_stream;
+    document.getElementById('resultDistrict').textContent = user_district || 'Any';
+    document.getElementById('resultTotal').textContent = total_eligible;
+    
+    // Get programs container
+    const programsList = document.getElementById('programsList');
+    const noResults = document.getElementById('noResultsMessage');
+    
+    // Clear previous results
+    programsList.innerHTML = '';
+    
+    if (eligible_programs.length === 0) {
+        programsList.style.display = 'none';
+        noResults.style.display = 'block';
+    } else {
+        programsList.style.display = 'flex';
+        noResults.style.display = 'none';
+        
+        // Create program cards using the same structure as degree programs search
+        eligible_programs.forEach(program => {
+            const card = document.createElement('div');
+            card.className = 'degree-program-card';
+            card.setAttribute('data-program-id', program.unicode); // Use unicode as ID since we don't have program_id
+            
+            card.innerHTML = `
+                <div class="card-header">
+                    <h3>${program.name}</h3>
+                    <p>${program.university}</p>
+                </div>
+                
+                <div class="card-body">
+                    <p class="faculty-name">${program.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                    
+                    <div class="degree-metrics">
+                        <div class="cutoff-info">Cutoff Z-Score: <strong style="color: #007bff;">${program.cutoff_zscore}</strong></div>
+                        <div class="unicode-info">Unicode: <strong>${program.unicode}</strong></div>
+                    </div>
+                    
+                    <div class="degree-tags">
+                        <span class="tag">${program.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} Stream</span>
+                        ${program.district_specific ? '<span class="tag" style="background: #28a745;">📍 District Specific</span>' : ''}
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="footer-details">
+                        <span>Stream: <strong>${program.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</strong></span>
+                        <span>Unicode: <strong>${program.unicode}</strong></span>
+                    </div>
+                    <div class="card-actions">
+                        <button class="icon-btn wishlist-btn" onclick="addEligibleToWishlist('${program.unicode}', '${program.name.replace(/'/g, "\\'")}', '${program.university.replace(/'/g, "\\'")}')" aria-label="Add to Wishlist">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        </button>
+                        <button class="icon-btn" aria-label="View Details">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            programsList.appendChild(card);
+        });
+    }
+    
+    // Show section (not modal)
+    const section = document.getElementById('eligibleProgramsSection');
+    section.style.display = 'block';
+    
+    // Scroll to results
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Function to close eligible programs section
+function closeEligibleProgramsModal() {
+    const section = document.getElementById('eligibleProgramsSection');
+    if (section) {
+        section.style.display = 'none';
     }
 }
