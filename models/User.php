@@ -116,6 +116,22 @@ class User
         }
     }
 
+    // Check if phone already exists
+    public function phoneExists($phone)
+    {
+        try {
+            $sql = "SELECT COUNT(*) FROM users WHERE phone = :phone";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':phone', $phone);
+            $stmt->execute();
+            
+            return $stmt->fetchColumn() > 0;
+        } catch (\PDOException $e) {
+            error_log("User phoneExists error: " . $e->getMessage());
+            return false;
+        }
+    }
+
     // Validate user data
     public function validate()
     {
@@ -200,6 +216,22 @@ class User
             return null;
         } catch (\PDOException $e) {
             error_log("User findById error: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    // get user's basic info
+    public function getBasicInfo($id)
+    {
+        try {
+            $sql = "SELECT id, first_name, last_name, role, profile_picture, moderator FROM users WHERE id = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            
+            return $stmt->fetch(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log("User getBasicInfo error: " . $e->getMessage());
             return null;
         }
     }

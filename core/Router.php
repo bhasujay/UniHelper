@@ -15,12 +15,14 @@ class Router
             '/dashboard' => ['DashboardController', 'index'],
             '/profile/view' => ['DashboardController', 'profileIndex'],
             '/profile/edit' => ['DashboardController', 'profileIndex'],
+            '/profile/change-password' => ['DashboardController', 'profileIndex'],
         ],
         'POST' => [
             '/register' => ['AuthController', 'register'],
             '/login' => ['AuthController', 'login'],
             '/api' => ['apiGateway', 'handleRequest'],
             '/profile/update' => ['DashboardController', 'profileUpdate'],
+            '/api/sessions/delete' => ['SessionController', 'deleteSession'],
         ],
         'PUT' => [
             '/api' => ['apiGateway', 'handleRequest'],
@@ -30,6 +32,7 @@ class Router
         ],
         'DYNAMIC' => [
             '/:component' => ['DashboardController', 'renderComponent'],
+            '/view/profile/:id' => ['DashboardController', 'viewProfile'],
             '/this/is/a/test/:id' => ['TestController', 'testMethod']
         ]
     ];

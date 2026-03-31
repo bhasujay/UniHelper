@@ -160,7 +160,7 @@
 }
 
 .profile-edit-section {
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .profile-edit-section:last-of-type {
@@ -505,5 +505,486 @@ input#publicSwitch:not(:checked) ~ .switch-label .switch-status {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
+    }
+}
+
+/* ===== Change Password Styles ===== */
+
+/* Security Banner */
+.cp-security-banner {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--gradient-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.cp-security-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    background: var(--gradient-primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-alt);
+    box-shadow: var(--glow-secondary);
+}
+
+.cp-security-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.cp-security-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.cp-security-subtitle {
+    font-size: 0.825rem;
+    color: var(--muted-foreground);
+    line-height: 1.4;
+}
+
+/* Section title (reuses profile pattern) */
+.profile-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary);
+    display: inline-block;
+}
+
+/* Password input wrapper */
+.cp-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.cp-input-wrapper input {
+    width: 100%;
+    padding: 0.75rem;
+    padding-right: 2.75rem;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.cp-input-wrapper input:focus {
+    border-color: var(--primary);
+    background: rgba(58, 150, 255, 0.05);
+}
+
+.cp-input-wrapper input:hover {
+    border-color: var(--primary);
+}
+
+.cp-input-wrapper input::placeholder {
+    color: var(--muted-foreground);
+    font-size: 0.9rem;
+}
+
+.cp-toggle-btn {
+    position: absolute;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+    transition: color 0.2s;
+}
+
+.cp-toggle-btn:hover {
+    color: var(--primary);
+}
+
+.cp-toggle-btn svg {
+    stroke: currentColor;
+}
+
+/* Password Requirements */
+.cp-requirements {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--gradient-accent);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.cp-req-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.825rem;
+    color: var(--muted-foreground);
+    transition: color 0.3s ease;
+}
+
+.cp-req-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    flex-shrink: 0;
+}
+
+.cp-req-item.met {
+    color: #4caf50;
+}
+
+.cp-req-item.met .cp-req-dot {
+    background: #4caf50;
+    box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
+}
+
+.cp-req-item.unmet {
+    color: var(--muted-foreground);
+}
+
+/* Submit button text */
+.cp-btn-text {
+    color: inherit;
+    font-weight: 600;
+}
+
+/* ===== OTP Modal (Change Password) ===== */
+.cp-otp-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(16px);
+}
+
+.cp-otp-modal-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem 2.25rem;
+    max-width: 420px;
+    width: 92%;
+    box-shadow: var(--glow-primary), 0 24px 64px rgba(0, 0, 0, 0.45);
+    animation: cpOtpSlideIn 0.35s ease-out;
+}
+
+@keyframes cpOtpSlideIn {
+    from { transform: translateY(-24px) scale(0.97); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.cp-otp-header {
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.cp-otp-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: var(--text-alt);
+    box-shadow: var(--glow-secondary);
+}
+
+.cp-otp-title {
+    color: var(--text);
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.cp-otp-subtitle {
+    color: var(--muted-foreground);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.cp-otp-subtitle strong {
+    color: var(--primary);
+}
+
+.cp-otp-inputs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 1.5rem 0;
+}
+
+.cp-otp-digit {
+    width: 46px;
+    height: 54px;
+    text-align: center;
+    font-size: 1.35rem;
+    font-weight: 600;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--key);
+    color: var(--text);
+    transition: all 0.25s ease;
+    outline: none;
+}
+
+.cp-otp-digit:focus {
+    border-color: var(--primary);
+    box-shadow: var(--glow-secondary);
+    background: rgba(58, 150, 255, 0.05);
+}
+
+/* OTP Messages */
+.cp-otp-message {
+    font-size: 0.8rem;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    display: none;
+}
+
+.cp-otp-error-msg {
+    color: #fc8181;
+}
+
+.cp-otp-success-msg {
+    color: #4caf50;
+}
+
+.cp-otp-loading-msg {
+    color: var(--muted-foreground);
+    font-style: italic;
+}
+
+/* OTP Actions */
+.cp-otp-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+.cp-otp-actions .btn {
+    flex: 1;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    justify-content: center;
+}
+
+.cp-otp-cancel-btn {
+    background: var(--key);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.cp-otp-cancel-btn:hover {
+    background: var(--card);
+    border-color: var(--primary);
+}
+
+.cp-otp-verify-btn {
+    background: var(--gradient-primary);
+    color: #fff;
+    border: none;
+}
+
+.cp-otp-verify-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glow-primary);
+}
+
+.cp-otp-verify-btn:disabled {
+    background: var(--border);
+    cursor: not-allowed;
+    transform: none;
+    opacity: 0.6;
+}
+
+.cp-otp-resend {
+    text-align: center;
+    margin-top: 1.25rem;
+    color: var(--muted-foreground);
+    font-size: 0.825rem;
+}
+
+.cp-otp-resend-link {
+    color: var(--primary);
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.cp-otp-resend-link:hover {
+    text-decoration: underline;
+    color: var(--accent);
+}
+
+/* ===== Toast Notifications (Change Password) ===== */
+.cp-toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 10005;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.cp-toast {
+    min-width: 300px;
+    max-width: 400px;
+    padding: 14px 16px 14px 18px;
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    animation: cpToastIn 0.35s ease-out;
+    position: relative;
+    overflow: hidden;
+    pointer-events: auto;
+}
+
+.cp-toast::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 4px 0 0 4px;
+}
+
+.cp-toast-success::before { background: #4caf50; }
+.cp-toast-error::before   { background: #f44336; }
+
+.cp-toast-hiding {
+    animation: cpToastOut 0.3s ease-out forwards;
+}
+
+.cp-toast-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.cp-toast-success .cp-toast-icon { color: #4caf50; }
+.cp-toast-error .cp-toast-icon   { color: #f44336; }
+
+.cp-toast-body {
+    flex: 1;
+}
+
+.cp-toast-type {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.cp-toast-success .cp-toast-type { color: #4caf50; }
+.cp-toast-error .cp-toast-type   { color: #f44336; }
+
+.cp-toast-message {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--text);
+}
+
+.cp-toast-close {
+    background: none;
+    border: none;
+    color: var(--muted-foreground);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+}
+
+.cp-toast-close:hover { opacity: 1; }
+
+@keyframes cpToastIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes cpToastOut {
+    from { transform: translateX(0);    opacity: 1; }
+    to   { transform: translateX(120%); opacity: 0; }
+}
+
+/* ===== Change Password Responsive ===== */
+@media (max-width: 768px) {
+    .cp-security-banner {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+
+    .cp-requirements {
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .cp-otp-modal-content {
+        padding: 1.75rem 1.25rem;
+        width: 95%;
+    }
+
+    .cp-otp-digit {
+        width: 40px;
+        height: 48px;
+        font-size: 1.1rem;
+    }
+
+    .cp-otp-inputs {
+        gap: 6px;
+    }
+
+    .cp-toast {
+        min-width: unset;
+        max-width: calc(100vw - 48px);
     }
 }

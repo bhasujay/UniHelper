@@ -250,13 +250,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add delete functionality to delete buttons
     document.querySelectorAll('.delete-button').forEach(button => {
-        button.addEventListener('click', function(e) {
+        button.addEventListener('click', async function(e) {
             e.preventDefault();
             const degreeId = this.getAttribute('data-degree-id');
             const degreeName = this.closest('.degree-card').querySelector('.degree-card-title').textContent;
             
             // Show confirmation dialog
-            if (confirm(`Are you sure you want to delete the degree program "${degreeName}"? This action cannot be undone.`)) {
+            if (await confirm(`Are you sure you want to delete the degree program "${degreeName}"? This action cannot be undone.`)) {
                 // Send request to delete endpoint
                 window.location.href = `/unihelper/dashboard/admin/degreemanage/remove/${degreeId}`;
             }

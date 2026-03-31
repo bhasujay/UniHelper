@@ -57,4 +57,9 @@ class Database
     {
         return $this->connection->query($sql);
     }
+
+    public function exec($sql)
+    {
+        return $this->connection->exec($sql);
+    }
 }

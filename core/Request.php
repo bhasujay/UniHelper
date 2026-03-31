@@ -34,9 +34,11 @@ class Request
         }
         
         if ($this->getMethod() === 'POST') {
-            // Handle POST data
+            // Handle POST data.
+            // Use raw $_POST values so multipart/form-data JSON fields (like
+            // the `tags` JSON) are preserved and not mangled by FILTER_SANITIZE.
             foreach ($_POST as $key => $value) {
-            $body[$key] = filter_input(INPUT_POST, $key, FILTER_SANITIZE_SPECIAL_CHARS);
+                $body[$key] = $value;
             }
 
             // Handle uploaded files
@@ -85,5 +87,10 @@ class Request
             $this->reqBody = $this->getBody();
         }
         return $this->reqBody[$key] ?? null;
+    }
+
+    public function session($key)
+    {
+        return $_SESSION[$key] ?? null;
     }
 }

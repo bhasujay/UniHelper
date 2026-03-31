@@ -7,8 +7,8 @@
   
   body {
     font-family: 'Segoe UI', 'Arial', 'Helvetica Neue', sans-serif;
-    background: #303030;
-    color: #fafafa;
+    background: var(--key);
+    color: var(--foreground);
     overflow-x: hidden;
     line-height: 1.6;
   }
@@ -16,20 +16,24 @@
   /* CSS Variables for design system */
   :root {
     --primary: rgb(0, 170, 255);
-    --accent: #04d1fff1;
-    --background: #3898ff;
-    --border: #1f1f1f;
-    --card: #404040;
+    --accent: #04d1ffdc;
+    --background: #131520;
+    --foreground: #e2e5ef;
+    --muted-foreground: #7d8596;
+    --border: #222639;
+    --card: #1a1d2b;
     --text: #ffffff;
     --text-alt: #003a66;
-    --key: #303030;
-    --key-bottom: #2e2e2e91;
+    --key: #131520;
+    --key-bottom: #111320ea;
+    --text_background: #1e2130;
 
     --bg-blur1: #20ffff11;
     --bg-blur2: #38fff22f;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, #3795ff, #32a6ff);
+    --gradient-primary: linear-gradient(135deg, #26b1fc, #32a6ff);
+    --btn-gradient-primary: linear-gradient(135deg, #0f6cbd, #0a70ff);
     --gradient-secondary: linear-gradient(135deg, #3eb5ff52, #47c5ff46);
     --btn-gradient: linear-gradient(135deg, #04d1ff, #0abfff);
     --gradient-accent: linear-gradient(135deg, #2ee7ff52, #08fbff48);
@@ -37,6 +41,35 @@
     /* Glows */
     --glow-primary: 0 0 60px #35f5ff41;
     --glow-secondary: 0 0 40px #1fe9ff1c;
+
+    color-scheme: dark;
+  }
+
+  /* Light Theme */
+  [data-theme="light"] {
+    --primary: #00b4e5; /* Darker primary for better visibility in light theme */
+    --accent: #005fbd; /* Darker accent for light theme */
+    --background: #f2f4f8;
+    --foreground: #1c1f2b;
+    --muted-foreground: #5f6577;
+    --border: #d4d8e3;
+    --card: #ffffff;
+    --text: #1c1f2b;
+    --text-alt: #003a66;
+    --key: #ebeef5;
+    --key-bottom: #e3e7eef0;
+    --text_background: #f0f1f7;
+
+    --bg-blur1: #00aaff08;
+    --bg-blur2: #04d1ff12;
+
+    --gradient-secondary: linear-gradient(135deg, #3eb5ff1a, #47c5ff14);
+    --gradient-accent: linear-gradient(135deg, #2ee7ff20, #08fbff18);
+
+    --glow-primary: 0 0 40px rgba(0, 170, 255, 0.1);
+    --glow-secondary: 0 0 30px rgba(0, 170, 255, 0.06);
+
+    color-scheme: light;
   }
 
     /* text colors */ 
@@ -137,9 +170,11 @@
   }
   
   .btn-primary {
-    background: var(--gradient-primary);
-    color: rgb(0, 0, 0);
+    background: var(--btn-gradient-primary);
+    color: #ffffff;
     justify-content: center;
+
+    
   }
   
   .btn-primary:hover {
@@ -150,7 +185,7 @@
   .btn-outline {
     background: transparent;
     color: var(--foreground);
-    border: 1px solid rgba(255, 255, 255, 0.318);
+    border: 1px solid var(--border);
   }
   
   .btn-text {
@@ -312,7 +347,11 @@
   }
 
   .nav-right .btn-primary {
-    color: rgb(0, 0, 0) !important;  /* Force black text color for nav buttons */
+    color: #fff !important;
+  }
+
+  .nav-right .btn-primary .btn-text {
+    color: #fff !important;
   }
 
   /* Update the nav-right button styles */
@@ -320,188 +359,6 @@
     font-size: 1.05rem;  /* Bigger text */
     padding: 0.5rem 1rem;  /* Smaller button size */
     font-weight: 500;  /* Slightly bolder text */
-  }
-
-  /* OTP Modal Styles */
-  #otpModal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(12px);
-  }
-
-  .otp-modal-content {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 40px;
-    max-width: 440px;
-    width: 90%;
-    box-shadow: var(--glow-primary), 0 20px 60px rgba(0, 0, 0, 0.5);
-    animation: slideIn 0.3s ease-out;
-  }
-
-  @keyframes slideIn {
-    from {
-      transform: translateY(-30px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  .otp-header {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-
-  .otp-icon {
-    width: 60px;
-    height: 60px;
-    background: var(--gradient-primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    font-size: 28px;
-    box-shadow: var(--glow-secondary);
-  }
-
-  .otp-title {
-    color: var(--text);
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-
-  .otp-subtitle {
-    color: var(--muted-foreground);
-    font-size: 14px;
-  }
-
-  .otp-inputs-container {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin: 30px 0;
-  }
-
-  .otp-input {
-    width: 50px;
-    height: 56px;
-    text-align: center;
-    font-size: 24px;
-    font-weight: 600;
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    background: var(--key);
-    color: var(--text);
-    transition: all 0.3s;
-  }
-
-  .otp-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: var(--glow-secondary);
-  }
-
-  .otp-error {
-    color: #fc8181;
-    font-size: 13px;
-    text-align: center;
-    margin-top: -15px;
-    margin-bottom: 15px;
-    display: none;
-  }
-
-  .otp-success {
-    color: var(--accent);
-    font-size: 13px;
-    text-align: center;
-    margin-top: -15px;
-    margin-bottom: 15px;
-    display: none;
-  }
-
-  .otp-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 25px;
-  }
-
-  .otp-btn {
-    flex: 1;
-    padding: 14px;
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-
-  .otp-btn-verify {
-    background: var(--gradient-primary);
-    color: var(--text-alt);
-  }
-
-  .otp-btn-verify:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--glow-primary);
-  }
-
-  .otp-btn-verify:disabled {
-    background: var(--border);
-    cursor: not-allowed;
-    transform: none;
-    opacity: 0.6;
-  }
-
-  .otp-btn-cancel {
-    background: var(--key);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-
-  .otp-btn-cancel:hover {
-    background: var(--card);
-  }
-
-  .otp-resend {
-    text-align: center;
-    margin-top: 20px;
-    color: var(--muted-foreground);
-    font-size: 14px;
-  }
-
-  .otp-resend-link {
-    color: var(--primary);
-    cursor: pointer;
-    text-decoration: none;
-    font-weight: 600;
-  }
-
-  .otp-resend-link:hover {
-    text-decoration: underline;
-    color: var(--accent);
-  }
-
-  .otp-loading {
-    display: none;
-    text-align: center;
-    color: var(--muted-foreground);
-    margin-top: 15px;
-    font-size: 14px;
   }
 
   /* Skeleton Loading Styles */
@@ -531,36 +388,38 @@
   }
 
   .skeleton-title {
-    width: 200px;
+    width: 12.5rem;
     height: 2rem;
   }
 
   .skeleton-tag {
-    width: 80px;
+    width: 5rem;
     height: 1.5rem;
   }
 
   .skeleton-username {
-    width: 100px;
+    width: 6.25rem;
     height: 1rem;
     display: inline-block;
   }
 
   .skeleton-role {
-    width: 60px;
+    width: 3.75rem;
     height: 0.75rem;
     display: inline-block;
   }
 
   .skeleton-time {
-    width: 70px;
+    width: 4.375rem;
     height: 0.8rem;
     display: inline-block;
   }
 
   .skeleton-count {
-    width: 30px;
+    width: 8%;
     height: 1rem;
+    min-width: 1.5rem;
+    max-width: 2rem;
     display: inline-block;
   }
 
@@ -575,13 +434,19 @@
   }
 
   .skeleton-stat {
-    width: 80px;
+    width: 15%;
     height: 1rem;
+    min-width: 3rem;
+    max-width: 5rem;
+    display: inline-block;
   }
 
   .skeleton-btn {
-    width: 100px;
+    width: 20%;
     height: 2rem;
+    min-width: 4rem;
+    max-width: 6.5rem;
+    display: inline-block;
   }
 
   @keyframes skeleton-loading {
