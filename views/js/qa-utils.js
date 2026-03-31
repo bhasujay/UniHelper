@@ -524,7 +524,11 @@ function makeQuestionCard(data, position) {
     card.querySelector('#qa-user-id').value = data.userID;
     const avatarImg = card.querySelector('.qa-avatar-img');
     if (data.user_avatar) {
-        avatarImg.src = 'public' + data.user_avatar;
+        if (data.user_avatar.includes('http')) {
+            avatarImg.src = data.user_avatar; // Absolute URL, use as is
+        } else {
+            avatarImg.src = 'public' + data.user_avatar; // Relative path, prepend 'public'
+        }
     } else {
         avatarImg.src = document.getElementById('default-pfp').src;
     }

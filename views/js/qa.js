@@ -443,15 +443,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showToast('Question posted successfully!', 'success');
                 
                 // Make the data object for question card
-                const fullAvatarSrc = document.getElementsByClassName('profile-img')[0].src;
-                const baseUrl = '/unihelper/public/';
-                let user_avatar;
-                
-                if (fullAvatarSrc.includes('/views/assets/')) {
-                    user_avatar = null; // Use default avatar
-                } else {
-                    user_avatar = fullAvatarSrc.replace(baseUrl, '');
-                }
+                const user_avatar = document.getElementsByClassName('profile-img')[0].src;
                 
                 // Build the expected image path based on what the server would save
                 const firstImagePath = selectedFiles.length > 0 
