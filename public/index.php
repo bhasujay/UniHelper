@@ -7,6 +7,13 @@ ini_set('display_errors', 1);
 // Start session
 session_start();
 
+// require vendor autoload (Composer)
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+// Load environment variables from .env
+$dotenv = \Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv->safeLoad();
+
 // require core files
 require_once dirname(__DIR__) . '/core/Application.php';
 require_once dirname(__DIR__) . '/core/Router.php';

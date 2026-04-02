@@ -1,0 +1,184 @@
+/* ================================================
+   Z-Score Checker — All Component Styles
+   Auto-loaded by dashboard.php for this component
+   ================================================ */
+
+/* ---- Card state toggle (show/hide content) ---- */
+.z-score-card .initial-content,
+.z-score-card .submitted-content {
+    display: none;
+}
+
+.z-score-card.initial-state .initial-content {
+    display: block;
+}
+
+.z-score-card.submitted-state .submitted-content {
+    display: block;
+}
+
+/* Prevent hover glow from blocking button clicks */
+.z-score-card::before {
+    pointer-events: none;
+}
+
+.z-score-card .card-main-action,
+.z-score-card .card-secondary-actions {
+    position: relative;
+    z-index: 2;
+}
+
+.z-score-card .card-main-action {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.z-score-card .card-main-action h2 {
+    margin: 0;
+}
+
+.z-score-card .card-secondary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+/* ------------------------------------------------
+   INLINE FORM SECTION
+   #zScoreModal is a plain block — no overlay,
+   no fixed positioning. Scrolls with the page.
+   ------------------------------------------------ */
+#zScoreModal {
+    display: none;
+    /* JS sets display:'block' to show */
+    margin-top: 1.5rem;
+}
+
+/* Card — max-width so it doesn't stretch full page width */
+.zscore-form-card {
+    background: var(--card);
+    border: 1px solid rgba(164, 109, 255, 0.2);
+    border-radius: 1.25rem;
+    overflow: hidden;
+    width: 100%;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(164, 109, 255, 0.08);
+}
+
+/* Header */
+.zscore-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(164, 109, 255, 0.05);
+}
+
+.zscore-form-header h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.zscore-form-header .close {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.4rem;
+    transition: color 0.2s, background 0.2s;
+}
+
+.zscore-form-header .close:hover {
+    color: var(--foreground);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+/* Form body */
+#zScoreForm {
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* 2-column layout */
+    gap: 1rem 1.25rem;
+    align-items: start;
+}
+
+/* District + Stream side by side (each takes 1 column) */
+#zScoreForm .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+/* A/L Subjects and Z-Score span both columns */
+#zScoreForm .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Field labels */
+#zScoreForm .form-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Larger inputs and selects */
+#zScoreForm .form-input,
+#zScoreForm .form-select {
+    padding: 0.7rem 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Subjects: 3 inputs in a row */
+.subjects-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.5rem;
+}
+
+/* Z-Score input — don't let it stretch full width */
+#zScore {
+    max-width: 220px;
+}
+
+/* Helper text */
+#zScoreForm .form-instructions {
+    font-size: 0.76rem;
+    color: var(--muted-foreground);
+    margin-top: 0.1rem;
+}
+
+/* Cancel / Save buttons — span both columns */
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    margin-top: 0.25rem;
+}
+
+.form-actions .btn {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    min-width: 110px;
+}
