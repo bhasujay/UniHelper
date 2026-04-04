@@ -369,9 +369,9 @@ async function viewQuestion(questionId) {
     qaViewModal.querySelector('.qa-role').textContent = question.user_role;
 
     const viewProfileUrl = `/unihelper/view/profile/${question.user_id}`;
-    viewAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = viewProfileUrl; };
+    viewAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.open(viewProfileUrl, '_blank'); };
     viewAvatarImg.parentElement.style.cursor = 'pointer';
-    viewUsernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = viewProfileUrl; };
+    viewUsernameEl.onclick = function(e) { e.stopPropagation(); window.open(viewProfileUrl, '_blank'); };
     viewUsernameEl.style.cursor = 'pointer';
     viewUsernameEl.style.textDecoration = 'underline';
     viewUsernameEl.style.textDecorationColor = 'transparent';
@@ -481,9 +481,9 @@ async function viewQuestion(questionId) {
             card.querySelector('.qa-role').textContent = answer.user_role;
 
             const ansProfileUrl = `/unihelper/view/profile/${answer.user_id}`;
-            ansAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
+            ansAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.open(ansProfileUrl, '_blank'); };
             ansAvatarImg.parentElement.style.cursor = 'pointer';
-            ansUsernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
+            ansUsernameEl.onclick = function(e) { e.stopPropagation(); window.open(ansProfileUrl, '_blank'); };
             ansUsernameEl.style.cursor = 'pointer';
             ansUsernameEl.style.textDecoration = 'underline';
             ansUsernameEl.style.textDecorationColor = 'transparent';
@@ -537,9 +537,9 @@ function makeQuestionCard(data, position) {
     card.querySelector('.qa-role').textContent = data.user_role;
 
     const profileUrl = `/unihelper/view/profile/${data.userID}`;
-    avatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = profileUrl; };
+    avatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.open(profileUrl, '_blank'); };
     avatarImg.parentElement.style.cursor = 'pointer';
-    usernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = profileUrl; };
+    usernameEl.onclick = function(e) { e.stopPropagation(); window.open(profileUrl, '_blank'); };
     usernameEl.style.cursor = 'pointer';
     usernameEl.style.textDecoration = 'underline';
     usernameEl.style.textDecorationColor = 'transparent';

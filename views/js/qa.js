@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     card.querySelector('.qa-role').textContent = role;
 
                     const ansProfileUrl = `/unihelper/view/profile/${userID}`;
-                    ansAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
+                    ansAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.open(ansProfileUrl, '_blank'); };
                     ansAvatarImg.parentElement.style.cursor = 'pointer';
                     ansUsernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
                     ansUsernameEl.style.cursor = 'pointer';
