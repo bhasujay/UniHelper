@@ -366,6 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     card.querySelector('.qa-question-title').innerHTML = styledTitle;
                     card.querySelector('.qa-question-text').textContent = questionBody;
                     card.querySelector('.qa-modified').textContent = '(edited)';
+                    bindHashtagClicks(card);
 
                     // Update image preview on the card
                     const imagePreview = card.querySelector('.qa-question-image-preview');
@@ -399,6 +400,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     qaViewModal.querySelector('.qa-view-title').innerHTML = styledTitle;
                     qaViewModal.querySelector('.qa-view-body').textContent = questionBody;
                     qaViewModal.querySelector('.qa-modified').textContent = '(edited)';
+                    bindHashtagClicks(qaViewModal);
                 }
 
                 // Close modal and reset
@@ -541,6 +543,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.setAttribute('aria-pressed', 'false');
                 });
 
+                // Remove any temp tag when a regular tag is clicked
+                const tempBtn = tagsBar.querySelector('.tag-btn[data-temp="true"]');
+                if (tempBtn && tempBtn !== this) tempBtn.remove();
+
                 if (!wasActive) {
                     // Activate this one and call handler
                     this.classList.add('active');
@@ -548,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     tagOnClick(tag.tag_name);
                 } else {
                     // It was active and is now deactivated
-                    tagOffClick();
+                    tagOffClick(true);
                 }
             });
 

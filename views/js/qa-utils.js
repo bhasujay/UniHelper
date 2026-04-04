@@ -401,6 +401,9 @@ async function viewQuestion(questionId) {
     qaViewModal.querySelector('.qa-view-title').innerHTML = styledTitle;
     qaViewModal.querySelector('.qa-view-body').textContent = question.text;
 
+    // Make hashtag tags clickable in question view
+    bindHashtagClicks(qaViewModal);
+
     // make the image array
     question.images = question.img_path ? question.img_path.split(',') : [];
 
@@ -550,6 +553,9 @@ function makeQuestionCard(data, position) {
     const styledTitle = data.questionTitle.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
     card.querySelector('.qa-question-title').innerHTML = styledTitle;
     card.querySelector('.qa-question-text').textContent = data.questionText;
+
+    // Make hashtag tags clickable in the card
+    bindHashtagClicks(card);
     
     card.querySelector('.qa-time').textContent = data.timestamp;
     if (data.modified) {
@@ -965,11 +971,12 @@ function tagOnClick(tag) {
     document.querySelector('.qa-main').style.display = 'none';
     document.querySelector('.qa-tag-filter').style.display = 'block';
     document.querySelector('.qa-sticky-btn').style.display = 'none';
+    // Clean the tag filter bucket before loading new tag results
     document.querySelector('.qa-tag-filter').innerHTML = '';
     fetchQuestions();
 }
 
-function tagOffClick() {
+function tagOffClick(removeTempTag) {
     // Reset to default filter
     currentFilter = 'default';
     currentTag = 'default';
@@ -980,7 +987,122 @@ function tagOffClick() {
     document.querySelector('.qa-main').style.display = 'block';
     document.querySelector('.qa-tag-filter').style.display = 'none';
     document.querySelector('.qa-sticky-btn').style.display = 'flex';
-    // placeholder for resetting filter function
+
+    // Remove the temporary tag button if it was one
+    if (removeTempTag) {
+        const tagsBar = document.querySelector('.qa-tags-bar');
+        const tempBtn = tagsBar.querySelector('.tag-btn[data-temp="true"]');
+        if (tempBtn) tempBtn.remove();
+    }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Clickable hashtag handler
+
+function hashtagClick(tagName) {
+    const qaView = document.querySelector('.qa-question-view');
+    const isInQuestionView = qaView && qaView.style.display === 'flex';
+
+    if (isInQuestionView) {
+        // Case 2: from question view — go back first, then apply tag
+        const questionId = qaView.querySelector('#qaViewModalQuestionId').textContent;
+        goBackFromQuestionView(questionId);
+        // Use a small delay to let the view transition complete
+        setTimeout(function() {
+            activateTagInBar(tagName);
+        }, 50);
+    } else {
+        // Case 1: from the feed
+        activateTagInBar(tagName);
+    }
+}
+
+function activateTagInBar(tagName) {
+    const tagsBar = document.querySelector('.qa-tags-bar');
+    const buttons = tagsBar.querySelectorAll('.tag-btn');
+
+    // Check if a temp tag is already active for this exact tag name — treat as toggle-off
+    const oldTemp = tagsBar.querySelector('.tag-btn[data-temp="true"]');
+    if (oldTemp) {
+        const oldTempName = oldTemp.textContent.trim().toLowerCase();
+        if (oldTempName === tagName.toLowerCase()) {
+            // Same tag clicked again — deactivate and go back to main
+            tagOffClick(true);
+            return;
+        }
+        // Different tag — remove the old temp before proceeding
+        oldTemp.remove();
+    }
+
+    // Look for an existing button whose tag name matches
+    let matchedBtn = null;
+    buttons.forEach(function(btn) {
+        if (btn.dataset.temp === 'true') return; // skip (already removed above)
+        // tag button text may include count like "tagname (5)", so strip it
+        const btnTagName = btn.textContent.replace(/\s*\(\d+\)$/, '').trim();
+        if (btnTagName.toLowerCase() === tagName.toLowerCase()) {
+            matchedBtn = btn;
+        }
+    });
+
+    if (matchedBtn) {
+        // Tag exists in bar — if already active, do nothing; otherwise click it
+        if (!matchedBtn.classList.contains('active')) {
+            matchedBtn.click();
+        }
+    } else {
+        // Tag not in bar — add a temporary button and activate it
+        // Deactivate any currently active button first
+        const currentActive = tagsBar.querySelector('.tag-btn.active');
+        if (currentActive) {
+            currentActive.click(); // deactivate it
+        }
+
+        const tempBtn = document.createElement('button');
+        tempBtn.className = 'tag-btn';
+        tempBtn.textContent = tagName;
+        tempBtn.setAttribute('type', 'button');
+        tempBtn.setAttribute('aria-pressed', 'false');
+        tempBtn.dataset.temp = 'true';
+
+        tempBtn.addEventListener('click', function() {
+            const allBtns = tagsBar.querySelectorAll('.tag-btn');
+            const wasActive = this.classList.contains('active');
+
+            allBtns.forEach(function(b) {
+                b.classList.remove('active');
+                b.setAttribute('aria-pressed', 'false');
+            });
+
+            if (!wasActive) {
+                this.classList.add('active');
+                this.setAttribute('aria-pressed', 'true');
+                tagOnClick(tagName);
+            } else {
+                // Was active, now deactivating — remove temp button and go back to main
+                tagOffClick(true);
+            }
+        });
+
+        tagsBar.appendChild(tempBtn);
+
+        // Immediately activate it
+        tempBtn.click();
+    }
+}
+
+function bindHashtagClicks(container) {
+    const hashtags = container.querySelectorAll('.hashtag');
+    hashtags.forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Extract tag name (remove the leading #)
+            const tagName = this.textContent.replace(/^#/, '').trim();
+            if (tagName) {
+                hashtagClick(tagName);
+            }
+        });
+    });
 }
 
 // deleting a question
