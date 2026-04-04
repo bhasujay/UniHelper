@@ -527,7 +527,11 @@
             .then(data => {
                 loading.style.display = 'none';
 
-                if (data.success && data.data.length > 0) {
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load your sessions');
+                }
+
+                if (data.data && data.data.length > 0) {
                     if (page === 1) {
                         container.innerHTML = '';
                     }
@@ -552,6 +556,7 @@
             .catch(error => {
                 loading.style.display = 'none';
                 console.error('Error loading sessions:', error);
+                alert(error.message || 'Failed to load your sessions. Please try again.');
                 container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
             });
     }
@@ -571,7 +576,11 @@
             .then(data => {
                 loading.style.display = 'none';
 
-                if (data.success && data.data.length > 0) {
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load sessions');
+                }
+
+                if (data.data && data.data.length > 0) {
                     if (page === 1) {
                         container.innerHTML = '';
                     }
@@ -596,6 +605,7 @@
             .catch(error => {
                 loading.style.display = 'none';
                 console.error('Error loading sessions:', error);
+                alert(error.message || 'Failed to load sessions. Please try again.');
                 container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
             });
     }
@@ -716,18 +726,18 @@
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Delete';
 
-            if (data.success) {
-                closeDeleteModal();
-                loadMyessions(1);
-            } else {
-                alert('Error: ' + data.error);
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to delete session');
             }
+
+            closeDeleteModal();
+            loadMyessions(1);
         })
         .catch(error => {
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Delete';
-            console.error('Error:', error);
-            alert('Failed to delete session');
+            console.error('Error deleting session:', error);
+            alert(error.message || 'Failed to delete session. Please try again.');
         });
     }
 
