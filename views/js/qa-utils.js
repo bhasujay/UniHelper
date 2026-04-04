@@ -822,8 +822,11 @@ function handleScroll() {
     const pageHeight = document.documentElement.scrollHeight;
     const threshold = 200; // Trigger when 200px from bottom
 
-    if (scrollPosition >= pageHeight - threshold) {
-        fetchQuestions();
+    // Fetch more questions if the main question list is visible and we have more questions to load
+    if (scrollPosition >= pageHeight - threshold){
+        if (currentFilter === 'default' && document.querySelector('.qa-main').style.display !== 'none') {
+            fetchQuestions();
+        }
     }
 }
 

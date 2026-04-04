@@ -79,10 +79,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     
-    // Close answermodal
-    answermodal.querySelector('.qa-answermodal-close').addEventListener('click', function() {
+    async function closeAnswerModalWithGuard() {
+        const answerText = document.getElementById('qa-answer-body').value.trim();
+
+        if (answerText) {
+            if (!await confirm('You have unsaved changes. Are you sure you want to close?')) {
+                return;
+            }
+        }
+
         answermodal.style.display = 'none';
         resetAnswerForm();
+    }
+
+    // Close answermodal
+    answermodal.querySelector('.qa-answermodal-close').addEventListener('click', async function() {
+        await closeAnswerModalWithGuard();
     });
     
     // Cancel button
@@ -107,9 +119,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Cancel button for answer modal
     const answerCancelBtn = answermodal.querySelector('.qa-cancel-btn');
-    answerCancelBtn.addEventListener('click', function() {
-        answermodal.style.display = 'none';
-        resetAnswerForm();
+    answerCancelBtn.addEventListener('click', async function() {
+        await closeAnswerModalWithGuard();
     });
 
 /////////////////////////////////////////////////////////////////////////////
