@@ -263,12 +263,15 @@
     <h1 class="qa-title">Q&A Forum</h1>
     <div class="qa-controls">
         <div class="qa-searchbar">
-            <input type="text" placeholder="" class="search-input">
-            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-            </svg>
-        </div>
+                <input type="text" id="qa-search-input" placeholder="Search questions and answers..." class="search-input">
+                <button type="button" class="search-clear-btn" aria-label="Clear search" style="display: none;">×</button>
+                <button type="button" class="search-trigger-btn" aria-label="Search">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </button>
+            </div>
     </div>
     <div class="qa-tags-bar">
         <?php for ($i = 0; $i < 10; $i++): ?>
@@ -347,6 +350,59 @@
 </div>
 
 <!-- search result bucket -->
-<div class="qa-search-results" style ="display: none;">
-    <!-- for the search results -->
+<div class="qa-search-results">
+    <!-- Dummy Question Result -->
+    <div class="qa-search-card template-question-search" style="display: none;">
+        <div class="qa-search-card-header">
+            <span class="qa-search-card-type">❓ Question</span>
+            <span class="qa-search-card-time">2 hours ago</span>
+        </div>
+        <h3 class="qa-search-question-title">How do I properly handle state management in a <span class="hashtag">#React</span> application?</h3>
+        <p class="qa-search-body">I've been using useState and useContext, but my app is getting complex and I'm worried about performance issues. What are the best practices...</p>
+    </div>
+
+    <!-- Dummy Answer Result -->
+    <div class="qa-search-card template-answer-search" style="display: none;">
+        <div class="qa-search-card-header">
+            <span class="qa-search-card-type">💬 Answer</span>
+            <span class="qa-search-card-time">5 minutes ago</span>
+        </div>
+        <div class="qa-search-answer-parent">Re: How do I properly handle state management in a #React application?</div>
+        <p class="qa-search-body">For large React applications, I recommend using a state management library like Redux or Zustand. Redux Toolkit makes Redux much easier to work with and includes best practices out of the box. The key...</p>
+    </div>
+
+    <!-- Searching Buffer (Loading State) -->
+    <div class="qa-search-loading template-search-loading" style="display: none;">
+        <div class="qa-search-card" style="border-left-color: var(--border); pointer-events: none;">
+            <div class="qa-search-card-header">
+                <div class="skeleton-text" style="width: 80px; height: 16px; border-radius: 4px;"></div>
+                <div class="skeleton-text" style="width: 60px; height: 12px; border-radius: 4px;"></div>
+            </div>
+            <div class="skeleton-text" style="width: 70%; height: 20px; border-radius: 4px; margin-bottom: 0.5rem;"></div>
+            <div class="skeleton-text" style="width: 100%; height: 14px; border-radius: 4px; margin-bottom: 0.3rem;"></div>
+            <div class="skeleton-text" style="width: 85%; height: 14px; border-radius: 4px;"></div>
+        </div>
+        <div class="qa-search-card" style="border-left-color: var(--border); pointer-events: none;">
+            <div class="qa-search-card-header">
+                <div class="skeleton-text" style="width: 80px; height: 16px; border-radius: 4px;"></div>
+                <div class="skeleton-text" style="width: 60px; height: 12px; border-radius: 4px;"></div>
+            </div>
+            <div class="skeleton-text" style="width: 50%; height: 20px; border-radius: 4px; margin-bottom: 0.5rem;"></div>
+            <div class="skeleton-text" style="width: 100%; height: 14px; border-radius: 4px; margin-bottom: 0.3rem;"></div>
+            <div class="skeleton-text" style="width: 90%; height: 14px; border-radius: 4px;"></div>
+        </div>
+    </div>
+
+    <!-- No Search Results Banner -->
+    <div class="qa-search-no-results template-search-empty" style="display: none;">
+        <div class="qa-search-no-results-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+        </div>
+        <h3 class="qa-search-no-results-title">No Results Found</h3>
+        <p class="qa-search-no-results-text">We couldn't find any questions or answers matching your search. Try different keywords or check your spelling.</p>
+    </div>
 </div>

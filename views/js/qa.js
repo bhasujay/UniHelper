@@ -9,6 +9,7 @@ var batch_limit = 10;
 var isFetching = false;
 var hasMoreQuestions = true;
 var questionModel = true;
+var searchIndex = 0;
 var userID = document.getElementById('profileUserId').textContent;
 var isModerator = document.getElementById('profileModStatus').textContent === '1';
 var menuDropdown = document.querySelector('.qa-menu-dropdown');
@@ -573,6 +574,41 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial fetch of questions
     fetchQuestions();
+
+    // Search interactions
+    const searchInput = document.getElementById('qa-search-input');
+    const searchTriggerBtn = document.querySelector('.search-trigger-btn');
+    const searchClearBtn = document.querySelector('.search-clear-btn');
+
+    if (searchInput && searchTriggerBtn && searchClearBtn) {
+        searchTriggerBtn.addEventListener('click', function() {
+            search();
+        });
+
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                search();
+            }
+        });
+
+        searchInput.addEventListener('input', function() {
+            const hasValue = this.value.trim().length > 0;
+            searchClearBtn.style.display = hasValue ? 'inline-flex' : 'none';
+
+            if (!hasValue && currentFilter === 'search') {
+                clearSearch();
+            }
+        });
+
+        searchClearBtn.addEventListener('click', function() {
+            clearSearch();
+            searchInput.focus();
+        });
+
+        // Keep search results container hidden until a search is triggered.
+        clearSearch();
+    }
     
     // Deep-link support: if ?question=<id> was passed, auto-open that question
     // once the initial batch of questions has been rendered.

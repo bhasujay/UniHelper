@@ -379,13 +379,27 @@ async function viewQuestion(questionId) {
     viewUsernameEl.onmouseleave = () => viewUsernameEl.style.textDecorationColor = 'transparent';
     
 
-    const addedTime = new Date(question.added_time);
-    const lastModified = new Date(question.last_modified);
-    if (addedTime.getTime() === lastModified.getTime()) {
-        qaViewModal.querySelector('.qa-time').textContent = getRelativeTime(addedTime);
-    } else {
-        qaViewModal.querySelector('.qa-time').textContent = getRelativeTime(lastModified);
+    const normalizeSqlDateTime = function(dateTimeValue) {
+        if (!dateTimeValue) return '';
+        const raw = String(dateTimeValue).trim();
+        if (!raw) return '';
+
+        // Backend sends DATETIME-like values; keep an exact date+time text in SQL style.
+        return raw
+            .replace('T', ' ')
+            .replace(/\.\d+$/, '')
+            .replace(/Z$/, '');
+    };
+
+    const addedDateTime = normalizeSqlDateTime(question.added_time);
+    const editedDateTime = normalizeSqlDateTime(question.last_modified);
+
+    if (editedDateTime && editedDateTime !== addedDateTime) {
+        qaViewModal.querySelector('.qa-time').textContent = editedDateTime;
         qaViewModal.querySelector('.qa-modified').textContent = '(edited)';
+    } else {
+        qaViewModal.querySelector('.qa-time').textContent = addedDateTime;
+        qaViewModal.querySelector('.qa-modified').textContent = '';
     }
 
     // Create and append the menu container
@@ -1272,4 +1286,313 @@ function resetEditMode() {
 
     const submitBtn = document.querySelector('#qaQuestionForm button[type="submit"]');
     submitBtn.textContent = 'Post Question';
+}
+
+//////////////////////////////////////////////////////////////////////
+// Searching functions
+
+let activeSearchRequestId = 0;
+
+function getSearchElements() {
+    const resultsBucket = document.querySelector('.qa-search-results');
+    if (!resultsBucket) return null;
+
+    return {
+        resultsBucket,
+        mainBucket: document.querySelector('.qa-main'),
+        tagBucket: document.querySelector('.qa-tag-filter'),
+        tagsBar: document.querySelector('.qa-tags-bar'),
+        stickyBtn: document.querySelector('.qa-sticky-btn'),
+        searchInput: document.getElementById('qa-search-input'),
+        clearBtn: document.querySelector('.search-clear-btn'),
+        loadingTemplate: resultsBucket.querySelector('.template-search-loading'),
+        emptyTemplate: resultsBucket.querySelector('.template-search-empty'),
+        questionTemplate: resultsBucket.querySelector('.template-question-search'),
+        answerTemplate: resultsBucket.querySelector('.template-answer-search')
+    };
+}
+
+function getOrCreateSearchSummaryElement(resultsBucket) {
+    let summary = resultsBucket.querySelector('.qa-search-summary');
+    if (!summary) {
+        summary = document.createElement('p');
+        summary.className = 'qa-search-summary';
+        summary.style.margin = '0 0 0.25rem 0';
+        summary.style.fontSize = '0.9rem';
+        summary.style.color = 'var(--muted-foreground)';
+        resultsBucket.insertBefore(summary, resultsBucket.firstChild);
+    }
+    return summary;
+}
+
+function clearRenderedSearchCards(resultsBucket) {
+    resultsBucket.querySelectorAll('.qa-search-result-item').forEach(function(card) {
+        card.remove();
+    });
+}
+
+function setSearchLoadingState(loadingElement, isVisible) {
+    if (!loadingElement) return;
+    loadingElement.style.display = isVisible ? 'flex' : 'none';
+}
+
+function setSearchEmptyState(emptyElement, isVisible, query) {
+    if (!emptyElement) return;
+
+    const textElement = emptyElement.querySelector('.qa-search-no-results-text');
+    if (textElement) {
+        textElement.textContent = query
+            ? `No results found for "${query}". Try different keywords or check your spelling.`
+            : "We couldn't find any questions or answers matching your search. Try different keywords or check your spelling.";
+    }
+
+    emptyElement.style.display = isVisible ? 'flex' : 'none';
+}
+
+function parseDeepLinkRef(deeplinkRef, fallbackQuestionId, fallbackAnswerId) {
+    const parts = String(deeplinkRef || '')
+        .split(',')
+        .map(function(value) { return value.trim(); })
+        .filter(Boolean);
+
+    const questionId = parts[0] || fallbackQuestionId || '';
+    const answerId = parts[1] || fallbackAnswerId || '';
+
+    if (!questionId) {
+        return null;
+    }
+
+    let link = `/unihelper/qa-forum?question=${encodeURIComponent(questionId)}`;
+    if (answerId) {
+        link += `&answer=${encodeURIComponent(answerId)}`;
+    }
+
+    return link;
+}
+
+function createSearchResultCard(result, questionTemplate, answerTemplate) {
+    const type = String(result?.type || '').toLowerCase();
+    const isAnswer = type === 'answer';
+    const template = isAnswer ? answerTemplate : questionTemplate;
+
+    if (!template) {
+        return null;
+    }
+
+    const link = parseDeepLinkRef(result.deeplink_ref, result.questionId, result.answerId);
+    if (!link) {
+        return null;
+    }
+
+    const card = template.cloneNode(true);
+    card.classList.remove('template-question-search', 'template-answer-search');
+    card.classList.add('qa-search-result-item');
+    card.style.display = 'flex';
+
+    const typeEl = card.querySelector('.qa-search-card-type');
+    if (typeEl) {
+        typeEl.textContent = isAnswer ? '💬 Answer' : '❓ Question';
+    }
+
+    const timeEl = card.querySelector('.qa-search-card-time');
+    if (timeEl) {
+        const rawTimestamp = result.time || result.timestamp || result.added_time || result.last_modified || '';
+        let relativeTime = '';
+
+        if (rawTimestamp) {
+            const parsedTime = new Date(rawTimestamp);
+            if (!Number.isNaN(parsedTime.getTime())) {
+                relativeTime = getRelativeTime(parsedTime);
+            }
+        }
+
+        timeEl.textContent = relativeTime;
+        timeEl.style.display = relativeTime ? 'inline' : 'none';
+    }
+
+    if (isAnswer) {
+        const parentEl = card.querySelector('.qa-search-answer-parent');
+        if (parentEl) {
+            parentEl.textContent = `Re: ${result.questionTitle || ''}`;
+        }
+    } else {
+        const titleEl = card.querySelector('.qa-search-question-title');
+        if (titleEl) {
+            titleEl.textContent = result.questionTitle || '';
+        }
+    }
+
+    const bodyEl = card.querySelector('.qa-search-body');
+    if (bodyEl) {
+        bodyEl.textContent = isAnswer ? (result.answerText || '') : (result.questionText || '');
+    }
+
+    card.setAttribute('role', 'link');
+    card.setAttribute('tabindex', '0');
+    card.addEventListener('click', function() {
+        window.open(link, '_blank');
+    });
+    card.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            window.open(link, '_blank');
+        }
+    });
+
+    return card;
+}
+
+function setSearchSummary(summaryEl, query, count) {
+    if (!summaryEl) return;
+    if (count === 0) {
+        summaryEl.textContent = `No results found for "${query}"`;
+        return;
+    }
+    const label = count === 1 ? 'result' : 'results';
+    summaryEl.textContent = `Search results for "${query}" (${count} ${label})`;
+}
+
+async function fetchSearchResults(query) {
+    const els = getSearchElements();
+    if (!els || !query) {
+        return;
+    }
+
+    const requestId = ++activeSearchRequestId;
+    const summaryEl = getOrCreateSearchSummaryElement(els.resultsBucket);
+
+    clearRenderedSearchCards(els.resultsBucket);
+    setSearchEmptyState(els.emptyTemplate, false);
+    setSearchLoadingState(els.loadingTemplate, true);
+    summaryEl.textContent = `Searching for "${query}"...`;
+
+    try {
+        const response = await fetch(`/unihelper/api?controller=searchController&action=search&query=${encodeURIComponent(query)}&type=qa&index=${encodeURIComponent(searchIndex)}`);
+        let payload;
+
+        try {
+            payload = await response.json();
+        } catch (_) {
+            throw new Error('Invalid response format from search API.');
+        }
+
+        if (requestId !== activeSearchRequestId) {
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(payload?.message || payload?.error || 'Search request failed.');
+        }
+
+        if (payload?.success === false || payload?.error) {
+            throw new Error(payload?.message || payload?.error || 'Unable to complete search.');
+        }
+
+        const results = Array.isArray(payload?.data)
+            ? payload.data
+            : (Array.isArray(payload) ? payload : []);
+
+        searchIndex += 1;
+        setSearchSummary(summaryEl, query, results.length);
+
+        if (results.length === 0) {
+            setSearchEmptyState(els.emptyTemplate, true, query);
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        results.forEach(function(result) {
+            const card = createSearchResultCard(result, els.questionTemplate, els.answerTemplate);
+            if (card) {
+                fragment.appendChild(card);
+            }
+        });
+
+        els.resultsBucket.appendChild(fragment);
+        setSearchEmptyState(els.emptyTemplate, els.resultsBucket.querySelectorAll('.qa-search-result-item').length === 0, query);
+    } catch (error) {
+        if (requestId !== activeSearchRequestId) {
+            return;
+        }
+
+        const message = error?.message || 'An error occurred while searching. Please try again.';
+        showToast(message, 'error');
+        summaryEl.textContent = `Search failed for "${query}". Please try again.`;
+        setSearchLoadingState(els.loadingTemplate, false);
+    } finally {
+        if (requestId === activeSearchRequestId) {
+            setSearchLoadingState(els.loadingTemplate, false);
+        }
+    }
+}
+
+function clearSearch() {
+    activeSearchRequestId += 1;
+
+    const els = getSearchElements();
+    if (!els) {
+        return;
+    }
+
+    currentFilter = 'default';
+    currentTag = 'default';
+
+    if (els.mainBucket) els.mainBucket.style.display = 'block';
+    if (els.tagBucket) els.tagBucket.style.display = 'none';
+    if (els.resultsBucket) els.resultsBucket.style.display = 'none';
+    if (els.tagsBar) els.tagsBar.style.display = 'flex';
+    if (els.stickyBtn) els.stickyBtn.style.display = 'flex';
+
+    clearRenderedSearchCards(els.resultsBucket);
+    setSearchLoadingState(els.loadingTemplate, false);
+    setSearchEmptyState(els.emptyTemplate, false);
+
+    const summaryEl = getOrCreateSearchSummaryElement(els.resultsBucket);
+    summaryEl.textContent = '';
+
+    if (els.searchInput) {
+        els.searchInput.value = '';
+    }
+    if (els.clearBtn) {
+        els.clearBtn.style.display = 'none';
+    }
+
+    const tagsBar = document.querySelector('.qa-tags-bar');
+    if (tagsBar) {
+        tagsBar.querySelectorAll('.tag-btn').forEach(function(btn) {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+        });
+        const tempBtn = tagsBar.querySelector('.tag-btn[data-temp="true"]');
+        if (tempBtn) {
+            tempBtn.remove();
+        }
+    }
+}
+
+function search() {
+    const els = getSearchElements();
+    if (!els || !els.searchInput) {
+        return;
+    }
+
+    const query = els.searchInput.value.trim();
+    if (!query) {
+        clearSearch();
+        return;
+    }
+
+    currentFilter = 'search';
+
+    if (els.mainBucket) els.mainBucket.style.display = 'none';
+    if (els.tagBucket) els.tagBucket.style.display = 'none';
+    if (els.resultsBucket) els.resultsBucket.style.display = 'flex';
+    if (els.tagsBar) els.tagsBar.style.display = 'none';
+    if (els.stickyBtn) els.stickyBtn.style.display = 'none';
+
+    if (els.clearBtn) {
+        els.clearBtn.style.display = 'inline-flex';
+    }
+
+    fetchSearchResults(query);
 }
