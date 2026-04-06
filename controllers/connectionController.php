@@ -23,7 +23,7 @@ Class ConnectionController
     
 
     // ---------------------------------------------------------------
-    // Helper: emit JSON and exit
+    // Emit JSON and exit
     // ---------------------------------------------------------------
     private function json($data, int $status = 200): void
     {
@@ -285,4 +285,97 @@ Class ConnectionController
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+    // ---------------------------------------------------------------
+    // this to get user's friends that are already accpeted connection
+    // GET  ?controller=connectionController&action=getFriends
+    // ---------------------------------------------------------------
+    public function getFriends(Request $request): void
+    {
+        $userId = $request->session('user_id');
+        if (!$userId) {
+            $this->json(['success' => false, 'message' => 'Unauthorised'], 401);
+            return;
+        }
+
+        try {
+            // contract: [{user_id, name, profile_picture, role}, ...], max 100
+            $friends = $this->connectionModel->getFriends((int) $userId, 100);
+            $this->json(['success' => true, 'data' => $friends]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // this is to get user's pending connection requests that are sent by the user
+    // GET  ?controller=connectionController&action=getPendingConnections
+    // ---------------------------------------------------------------
+    public function getPendingConnections(Request $request): void
+    {
+        $userId = $request->session('user_id');
+        if (!$userId) {
+            $this->json(['success' => false, 'message' => 'Unauthorised'], 401);
+            return;
+        }
+
+        try {
+            // contract: [{user_id, name, profile_picture, role}, ...], max 100
+            $pending = $this->connectionModel->getPendingConnections((int) $userId, 100);
+            $this->json(['success' => true, 'data' => $pending]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // this is to get user's pending connection requests that are sent by other users
+    // GET  ?controller=connectionController&action=getReceivedRequests
+    // ---------------------------------------------------------------
+    public function getReceivedRequests(Request $request): void
+    {
+        $userId = $request->session('user_id');
+        if (!$userId) {
+            $this->json(['success' => false, 'message' => 'Unauthorised'], 401);
+            return;
+        }
+
+        try {
+            // contract: [{user_id, name, profile_picture, role}, ...], max 100
+            $received = $this->connectionModel->getReceivedRequests((int) $userId, 100);
+            $this->json(['success' => true, 'data' => $received]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // this is to get user suggestions based on interests or mutual connections that are public accounts
+    // GET  ?controller=connectionController&action=getSuggestions&type=X
+    // ---------------------------------------------------------------
+    public function getSuggestions(Request $request): void
+    {
+        $userId = $request->session('user_id');
+        $type = $request->get('type') ?? 'mutual';
+        if (!$userId) {
+            $this->json(['success' => false, 'message' => 'Unauthorised'], 401);
+            return;
+        }
+
+        if (strtolower((string) $type) !== 'mutual') {
+            $this->json(['success' => false, 'message' => 'Only type=mutual is supported'], 400);
+            return;
+        }
+
+        try {
+            // contract: [{user_id, name, profile_picture, role}, ...], max 30
+            // algorithm: random 10 direct friends -> friends of those friends -> dedupe/exclude self
+            $suggestions = $this->connectionModel->getMutualSuggestions((int) $userId, 10, 30);
+            $this->json(['success' => true, 'data' => $suggestions]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
 }

@@ -224,4 +224,163 @@ Class Connection extends BaseModel
             throw new Exception("Failed to get pending requests: " . $e->getMessage());
         }
     }
+
+    /**
+     * Returns accepted friends for a user.
+     * Contract: [{user_id, name, profile_picture, role}, ...]
+     */
+    public function getFriends($userId, $limit = 100)
+    {
+        $limit = max(1, min(100, (int) $limit));
+
+        $sql = "SELECT
+                    u.id AS user_id,
+                    CONCAT(u.first_name, ' ', u.last_name) AS name,
+                    u.profile_picture,
+                    u.role
+                FROM connections c
+                JOIN users u ON u.id = CASE
+                    WHEN c.requester_id = :uid THEN c.receiver_id
+                    ELSE c.requester_id
+                END
+                WHERE (c.requester_id = :uid2 OR c.receiver_id = :uid3)
+                  AND c.status = 'accepted'
+                ORDER BY c.created_at DESC
+                LIMIT $limit";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':uid' => $userId,
+                ':uid2' => $userId,
+                ':uid3' => $userId,
+            ]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to get friends: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Returns pending requests sent by a user.
+     * Contract: [{user_id, name, profile_picture, role}, ...]
+     */
+    public function getPendingConnections($userId, $limit = 100)
+    {
+        $limit = max(1, min(100, (int) $limit));
+
+        $sql = "SELECT
+                    u.id AS user_id,
+                    CONCAT(u.first_name, ' ', u.last_name) AS name,
+                    u.profile_picture,
+                    u.role
+                FROM connections c
+                JOIN users u ON u.id = c.receiver_id
+                WHERE c.requester_id = :uid
+                  AND c.status = 'pending'
+                ORDER BY c.created_at DESC
+                LIMIT $limit";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':uid' => $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to get pending connections: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Returns pending requests received by a user.
+     * Contract: [{user_id, name, profile_picture, role}, ...]
+     */
+    public function getReceivedRequests($userId, $limit = 100)
+    {
+        $limit = max(1, min(100, (int) $limit));
+
+        $sql = "SELECT
+                    u.id AS user_id,
+                    CONCAT(u.first_name, ' ', u.last_name) AS name,
+                    u.profile_picture,
+                    u.role
+                FROM connections c
+                JOIN users u ON u.id = c.requester_id
+                WHERE c.receiver_id = :uid
+                  AND c.status = 'pending'
+                ORDER BY c.created_at DESC
+                LIMIT $limit";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':uid' => $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to get received requests: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Returns mutual-friend based suggestions.
+     * Process:
+     * 1) Pick up to 10 random accepted friends of the user.
+     * 2) Collect friends of those random friends (deduplicated).
+     * 3) Exclude authenticated user and direct friends.
+     * 4) Return up to 30 public accounts in random order.
+     * Contract: [{user_id, name, profile_picture, role}, ...]
+     */
+    public function getMutualSuggestions($userId, $randomFriendSample = 10, $limit = 30)
+    {
+        $limit = max(1, min(30, (int) $limit));
+
+        try {
+            $sql = "SELECT
+                        cand.id AS user_id,
+                        CONCAT(cand.first_name, ' ', cand.last_name) AS name,
+                        cand.profile_picture,
+                        cand.role,
+                        COUNT(DISTINCT f.friend_id) AS mutual_count
+                    FROM (
+                        SELECT DISTINCT
+                            CASE
+                                WHEN c1.requester_id = :uid_f1 THEN c1.receiver_id
+                                ELSE c1.requester_id
+                            END AS friend_id
+                        FROM connections c1
+                        WHERE c1.status = 'accepted'
+                          AND (c1.requester_id = :uid_f2 OR c1.receiver_id = :uid_f3)
+                    ) f
+                    JOIN connections c2
+                      ON c2.status = 'accepted'
+                     AND (c2.requester_id = f.friend_id OR c2.receiver_id = f.friend_id)
+                    JOIN users cand
+                      ON cand.id = CASE
+                            WHEN c2.requester_id = f.friend_id THEN c2.receiver_id
+                            ELSE c2.requester_id
+                         END
+                                        LEFT JOIN connections direct
+                                            ON ((direct.requester_id = :uid_d1 AND direct.receiver_id = cand.id)
+                                             OR (direct.requester_id = cand.id AND direct.receiver_id = :uid_d2))
+                                         AND direct.status IN ('pending', 'accepted')
+                    WHERE cand.id <> :uid_self
+                      AND cand.public = 1
+                      AND direct.requester_id IS NULL
+                    GROUP BY cand.id, cand.first_name, cand.last_name, cand.profile_picture, cand.role
+                    ORDER BY mutual_count DESC, RAND()
+                    LIMIT $limit";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':uid_f1' => $userId,
+                ':uid_f2' => $userId,
+                ':uid_f3' => $userId,
+                ':uid_d1' => $userId,
+                ':uid_d2' => $userId,
+                ':uid_self' => $userId,
+            ]);
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to get mutual suggestions: " . $e->getMessage());
+        }
+    }
 }

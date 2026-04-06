@@ -213,9 +213,66 @@ class search extends BaseModel
         return date('c', strtotime($timestamp));
     }
 
-    // searching for users
-    public function user_search($query, $index)
+    // searching for users by first name / last name / full name
+    // contract: [{user_id, name, profile_picture, role}, ...]
+    public function user_search($query, $index, $excludeUserId = null)
     {
+        $query = trim((string)$query);
+        if ($query === '') {
+            return [];
+        }
+
+        $page = max(0, (int)$index);
+        $limit = 20;
+        $offset = $page * $limit;
+
+        $like = '%' . $query . '%';
+        $prefix = $query . '%';
+
+        $sql = "SELECT
+                    u.id AS user_id,
+                    CONCAT(u.first_name, ' ', u.last_name) AS name,
+                    u.profile_picture,
+                    u.role
+                FROM users u
+                WHERE u.public = 1
+                  AND (
+                        LOWER(CONCAT(u.first_name, ' ', u.last_name)) LIKE LOWER(:like_full)
+                     OR LOWER(u.first_name) LIKE LOWER(:like_first)
+                     OR LOWER(u.last_name) LIKE LOWER(:like_last)
+                  )";
+
+        $params = [
+            ':like_full' => $like,
+            ':like_first' => $like,
+            ':like_last' => $like,
+            ':exact' => $query,
+            ':prefix_full' => $prefix,
+            ':prefix_first' => $prefix,
+            ':prefix_last' => $prefix,
+        ];
+
+        if ($excludeUserId !== null) {
+            $sql .= " AND u.id <> :excludeUserId";
+            $params[':excludeUserId'] = (int)$excludeUserId;
+        }
+
+        $sql .= "
+                ORDER BY
+                    CASE
+                        WHEN LOWER(CONCAT(u.first_name, ' ', u.last_name)) = LOWER(:exact) THEN 0
+                        WHEN LOWER(CONCAT(u.first_name, ' ', u.last_name)) LIKE LOWER(:prefix_full) THEN 1
+                        WHEN LOWER(u.first_name) LIKE LOWER(:prefix_first) THEN 2
+                        WHEN LOWER(u.last_name) LIKE LOWER(:prefix_last) THEN 3
+                        ELSE 4
+                    END,
+                    u.first_name ASC,
+                    u.last_name ASC
+                LIMIT $limit OFFSET $offset";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     // searching for posts in the feed

@@ -18,6 +18,7 @@ class searchController
 
     // ---------------------------------------------------------------
     // GET  ?controller=searchController&action=search&query=...&type=qa|user|feed|session&index=...
+    // type=user response contract: [{user_id, name, profile_picture, role}, ...]
     // ---------------------------------------------------------------
     public function search(Request $request)
     {
@@ -41,6 +42,7 @@ class searchController
             if ($type === 'qa') {
                 $results = $this->model->qa_search($query, $index);
             } elseif ($type === 'user') {
+                // Do not exclude the current user from search results
                 $results = $this->model->user_search($query, $index);
             } elseif ($type === 'feed') {
                 $results = $this->model->feed_search($query, $index);
