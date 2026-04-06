@@ -224,13 +224,13 @@ function addButtonEventListeners() {
                 const result = await response.json();
 
                 if (result.success && result.data) {
-                    const data = result.data;
+                    const data = result.data; // Now this is an array []
 
                     // Display results
-                    if (data.total_eligible > 0) {
+                    if (data.length > 0) {
                         displayEligiblePrograms(data);
                     } else {
-                        alert(`No eligible programs found for your Z-Score of ${data.user_zscore}.\n\nTry exploring other streams or check back later for updates.`);
+                        alert(`No eligible programs found for your Z-Score of ${submittedZScoreData.zScore}.\n\nTry exploring other streams or check back later for updates.`);
                     }
                 } else {
                     alert('Error: ' + (result.message || 'Failed to find eligible programs'));
@@ -412,34 +412,54 @@ async function deleteZScoreFromAPI() {
 }
 
 // Function to display eligible programs in a modal or section
-function displayEligiblePrograms(data) {
-    const { user_zscore, user_stream, user_district, eligible_programs, total_eligible } = data;
+function displayEligiblePrograms(programs) {
+    // 1. Populate summary section using tracking variables
+    document.getElementById('resultZScore').textContent = submittedZScoreData.zScore;
+    document.getElementById('resultStream').textContent = submittedZScoreData.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    document.getElementById('resultDistrict').textContent = submittedZScoreData.district || 'Any';
+    document.getElementById('resultTotal').textContent = programs.length;
 
-    // Populate summary section
-    document.getElementById('resultZScore').textContent = user_zscore;
-    document.getElementById('resultStream').textContent = user_stream;
-    document.getElementById('resultDistrict').textContent = user_district || 'Any';
-    document.getElementById('resultTotal').textContent = total_eligible;
-
-    // Get programs container
+    // 2. Get programs container
     const programsList = document.getElementById('programsList');
     const noResults = document.getElementById('noResultsMessage');
 
     // Clear previous results
     programsList.innerHTML = '';
 
-    if (eligible_programs.length === 0) {
+    if (programs.length === 0) {
         programsList.style.display = 'none';
         noResults.style.display = 'block';
     } else {
         programsList.style.display = 'flex';
         noResults.style.display = 'none';
 
+        // Badge settings mapping
+        const badgeConfig = {
+            'very_likely': { label: 'Very Likely', color: '#22c55e', bg: '#f0fdf4' },  // Green
+            'likely':      { label: 'Likely',      color: '#3b82f6', bg: '#eff6ff' },  // Blue
+            'possible':    { label: 'Possible',    color: '#f59e0b', bg: '#fffbeb' },  // Amber
+            'unlikely':    { label: 'Low Chance',  color: '#ef4444', bg: '#fef2f2' },  // Red
+            'noc':         { label: 'Open Entry',  color: '#8b5cf6', bg: '#f5f3ff' }   // Purple
+        };
+
         // Create program cards using the same structure as degree programs search
-        eligible_programs.forEach(program => {
+        programs.forEach(program => {
+            const badge = badgeConfig[program.eligibility] || badgeConfig['noc'];
+            
+            // Format cutoff predictions nicely
+            let cutoffDisplay = 'No matching history';
+            if (program.eligibility !== 'noc') {
+                cutoffDisplay = program.predicted 
+                    ? `Predicted: <strong style="color: #007bff;">${program.predicted.toFixed(4)}</strong>` 
+                    : `Lowest: <strong style="color: #007bff;">${(program.min_cutoff || 0).toFixed(4)}</strong>`;
+            }
+
             const card = document.createElement('div');
             card.className = 'degree-program-card';
-            card.setAttribute('data-program-id', program.unicode); // Use unicode as ID since we don't have program_id
+            card.setAttribute('data-program-id', program.program_id);
+
+            // Format probability percentage display
+            const probDisplay = program.probability_percent ? `${program.probability_percent}% - ` : '';
 
             card.innerHTML = `
                 <div class="card-header">
@@ -448,26 +468,34 @@ function displayEligiblePrograms(data) {
                 </div>
                 
                 <div class="card-body">
-                    <p class="faculty-name">${program.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                    <p class="faculty-name">${submittedZScoreData.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
                     
-                    <div class="degree-metrics">
-                        <div class="cutoff-info">Cutoff Z-Score: <strong style="color: #007bff;">${program.cutoff_zscore}</strong></div>
-                        <div class="unicode-info">Unicode: <strong>${program.unicode}</strong></div>
+                    <div class="degree-metrics" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+                        <div class="cutoff-info" style="width: 100%;">${cutoffDisplay}</div>
+                        <!-- UI Probability Progress Bar -->
+                        <div class="probability-container" style="width: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 0.85rem; font-weight: 700; color: ${badge.color}; text-transform: uppercase; letter-spacing: 0.5px;">${badge.label}</span>
+                                <span style="font-size: 0.9rem; font-weight: 800; color: #374151;">${program.probability_percent ? program.probability_percent + '%' : 'N/A'}</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background-color: ${badge.bg}; border-radius: 6px; overflow: hidden; border: 1px solid ${badge.color}20;">
+                                <div style="height: 100%; width: ${program.probability_percent || 100}%; background: linear-gradient(90deg, ${badge.color}dd, ${badge.color}); border-radius: 6px; box-shadow: 0 0 10px ${badge.color}40; transition: width 1.5s cubic-bezier(0.1, 0.7, 0.1, 1);"></div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="degree-tags">
-                        <span class="tag">${program.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} Stream</span>
-                        ${program.district_specific ? '<span class="tag" style="background: #28a745;">📍 District Specific</span>' : ''}
+                        <span class="tag">${submittedZScoreData.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} Stream</span>
                     </div>
                 </div>
                 
                 <div class="card-footer">
                     <div class="footer-details">
-                        <span>Stream: <strong>${program.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</strong></span>
-                        <span>Unicode: <strong>${program.unicode}</strong></span>
+                        <span>Min: <strong>${program.min_cutoff ? program.min_cutoff.toFixed(4) : 'N/A'}</strong></span>
+                        <span>Max: <strong>${program.max_cutoff ? program.max_cutoff.toFixed(4) : 'N/A'}</strong></span>
                     </div>
                     <div class="card-actions">
-                        <button class="icon-btn wishlist-btn" onclick="addEligibleToWishlist('${program.unicode}', '${program.name.replace(/'/g, "\\'")}', '${program.university.replace(/'/g, "\\'")}')" aria-label="Add to Wishlist">
+                        <button class="icon-btn wishlist-btn" onclick="if(typeof toggleWishlist === 'function') toggleWishlist(${program.program_id})" aria-label="Add to Wishlist">
                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                         </button>
                         <button class="icon-btn" aria-label="View Details">
@@ -487,6 +515,11 @@ function displayEligiblePrograms(data) {
 
     // Scroll to results
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Check if the wishlist check exists to set proper heart icons
+    if (typeof initializeWishlistStatus === 'function') {
+        initializeWishlistStatus();
+    }
 }
 
 // Function to close eligible programs section

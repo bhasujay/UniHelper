@@ -116,10 +116,19 @@ def main():
         print(f"\n✅ Save Results:")
         print(f"   Total processed: {save_result['total_processed']}")
         print(f"   Database records affected: {save_result['inserted']}")
-        
-        
+
+
         # ============================================================
-        # STEP 4: VERIFY RESULTS
+        # STEP 3.5: POPULATE cutoff_summary
+        # Reads from z_score_data (actual + predicted rows) and writes
+        # min/max/avg/predicted into the cutoff_summary lookup table.
+        # ============================================================
+        print_section("📊 STEP 3.5: Populating cutoff_summary Table")
+
+        summary_rows = saver.populate_cutoff_summary(year=2026)
+        print(f"   Rows written to cutoff_summary: {summary_rows}")
+
+
         # ============================================================
         print_section("✔️  STEP 4: Verifying Results")
         
