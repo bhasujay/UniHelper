@@ -136,18 +136,6 @@
 
 <!-- Eligible Programs Results Section -->
 <div id="eligibleProgramsSection" style="display: none; margin-top: 30px;">
-    <div style="background: #1a1a1a; border: 1px solid #444; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2 style="color: white; margin: 0;">🎓 Eligible Degree Programs</h2>
-            <button onclick="closeEligibleProgramsModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-        </div>
-        <p style="color: #ccc; margin: 10px 0 0 0; font-size: 14px;">
-            <strong>Your Z-Score:</strong> <span id="resultZScore">-</span> | 
-            <strong>Stream:</strong> <span id="resultStream">-</span> | 
-            <strong>District:</strong> <span id="resultDistrict">-</span> | 
-            <strong style="color: #007bff;">Total Eligible:</strong> <span id="resultTotal" style="color: #007bff; font-weight: bold;">0</span> programs
-        </p>
-    </div>
     
     <div id="programsList" class="search-results">
         <!-- Programs will be inserted here by JavaScript as degree-program-card -->

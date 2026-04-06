@@ -413,12 +413,6 @@ async function deleteZScoreFromAPI() {
 
 // Function to display eligible programs in a modal or section
 function displayEligiblePrograms(programs) {
-    // 1. Populate summary section using tracking variables
-    document.getElementById('resultZScore').textContent = submittedZScoreData.zScore;
-    document.getElementById('resultStream').textContent = submittedZScoreData.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-    document.getElementById('resultDistrict').textContent = submittedZScoreData.district || 'Any';
-    document.getElementById('resultTotal').textContent = programs.length;
-
     // 2. Get programs container
     const programsList = document.getElementById('programsList');
     const noResults = document.getElementById('noResultsMessage');
