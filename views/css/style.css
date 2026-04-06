@@ -15,7 +15,7 @@
   
   /* CSS Variables for design system */
   :root {
-    --primary: rgb(0, 170, 255);
+    --primary: #00aaff;
     --accent: #04d1ffdc;
     --background: #131520;
     --foreground: #e2e5ef;
@@ -47,7 +47,7 @@
 
   /* Light Theme */
   [data-theme="light"] {
-    --primary: #00b4e5; /* Darker primary for better visibility in light theme */
+    --primary: #00b3e5; /* Darker primary for better visibility in light theme */
     --accent: #005fbd; /* Darker accent for light theme */
     --background: #f2f4f8;
     --foreground: #1c1f2b;
