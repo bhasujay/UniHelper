@@ -51,63 +51,7 @@ class SessionController
     // POST /create-session - Handle form submission
     public function store(Request $request)
     {
-        $errors = [];
-
-        // Get form data
-        $title = $request->get('title');
-        $subject = $request->get('subject');
-        $description = $request->get('description');
-        $date = $request->get('date');
-        $time = $request->get('time');
-        $duration = $request->get('duration');
-        $sessionLink = $request->get('sessionLink');
-        $audience = $request->get('audience');
-        $tags = $request->get('tags');
-
-        // Validation: Title
-        if (empty($title)) {
-            $errors['title'] = 'Session title is required.';
-        } elseif (strlen($title) > 255) {
-            $errors['title'] = 'Session title must not exceed 255 characters.';
-        }
-
-        // Validation: Subject
-        if (empty($subject)) {
-            $errors['subject'] = 'Subject is required.';
-        }
-
-        // Validation: Description
-        if (empty($description)) {
-            $errors['description'] = 'Description is required.';
-        }
-
-        // Validation: Date
-        if (empty($date)) {
-            $errors['date'] = 'Date is required.';
-        } else {
-            $selectedDate = strtotime($date);
-            $today = strtotime(date('Y-m-d'));
-            if ($selectedDate < $today) {
-                $errors['date'] = 'Date must be today or in the future.';
-            }
-        }
-
-        // Validation: Time
-        if (empty($time)) {
-            $errors['time'] = 'Time is required.';
-        }
-
-        // Validation: Duration
-        if (empty($duration)) {
-            $errors['duration'] = 'Duration is required.';
-        } elseif (!is_numeric($duration) || $duration <= 0) {
-            $errors['duration'] = 'Duration must be a positive number.';
-        }
-
-        // Validation: Audience
-        if (empty($audience) || !in_array($audience, ['my_university', 'all_universities'])) {
-            $errors['audience'] = 'Please select a valid audience option.';
-        }
+        [$errors, $formData, $sessionData] = $this->validateSessionPayload($request);
 
         // If there are validation errors, reload the form with errors
         if (!empty($errors)) {
@@ -116,40 +60,16 @@ class SessionController
                 'userId' => $this->user->id,
                 'university' => $this->user->University ?? ''
             ];
-            $formData = [
-                'title' => $title,
-                'subject' => $subject,
-                'description' => $description,
-                'date' => $date,
-                'time' => $time,
-                'duration' => $duration,
-                'sessionLink' => $sessionLink,
-                'audience' => $audience,
-                'tags' => $tags
-            ];
+            $isEditMode = false;
+            $editingSessionId = 0;
 
             include Application::$ROOT_DIR . '/views/components/create-session.php';
             return;
         }
 
-        // Prepare data for database
-        $sessionData = [
-            'user_id' => $this->user->id,
-            'title' => $title,
-            'subject' => $subject,
-            'description' => $description,
-            'date' => $date,
-            'time' => $time,
-            'duration' => $duration,
-            'session_link' => $sessionLink ?? null,
-            'audience' => $audience,
-            'university' => $this->user->University ?? '',
-            'tags' => $tags ?? null
-        ];
-
         try {
             // Create the session
-            $sessionId = $this->sessionModel->create($sessionData);
+            $this->sessionModel->create($sessionData);
             // Redirect to Peer Learning page with success
             header('Location: /UniHelper/peer-learning');
             exit;
@@ -160,18 +80,109 @@ class SessionController
                 'userId' => $this->user->id,
                 'university' => $this->user->University ?? ''
             ];
-            $formData = [
-                'title' => $title,
-                'subject' => $subject,
-                'description' => $description,
-                'date' => $date,
-                'time' => $time,
-                'duration' => $duration,
-                'sessionLink' => $sessionLink,
-                'audience' => $audience,
-                'tags' => $tags
-            ];
+            $isEditMode = false;
+            $editingSessionId = 0;
             $errors['form'] = 'An error occurred while creating the session. Please try again.';
+
+            include Application::$ROOT_DIR . '/views/components/create-session.php';
+            return;
+        }
+    }
+
+    // GET /api?controller=SessionController&action=getSessionForEdit&id={id}
+    public function getSessionForEdit(Request $request)
+    {
+        header('Content-Type: application/json');
+
+        try {
+            $sessionId = $request->get('id');
+
+            if (!$sessionId) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Session ID is required.'
+                ]);
+                return;
+            }
+
+            $session = $this->sessionModel->find($sessionId);
+
+            if (!$session) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Session not found.'
+                ]);
+                return;
+            }
+
+            if ((int)$session['user_id'] !== (int)$this->user->id) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'You are not authorized to edit this session.'
+                ]);
+                return;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $session
+            ]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Failed to fetch session details.'
+            ]);
+        }
+    }
+
+    // POST /api?controller=SessionController&action=update
+    public function update(Request $request)
+    {
+        $sessionId = $request->get('session_id');
+
+        if (!$sessionId) {
+            header('Location: /UniHelper/peer-learning');
+            exit;
+        }
+
+        $session = $this->sessionModel->find($sessionId);
+        if (!$session || (int)$session['user_id'] !== (int)$this->user->id) {
+            header('Location: /UniHelper/peer-learning');
+            exit;
+        }
+
+        [$errors, $formData, $sessionData] = $this->validateSessionPayload($request, (int)$sessionId);
+
+        if (!empty($errors)) {
+            $user = $this->user;
+            $userData = [
+                'userId' => $this->user->id,
+                'university' => $this->user->University ?? ''
+            ];
+            $isEditMode = true;
+            $editingSessionId = (int)$sessionId;
+
+            include Application::$ROOT_DIR . '/views/components/create-session.php';
+            return;
+        }
+
+        try {
+            $this->sessionModel->updateByOwner((int)$sessionId, (int)$this->user->id, $sessionData);
+            header('Location: /UniHelper/peer-learning');
+            exit;
+        } catch (\Exception $e) {
+            $user = $this->user;
+            $userData = [
+                'userId' => $this->user->id,
+                'university' => $this->user->University ?? ''
+            ];
+            $isEditMode = true;
+            $editingSessionId = (int)$sessionId;
+            $errors['form'] = 'An error occurred while updating the session. Please try again.';
 
             include Application::$ROOT_DIR . '/views/components/create-session.php';
             return;
@@ -336,5 +347,90 @@ class SessionController
         }
         
         return $sessions;
+    }
+
+    /**
+     * Validate create/update payload and return [errors, formData, sessionData]
+     */
+    private function validateSessionPayload(Request $request, ?int $sessionId = null): array
+    {
+        $errors = [];
+
+        $title = trim((string)($request->get('title') ?? ''));
+        $subject = trim((string)($request->get('subject') ?? ''));
+        $description = trim((string)($request->get('description') ?? ''));
+        $date = trim((string)($request->get('date') ?? ''));
+        $time = trim((string)($request->get('time') ?? ''));
+        $duration = trim((string)($request->get('duration') ?? ''));
+        $sessionLink = trim((string)($request->get('sessionLink') ?? ''));
+        $audience = trim((string)($request->get('audience') ?? ''));
+        $tags = trim((string)($request->get('tags') ?? ''));
+
+        if ($title === '') {
+            $errors['title'] = 'Session title is required.';
+        } elseif (strlen($title) > 255) {
+            $errors['title'] = 'Session title must not exceed 255 characters.';
+        }
+
+        if ($subject === '') {
+            $errors['subject'] = 'Subject is required.';
+        }
+
+        if ($description === '') {
+            $errors['description'] = 'Description is required.';
+        }
+
+        if ($date === '') {
+            $errors['date'] = 'Date is required.';
+        } else {
+            $selectedDate = strtotime($date);
+            $today = strtotime(date('Y-m-d'));
+            if ($selectedDate < $today) {
+                $errors['date'] = 'Date must be today or in the future.';
+            }
+        }
+
+        if ($time === '') {
+            $errors['time'] = 'Time is required.';
+        }
+
+        if ($duration === '') {
+            $errors['duration'] = 'Duration is required.';
+        } elseif (!is_numeric($duration) || (float)$duration <= 0) {
+            $errors['duration'] = 'Duration must be a positive number.';
+        }
+
+        if ($audience === '' || !in_array($audience, ['my_university', 'all_universities'])) {
+            $errors['audience'] = 'Please select a valid audience option.';
+        }
+
+        $formData = [
+            'title' => $title,
+            'subject' => $subject,
+            'description' => $description,
+            'date' => $date,
+            'time' => $time,
+            'duration' => $duration,
+            'sessionLink' => $sessionLink,
+            'audience' => $audience,
+            'tags' => $tags,
+            'session_id' => $sessionId
+        ];
+
+        $sessionData = [
+            'user_id' => $this->user->id,
+            'title' => $title,
+            'subject' => $subject,
+            'description' => $description,
+            'date' => $date,
+            'time' => $time,
+            'duration' => $duration,
+            'session_link' => $sessionLink !== '' ? $sessionLink : null,
+            'audience' => $audience,
+            'university' => $this->user->University ?? '',
+            'tags' => $tags !== '' ? $tags : null
+        ];
+
+        return [$errors, $formData, $sessionData];
     }
 }

@@ -686,7 +686,7 @@
 
     // Edit session (redirect to edit page - to be implemented)
     function editSession(sessionId) {
-        alert('Edit feature coming soon!');
+        window.location.href = `${BASE_URL}/create-session?session_id=${sessionId}`;
     }
 
     // Open delete confirmation modal
