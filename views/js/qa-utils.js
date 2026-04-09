@@ -369,9 +369,9 @@ async function viewQuestion(questionId) {
     qaViewModal.querySelector('.qa-role').textContent = question.user_role;
 
     const viewProfileUrl = `/unihelper/view/profile/${question.user_id}`;
-    viewAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = viewProfileUrl; };
+    viewAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.open(viewProfileUrl, '_blank'); };
     viewAvatarImg.parentElement.style.cursor = 'pointer';
-    viewUsernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = viewProfileUrl; };
+    viewUsernameEl.onclick = function(e) { e.stopPropagation(); window.open(viewProfileUrl, '_blank'); };
     viewUsernameEl.style.cursor = 'pointer';
     viewUsernameEl.style.textDecoration = 'underline';
     viewUsernameEl.style.textDecorationColor = 'transparent';
@@ -379,13 +379,27 @@ async function viewQuestion(questionId) {
     viewUsernameEl.onmouseleave = () => viewUsernameEl.style.textDecorationColor = 'transparent';
     
 
-    const addedTime = new Date(question.added_time);
-    const lastModified = new Date(question.last_modified);
-    if (addedTime.getTime() === lastModified.getTime()) {
-        qaViewModal.querySelector('.qa-time').textContent = getRelativeTime(addedTime);
-    } else {
-        qaViewModal.querySelector('.qa-time').textContent = getRelativeTime(lastModified);
+    const normalizeSqlDateTime = function(dateTimeValue) {
+        if (!dateTimeValue) return '';
+        const raw = String(dateTimeValue).trim();
+        if (!raw) return '';
+
+        // Backend sends DATETIME-like values; keep an exact date+time text in SQL style.
+        return raw
+            .replace('T', ' ')
+            .replace(/\.\d+$/, '')
+            .replace(/Z$/, '');
+    };
+
+    const addedDateTime = normalizeSqlDateTime(question.added_time);
+    const editedDateTime = normalizeSqlDateTime(question.last_modified);
+
+    if (editedDateTime && editedDateTime !== addedDateTime) {
+        qaViewModal.querySelector('.qa-time').textContent = editedDateTime;
         qaViewModal.querySelector('.qa-modified').textContent = '(edited)';
+    } else {
+        qaViewModal.querySelector('.qa-time').textContent = addedDateTime;
+        qaViewModal.querySelector('.qa-modified').textContent = '';
     }
 
     // Create and append the menu container
@@ -400,6 +414,9 @@ async function viewQuestion(questionId) {
     const styledTitle = question.question.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
     qaViewModal.querySelector('.qa-view-title').innerHTML = styledTitle;
     qaViewModal.querySelector('.qa-view-body').textContent = question.text;
+
+    // Make hashtag tags clickable in question view
+    bindHashtagClicks(qaViewModal);
 
     // make the image array
     question.images = question.img_path ? question.img_path.split(',') : [];
@@ -481,9 +498,9 @@ async function viewQuestion(questionId) {
             card.querySelector('.qa-role').textContent = answer.user_role;
 
             const ansProfileUrl = `/unihelper/view/profile/${answer.user_id}`;
-            ansAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
+            ansAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.open(ansProfileUrl, '_blank'); };
             ansAvatarImg.parentElement.style.cursor = 'pointer';
-            ansUsernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
+            ansUsernameEl.onclick = function(e) { e.stopPropagation(); window.open(ansProfileUrl, '_blank'); };
             ansUsernameEl.style.cursor = 'pointer';
             ansUsernameEl.style.textDecoration = 'underline';
             ansUsernameEl.style.textDecorationColor = 'transparent';
@@ -537,9 +554,9 @@ function makeQuestionCard(data, position) {
     card.querySelector('.qa-role').textContent = data.user_role;
 
     const profileUrl = `/unihelper/view/profile/${data.userID}`;
-    avatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = profileUrl; };
+    avatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.open(profileUrl, '_blank'); };
     avatarImg.parentElement.style.cursor = 'pointer';
-    usernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = profileUrl; };
+    usernameEl.onclick = function(e) { e.stopPropagation(); window.open(profileUrl, '_blank'); };
     usernameEl.style.cursor = 'pointer';
     usernameEl.style.textDecoration = 'underline';
     usernameEl.style.textDecorationColor = 'transparent';
@@ -550,6 +567,9 @@ function makeQuestionCard(data, position) {
     const styledTitle = data.questionTitle.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
     card.querySelector('.qa-question-title').innerHTML = styledTitle;
     card.querySelector('.qa-question-text').textContent = data.questionText;
+
+    // Make hashtag tags clickable in the card
+    bindHashtagClicks(card);
     
     card.querySelector('.qa-time').textContent = data.timestamp;
     if (data.modified) {
@@ -822,8 +842,11 @@ function handleScroll() {
     const pageHeight = document.documentElement.scrollHeight;
     const threshold = 200; // Trigger when 200px from bottom
 
-    if (scrollPosition >= pageHeight - threshold) {
-        fetchQuestions();
+    // Fetch more questions if the main question list is visible and we have more questions to load
+    if (scrollPosition >= pageHeight - threshold){
+        if (currentFilter === 'default' && document.querySelector('.qa-main').style.display !== 'none') {
+            fetchQuestions();
+        }
     }
 }
 
@@ -962,11 +985,12 @@ function tagOnClick(tag) {
     document.querySelector('.qa-main').style.display = 'none';
     document.querySelector('.qa-tag-filter').style.display = 'block';
     document.querySelector('.qa-sticky-btn').style.display = 'none';
+    // Clean the tag filter bucket before loading new tag results
     document.querySelector('.qa-tag-filter').innerHTML = '';
     fetchQuestions();
 }
 
-function tagOffClick() {
+function tagOffClick(removeTempTag) {
     // Reset to default filter
     currentFilter = 'default';
     currentTag = 'default';
@@ -977,7 +1001,122 @@ function tagOffClick() {
     document.querySelector('.qa-main').style.display = 'block';
     document.querySelector('.qa-tag-filter').style.display = 'none';
     document.querySelector('.qa-sticky-btn').style.display = 'flex';
-    // placeholder for resetting filter function
+
+    // Remove the temporary tag button if it was one
+    if (removeTempTag) {
+        const tagsBar = document.querySelector('.qa-tags-bar');
+        const tempBtn = tagsBar.querySelector('.tag-btn[data-temp="true"]');
+        if (tempBtn) tempBtn.remove();
+    }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Clickable hashtag handler
+
+function hashtagClick(tagName) {
+    const qaView = document.querySelector('.qa-question-view');
+    const isInQuestionView = qaView && qaView.style.display === 'flex';
+
+    if (isInQuestionView) {
+        // Case 2: from question view — go back first, then apply tag
+        const questionId = qaView.querySelector('#qaViewModalQuestionId').textContent;
+        goBackFromQuestionView(questionId);
+        // Use a small delay to let the view transition complete
+        setTimeout(function() {
+            activateTagInBar(tagName);
+        }, 50);
+    } else {
+        // Case 1: from the feed
+        activateTagInBar(tagName);
+    }
+}
+
+function activateTagInBar(tagName) {
+    const tagsBar = document.querySelector('.qa-tags-bar');
+    const buttons = tagsBar.querySelectorAll('.tag-btn');
+
+    // Check if a temp tag is already active for this exact tag name — treat as toggle-off
+    const oldTemp = tagsBar.querySelector('.tag-btn[data-temp="true"]');
+    if (oldTemp) {
+        const oldTempName = oldTemp.textContent.trim().toLowerCase();
+        if (oldTempName === tagName.toLowerCase()) {
+            // Same tag clicked again — deactivate and go back to main
+            tagOffClick(true);
+            return;
+        }
+        // Different tag — remove the old temp before proceeding
+        oldTemp.remove();
+    }
+
+    // Look for an existing button whose tag name matches
+    let matchedBtn = null;
+    buttons.forEach(function(btn) {
+        if (btn.dataset.temp === 'true') return; // skip (already removed above)
+        // tag button text may include count like "tagname (5)", so strip it
+        const btnTagName = btn.textContent.replace(/\s*\(\d+\)$/, '').trim();
+        if (btnTagName.toLowerCase() === tagName.toLowerCase()) {
+            matchedBtn = btn;
+        }
+    });
+
+    if (matchedBtn) {
+        // Tag exists in bar — if already active, do nothing; otherwise click it
+        if (!matchedBtn.classList.contains('active')) {
+            matchedBtn.click();
+        }
+    } else {
+        // Tag not in bar — add a temporary button and activate it
+        // Deactivate any currently active button first
+        const currentActive = tagsBar.querySelector('.tag-btn.active');
+        if (currentActive) {
+            currentActive.click(); // deactivate it
+        }
+
+        const tempBtn = document.createElement('button');
+        tempBtn.className = 'tag-btn';
+        tempBtn.textContent = tagName;
+        tempBtn.setAttribute('type', 'button');
+        tempBtn.setAttribute('aria-pressed', 'false');
+        tempBtn.dataset.temp = 'true';
+
+        tempBtn.addEventListener('click', function() {
+            const allBtns = tagsBar.querySelectorAll('.tag-btn');
+            const wasActive = this.classList.contains('active');
+
+            allBtns.forEach(function(b) {
+                b.classList.remove('active');
+                b.setAttribute('aria-pressed', 'false');
+            });
+
+            if (!wasActive) {
+                this.classList.add('active');
+                this.setAttribute('aria-pressed', 'true');
+                tagOnClick(tagName);
+            } else {
+                // Was active, now deactivating — remove temp button and go back to main
+                tagOffClick(true);
+            }
+        });
+
+        tagsBar.appendChild(tempBtn);
+
+        // Immediately activate it
+        tempBtn.click();
+    }
+}
+
+function bindHashtagClicks(container) {
+    const hashtags = container.querySelectorAll('.hashtag');
+    hashtags.forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Extract tag name (remove the leading #)
+            const tagName = this.textContent.replace(/^#/, '').trim();
+            if (tagName) {
+                hashtagClick(tagName);
+            }
+        });
+    });
 }
 
 // deleting a question
@@ -1147,4 +1286,313 @@ function resetEditMode() {
 
     const submitBtn = document.querySelector('#qaQuestionForm button[type="submit"]');
     submitBtn.textContent = 'Post Question';
+}
+
+//////////////////////////////////////////////////////////////////////
+// Searching functions
+
+let activeSearchRequestId = 0;
+
+function getSearchElements() {
+    const resultsBucket = document.querySelector('.qa-search-results');
+    if (!resultsBucket) return null;
+
+    return {
+        resultsBucket,
+        mainBucket: document.querySelector('.qa-main'),
+        tagBucket: document.querySelector('.qa-tag-filter'),
+        tagsBar: document.querySelector('.qa-tags-bar'),
+        stickyBtn: document.querySelector('.qa-sticky-btn'),
+        searchInput: document.getElementById('qa-search-input'),
+        clearBtn: document.querySelector('.search-clear-btn'),
+        loadingTemplate: resultsBucket.querySelector('.template-search-loading'),
+        emptyTemplate: resultsBucket.querySelector('.template-search-empty'),
+        questionTemplate: resultsBucket.querySelector('.template-question-search'),
+        answerTemplate: resultsBucket.querySelector('.template-answer-search')
+    };
+}
+
+function getOrCreateSearchSummaryElement(resultsBucket) {
+    let summary = resultsBucket.querySelector('.qa-search-summary');
+    if (!summary) {
+        summary = document.createElement('p');
+        summary.className = 'qa-search-summary';
+        summary.style.margin = '0 0 0.25rem 0';
+        summary.style.fontSize = '0.9rem';
+        summary.style.color = 'var(--muted-foreground)';
+        resultsBucket.insertBefore(summary, resultsBucket.firstChild);
+    }
+    return summary;
+}
+
+function clearRenderedSearchCards(resultsBucket) {
+    resultsBucket.querySelectorAll('.qa-search-result-item').forEach(function(card) {
+        card.remove();
+    });
+}
+
+function setSearchLoadingState(loadingElement, isVisible) {
+    if (!loadingElement) return;
+    loadingElement.style.display = isVisible ? 'flex' : 'none';
+}
+
+function setSearchEmptyState(emptyElement, isVisible, query) {
+    if (!emptyElement) return;
+
+    const textElement = emptyElement.querySelector('.qa-search-no-results-text');
+    if (textElement) {
+        textElement.textContent = query
+            ? `No results found for "${query}". Try different keywords or check your spelling.`
+            : "We couldn't find any questions or answers matching your search. Try different keywords or check your spelling.";
+    }
+
+    emptyElement.style.display = isVisible ? 'flex' : 'none';
+}
+
+function parseDeepLinkRef(deeplinkRef, fallbackQuestionId, fallbackAnswerId) {
+    const parts = String(deeplinkRef || '')
+        .split(',')
+        .map(function(value) { return value.trim(); })
+        .filter(Boolean);
+
+    const questionId = parts[0] || fallbackQuestionId || '';
+    const answerId = parts[1] || fallbackAnswerId || '';
+
+    if (!questionId) {
+        return null;
+    }
+
+    let link = `/unihelper/qa-forum?question=${encodeURIComponent(questionId)}`;
+    if (answerId) {
+        link += `&answer=${encodeURIComponent(answerId)}`;
+    }
+
+    return link;
+}
+
+function createSearchResultCard(result, questionTemplate, answerTemplate) {
+    const type = String(result?.type || '').toLowerCase();
+    const isAnswer = type === 'answer';
+    const template = isAnswer ? answerTemplate : questionTemplate;
+
+    if (!template) {
+        return null;
+    }
+
+    const link = parseDeepLinkRef(result.deeplink_ref, result.questionId, result.answerId);
+    if (!link) {
+        return null;
+    }
+
+    const card = template.cloneNode(true);
+    card.classList.remove('template-question-search', 'template-answer-search');
+    card.classList.add('qa-search-result-item');
+    card.style.display = 'flex';
+
+    const typeEl = card.querySelector('.qa-search-card-type');
+    if (typeEl) {
+        typeEl.textContent = isAnswer ? '💬 Answer' : '❓ Question';
+    }
+
+    const timeEl = card.querySelector('.qa-search-card-time');
+    if (timeEl) {
+        const rawTimestamp = result.time || result.timestamp || result.added_time || result.last_modified || '';
+        let relativeTime = '';
+
+        if (rawTimestamp) {
+            const parsedTime = new Date(rawTimestamp);
+            if (!Number.isNaN(parsedTime.getTime())) {
+                relativeTime = getRelativeTime(parsedTime);
+            }
+        }
+
+        timeEl.textContent = relativeTime;
+        timeEl.style.display = relativeTime ? 'inline' : 'none';
+    }
+
+    if (isAnswer) {
+        const parentEl = card.querySelector('.qa-search-answer-parent');
+        if (parentEl) {
+            parentEl.textContent = `Re: ${result.questionTitle || ''}`;
+        }
+    } else {
+        const titleEl = card.querySelector('.qa-search-question-title');
+        if (titleEl) {
+            titleEl.textContent = result.questionTitle || '';
+        }
+    }
+
+    const bodyEl = card.querySelector('.qa-search-body');
+    if (bodyEl) {
+        bodyEl.textContent = isAnswer ? (result.answerText || '') : (result.questionText || '');
+    }
+
+    card.setAttribute('role', 'link');
+    card.setAttribute('tabindex', '0');
+    card.addEventListener('click', function() {
+        window.open(link, '_blank');
+    });
+    card.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            window.open(link, '_blank');
+        }
+    });
+
+    return card;
+}
+
+function setSearchSummary(summaryEl, query, count) {
+    if (!summaryEl) return;
+    if (count === 0) {
+        summaryEl.textContent = `No results found for "${query}"`;
+        return;
+    }
+    const label = count === 1 ? 'result' : 'results';
+    summaryEl.textContent = `Search results for "${query}" (${count} ${label})`;
+}
+
+async function fetchSearchResults(query) {
+    const els = getSearchElements();
+    if (!els || !query) {
+        return;
+    }
+
+    const requestId = ++activeSearchRequestId;
+    const summaryEl = getOrCreateSearchSummaryElement(els.resultsBucket);
+
+    clearRenderedSearchCards(els.resultsBucket);
+    setSearchEmptyState(els.emptyTemplate, false);
+    setSearchLoadingState(els.loadingTemplate, true);
+    summaryEl.textContent = `Searching for "${query}"...`;
+
+    try {
+        const response = await fetch(`/unihelper/api?controller=searchController&action=search&query=${encodeURIComponent(query)}&type=qa&index=${encodeURIComponent(searchIndex)}`);
+        let payload;
+
+        try {
+            payload = await response.json();
+        } catch (_) {
+            throw new Error('Invalid response format from search API.');
+        }
+
+        if (requestId !== activeSearchRequestId) {
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(payload?.message || payload?.error || 'Search request failed.');
+        }
+
+        if (payload?.success === false || payload?.error) {
+            throw new Error(payload?.message || payload?.error || 'Unable to complete search.');
+        }
+
+        const results = Array.isArray(payload?.data)
+            ? payload.data
+            : (Array.isArray(payload) ? payload : []);
+
+        searchIndex += 1;
+        setSearchSummary(summaryEl, query, results.length);
+
+        if (results.length === 0) {
+            setSearchEmptyState(els.emptyTemplate, true, query);
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        results.forEach(function(result) {
+            const card = createSearchResultCard(result, els.questionTemplate, els.answerTemplate);
+            if (card) {
+                fragment.appendChild(card);
+            }
+        });
+
+        els.resultsBucket.appendChild(fragment);
+        setSearchEmptyState(els.emptyTemplate, els.resultsBucket.querySelectorAll('.qa-search-result-item').length === 0, query);
+    } catch (error) {
+        if (requestId !== activeSearchRequestId) {
+            return;
+        }
+
+        const message = error?.message || 'An error occurred while searching. Please try again.';
+        showToast(message, 'error');
+        summaryEl.textContent = `Search failed for "${query}". Please try again.`;
+        setSearchLoadingState(els.loadingTemplate, false);
+    } finally {
+        if (requestId === activeSearchRequestId) {
+            setSearchLoadingState(els.loadingTemplate, false);
+        }
+    }
+}
+
+function clearSearch() {
+    activeSearchRequestId += 1;
+
+    const els = getSearchElements();
+    if (!els) {
+        return;
+    }
+
+    currentFilter = 'default';
+    currentTag = 'default';
+
+    if (els.mainBucket) els.mainBucket.style.display = 'block';
+    if (els.tagBucket) els.tagBucket.style.display = 'none';
+    if (els.resultsBucket) els.resultsBucket.style.display = 'none';
+    if (els.tagsBar) els.tagsBar.style.display = 'flex';
+    if (els.stickyBtn) els.stickyBtn.style.display = 'flex';
+
+    clearRenderedSearchCards(els.resultsBucket);
+    setSearchLoadingState(els.loadingTemplate, false);
+    setSearchEmptyState(els.emptyTemplate, false);
+
+    const summaryEl = getOrCreateSearchSummaryElement(els.resultsBucket);
+    summaryEl.textContent = '';
+
+    if (els.searchInput) {
+        els.searchInput.value = '';
+    }
+    if (els.clearBtn) {
+        els.clearBtn.style.display = 'none';
+    }
+
+    const tagsBar = document.querySelector('.qa-tags-bar');
+    if (tagsBar) {
+        tagsBar.querySelectorAll('.tag-btn').forEach(function(btn) {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+        });
+        const tempBtn = tagsBar.querySelector('.tag-btn[data-temp="true"]');
+        if (tempBtn) {
+            tempBtn.remove();
+        }
+    }
+}
+
+function search() {
+    const els = getSearchElements();
+    if (!els || !els.searchInput) {
+        return;
+    }
+
+    const query = els.searchInput.value.trim();
+    if (!query) {
+        clearSearch();
+        return;
+    }
+
+    currentFilter = 'search';
+
+    if (els.mainBucket) els.mainBucket.style.display = 'none';
+    if (els.tagBucket) els.tagBucket.style.display = 'none';
+    if (els.resultsBucket) els.resultsBucket.style.display = 'flex';
+    if (els.tagsBar) els.tagsBar.style.display = 'none';
+    if (els.stickyBtn) els.stickyBtn.style.display = 'none';
+
+    if (els.clearBtn) {
+        els.clearBtn.style.display = 'inline-flex';
+    }
+
+    fetchSearchResults(query);
 }

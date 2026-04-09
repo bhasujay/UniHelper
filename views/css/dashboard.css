@@ -1351,8 +1351,8 @@ body {
 /* Sidebar active link: use primary color text instead of white,
    since gradient-secondary becomes very subtle on light backgrounds */
 [data-theme="light"] .sidebar-link.active {
-  color: var(--primary);
-  font-weight: 600;
+  color: var(--text-alt);
+  font-weight: 700;
 }
 
 [data-theme="light"] .sidebar-link:hover {

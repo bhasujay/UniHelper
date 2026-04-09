@@ -9,6 +9,7 @@ var batch_limit = 10;
 var isFetching = false;
 var hasMoreQuestions = true;
 var questionModel = true;
+var searchIndex = 0;
 var userID = document.getElementById('profileUserId').textContent;
 var isModerator = document.getElementById('profileModStatus').textContent === '1';
 var menuDropdown = document.querySelector('.qa-menu-dropdown');
@@ -79,10 +80,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     
-    // Close answermodal
-    answermodal.querySelector('.qa-answermodal-close').addEventListener('click', function() {
+    async function closeAnswerModalWithGuard() {
+        const answerText = document.getElementById('qa-answer-body').value.trim();
+
+        if (answerText) {
+            if (!await confirm('You have unsaved changes. Are you sure you want to close?')) {
+                return;
+            }
+        }
+
         answermodal.style.display = 'none';
         resetAnswerForm();
+    }
+
+    // Close answermodal
+    answermodal.querySelector('.qa-answermodal-close').addEventListener('click', async function() {
+        await closeAnswerModalWithGuard();
     });
     
     // Cancel button
@@ -107,9 +120,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Cancel button for answer modal
     const answerCancelBtn = answermodal.querySelector('.qa-cancel-btn');
-    answerCancelBtn.addEventListener('click', function() {
-        answermodal.style.display = 'none';
-        resetAnswerForm();
+    answerCancelBtn.addEventListener('click', async function() {
+        await closeAnswerModalWithGuard();
     });
 
 /////////////////////////////////////////////////////////////////////////////
@@ -197,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     card.querySelector('.qa-role').textContent = role;
 
                     const ansProfileUrl = `/unihelper/view/profile/${userID}`;
-                    ansAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
+                    ansAvatarImg.parentElement.onclick = function(e) { e.stopPropagation(); window.open(ansProfileUrl, '_blank'); };
                     ansAvatarImg.parentElement.style.cursor = 'pointer';
                     ansUsernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
                     ansUsernameEl.style.cursor = 'pointer';
@@ -355,6 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     card.querySelector('.qa-question-title').innerHTML = styledTitle;
                     card.querySelector('.qa-question-text').textContent = questionBody;
                     card.querySelector('.qa-modified').textContent = '(edited)';
+                    bindHashtagClicks(card);
 
                     // Update image preview on the card
                     const imagePreview = card.querySelector('.qa-question-image-preview');
@@ -388,6 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     qaViewModal.querySelector('.qa-view-title').innerHTML = styledTitle;
                     qaViewModal.querySelector('.qa-view-body').textContent = questionBody;
                     qaViewModal.querySelector('.qa-modified').textContent = '(edited)';
+                    bindHashtagClicks(qaViewModal);
                 }
 
                 // Close modal and reset
@@ -530,6 +544,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.setAttribute('aria-pressed', 'false');
                 });
 
+                // Remove any temp tag when a regular tag is clicked
+                const tempBtn = tagsBar.querySelector('.tag-btn[data-temp="true"]');
+                if (tempBtn && tempBtn !== this) tempBtn.remove();
+
                 if (!wasActive) {
                     // Activate this one and call handler
                     this.classList.add('active');
@@ -537,7 +555,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     tagOnClick(tag.tag_name);
                 } else {
                     // It was active and is now deactivated
-                    tagOffClick();
+                    tagOffClick(true);
                 }
             });
 
@@ -556,6 +574,41 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial fetch of questions
     fetchQuestions();
+
+    // Search interactions
+    const searchInput = document.getElementById('qa-search-input');
+    const searchTriggerBtn = document.querySelector('.search-trigger-btn');
+    const searchClearBtn = document.querySelector('.search-clear-btn');
+
+    if (searchInput && searchTriggerBtn && searchClearBtn) {
+        searchTriggerBtn.addEventListener('click', function() {
+            search();
+        });
+
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                search();
+            }
+        });
+
+        searchInput.addEventListener('input', function() {
+            const hasValue = this.value.trim().length > 0;
+            searchClearBtn.style.display = hasValue ? 'inline-flex' : 'none';
+
+            if (!hasValue && currentFilter === 'search') {
+                clearSearch();
+            }
+        });
+
+        searchClearBtn.addEventListener('click', function() {
+            clearSearch();
+            searchInput.focus();
+        });
+
+        // Keep search results container hidden until a search is triggered.
+        clearSearch();
+    }
     
     // Deep-link support: if ?question=<id> was passed, auto-open that question
     // once the initial batch of questions has been rendered.
