@@ -48,9 +48,10 @@ class DatabaseConfig:
         try:
             if conn.is_connected():
                 conn.close()
-                print("Database connection closed")
+                # print("Database connection closed")  # Commented out to not corrupt JSON output
         except Error as e:
-            print(f"Error closing connection: {e}")
+            # print(f"Error closing connection: {e}")
+            pass
 
     @staticmethod
     def get_cursor(dictionary=True): # the results of the sql query get in to a dictionary 

@@ -166,6 +166,9 @@ function updateZScoreCard(formData) {
     card.classList.remove('initial-state');
     card.classList.add('submitted-state');
 
+    // Clear cache since the user updated their details
+    sessionStorage.removeItem('has_calculated_eligibility');
+
     // Update the values in submitted content
     document.querySelector('.z-score-value').textContent = submittedZScoreData.zScore;
     document.querySelector('.stream-value').textContent = submittedZScoreData.stream;
@@ -190,8 +193,9 @@ function resetZScoreCard() {
     card.classList.remove('submitted-state');
     card.classList.add('initial-state');
 
-    // Clear stored data
+    // Clear stored data and session cache
     submittedZScoreData = null;
+    sessionStorage.removeItem('has_calculated_eligibility');
 
     // Reset the listeners flag so they can be re-added when needed
     listenersInitialized = false;
@@ -225,6 +229,9 @@ function addButtonEventListeners() {
 
                 if (result.success && result.data) {
                     const data = result.data; // Now this is an array []
+                    
+                    // Set flag so we auto-fetch if they reload the page
+                    sessionStorage.setItem('has_calculated_eligibility', 'true');
 
                     // Display results
                     if (data.length > 0) {
@@ -382,6 +389,14 @@ async function loadZScoreFromAPI() {
             // Add button listeners
             setTimeout(() => {
                 addButtonEventListeners();
+
+                // Automatically re-fetch programs if user previously calculated them this session
+                if (sessionStorage.getItem('has_calculated_eligibility') === 'true') {
+                    const findDegreesBtn = document.getElementById('findDegreesBtn');
+                    if (findDegreesBtn) {
+                        findDegreesBtn.click(); // Programmatically trigger the search to get fresh data
+                    }
+                }
             }, 100);
         }
     } catch (error) {
