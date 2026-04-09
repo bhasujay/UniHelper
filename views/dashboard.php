@@ -15,16 +15,7 @@
 
     <link rel="stylesheet" href="/unihelper/views/css/style.css">
     <link rel="stylesheet" href="/unihelper/views/css/dashboard.css">
-    <link rel="stylesheet" href="/unihelper/views/css/components/cards.css">
-    <?php
-    // Load role-specific CSS based on user role
-    $roleMap = [
-        'role-applicant' => 'role-applicant.css',
-        'role-undergrad' => 'role-undergrad.css',
-        'role-profile' => 'role-profile.css',
-        'role-admin' => 'role-admin.css'
-    ];
-    
+    <?php    
     // Load component-specific CSS if available
     if (isset($activeComponent)) {
         $componentCssPath = __DIR__ . "/css/{$activeComponent}.css";
@@ -410,8 +401,217 @@
             <div class="notification-panels">
                 <!-- New Notifications Panel -->
                 <div id="notifPanelNew" class="notification-panel active" data-panel="new">
+                    <div class="notification-panel-actions">
+                        <button type="button" class="mark-all-read-btn" id="markAllReadBtn">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"></path>
+                                <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"></path>
+                            </svg>
+                            Mark all as read
+                        </button>
+                    </div>
                     <div class="notification-list" id="newNotifList">
                         <!-- Items will be cloned from the template and appended here -->
+                        <div class="notification-item" data-notif-id="temp-new-1">
+                            <a href="#" target="_blank" class="notification-item-content">
+                                <div class="notification-item-icon">
+                                    🗯️
+                                </div>
+                                <div class="notification-item-body">
+                                    <p class="notification-item-message">Your unread notification message here. This will be connected to the backend soon!</p>
+                                    <span class="notification-item-time">2 hours ago</span>
+                                </div>
+                            </a>
+                            <div class="notification-item-actions">
+                                <button class="notification-item-action mark-action" type="button" aria-label="Mark as read" title="Mark as read">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"></path>
+                                        <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"></path>
+                                    </svg>
+                                </button>
+                                <button class="notification-item-action delete-action" type="button" aria-label="Delete" title="Delete">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="notification-item" data-notif-id="temp-new-1">
+                            <a href="#" target="_blank" class="notification-item-content">
+                                <div class="notification-item-icon">
+                                    🗯️
+                                </div>
+                                <div class="notification-item-body">
+                                    <p class="notification-item-message">Your unread notification message here. This will be connected to the backend soon!</p>
+                                    <span class="notification-item-time">2 hours ago</span>
+                                </div>
+                            </a>
+                            <div class="notification-item-actions">
+                                <button class="notification-item-action mark-action" type="button" aria-label="Mark as read" title="Mark as read">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"></path>
+                                        <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"></path>
+                                    </svg>
+                                </button>
+                                <button class="notification-item-action delete-action" type="button" aria-label="Delete" title="Delete">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="notification-item" data-notif-id="temp-new-1">
+                            <a href="#" target="_blank" class="notification-item-content">
+                                <div class="notification-item-icon">
+                                    🗯️
+                                </div>
+                                <div class="notification-item-body">
+                                    <p class="notification-item-message">Your unread notification message here. This will be connected to the backend soon!</p>
+                                    <span class="notification-item-time">2 hours ago</span>
+                                </div>
+                            </a>
+                            <div class="notification-item-actions">
+                                <button class="notification-item-action mark-action" type="button" aria-label="Mark as read" title="Mark as read">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"></path>
+                                        <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"></path>
+                                    </svg>
+                                </button>
+                                <button class="notification-item-action delete-action" type="button" aria-label="Delete" title="Delete">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="notification-item" data-notif-id="temp-new-1">
+                            <a href="#" target="_blank" class="notification-item-content">
+                                <div class="notification-item-icon">
+                                    🗯️
+                                </div>
+                                <div class="notification-item-body">
+                                    <p class="notification-item-message">Your unread notification message here. This will be connected to the backend soon!</p>
+                                    <span class="notification-item-time">2 hours ago</span>
+                                </div>
+                            </a>
+                            <div class="notification-item-actions">
+                                <button class="notification-item-action mark-action" type="button" aria-label="Mark as read" title="Mark as read">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"></path>
+                                        <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"></path>
+                                    </svg>
+                                </button>
+                                <button class="notification-item-action delete-action" type="button" aria-label="Delete" title="Delete">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="notification-item" data-notif-id="temp-new-1">
+                            <a href="#" target="_blank" class="notification-item-content">
+                                <div class="notification-item-icon">
+                                    🗯️
+                                </div>
+                                <div class="notification-item-body">
+                                    <p class="notification-item-message">Your unread notification message here. This will be connected to the backend soon!</p>
+                                    <span class="notification-item-time">2 hours ago</span>
+                                </div>
+                            </a>
+                            <div class="notification-item-actions">
+                                <button class="notification-item-action mark-action" type="button" aria-label="Mark as read" title="Mark as read">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"></path>
+                                        <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"></path>
+                                    </svg>
+                                </button>
+                                <button class="notification-item-action delete-action" type="button" aria-label="Delete" title="Delete">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="notification-item" data-notif-id="temp-new-1">
+                            <a href="#" target="_blank" class="notification-item-content">
+                                <div class="notification-item-icon">
+                                    🗯️
+                                </div>
+                                <div class="notification-item-body">
+                                    <p class="notification-item-message">Your unread notification message here. This will be connected to the backend soon!</p>
+                                    <span class="notification-item-time">2 hours ago</span>
+                                </div>
+                            </a>
+                            <div class="notification-item-actions">
+                                <button class="notification-item-action mark-action" type="button" aria-label="Mark as read" title="Mark as read">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"></path>
+                                        <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"></path>
+                                    </svg>
+                                </button>
+                                <button class="notification-item-action delete-action" type="button" aria-label="Delete" title="Delete">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="notification-item" data-notif-id="temp-new-1">
+                            <a href="#" target="_blank" class="notification-item-content">
+                                <div class="notification-item-icon">
+                                    🗯️
+                                </div>
+                                <div class="notification-item-body">
+                                    <p class="notification-item-message">Your unread notification message here. This will be connected to the backend soon!</p>
+                                    <span class="notification-item-time">2 hours ago</span>
+                                </div>
+                            </a>
+                            <div class="notification-item-actions">
+                                <button class="notification-item-action mark-action" type="button" aria-label="Mark as read" title="Mark as read">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"></path>
+                                        <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"></path>
+                                    </svg>
+                                </button>
+                                <button class="notification-item-action delete-action" type="button" aria-label="Delete" title="Delete">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="notification-item" data-notif-id="temp-new-1">
+                            <a href="#" target="_blank" class="notification-item-content">
+                                <div class="notification-item-icon">
+                                    🗯️
+                                </div>
+                                <div class="notification-item-body">
+                                    <p class="notification-item-message">Your unread notification message here. This will be connected to the backend soon!</p>
+                                    <span class="notification-item-time">2 hours ago</span>
+                                </div>
+                            </a>
+                            <div class="notification-item-actions">
+                                <button class="notification-item-action mark-action" type="button" aria-label="Mark as read" title="Mark as read">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"></path>
+                                        <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"></path>
+                                    </svg>
+                                </button>
+                                <button class="notification-item-action delete-action" type="button" aria-label="Delete" title="Delete">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="notification-empty" id="newNotifEmpty">
                         <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -428,6 +628,31 @@
                 <div id="notifPanelOpened" class="notification-panel" data-panel="opened">
                     <div class="notification-list" id="openedNotifList">
                         <!-- Items will be cloned from the template and appended here -->
+                        <div class="notification-item" data-notif-id="temp-opened-1">
+                            <a href="#" target="_blank" class="notification-item-content">
+                                <div class="notification-item-icon">
+                                    🫱🏽🫲🏽
+                                </div>
+                                <div class="notification-item-body">
+                                    <p class="notification-item-message">An older notification message that you have already seen.</p>
+                                    <span class="notification-item-time">1 day ago</span>
+                                </div>
+                            </a>
+                            <div class="notification-item-actions">
+                                <button class="notification-item-action mark-action" type="button" aria-label="Mark as unread" title="Mark as unread">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                    </svg>
+                                </button>
+                                <button class="notification-item-action delete-action" type="button" aria-label="Delete" title="Delete">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="notification-empty" id="openedNotifEmpty">
                         <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -445,24 +670,29 @@
     <!-- Notification Item Template (hidden, cloned by JS) -->
     <template id="notificationItemTemplate">
         <div class="notification-item" data-notif-id="">
-            <div class="notification-item-icon">
-                <!-- Icon will be set by JS based on type -->
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
+            <a href="#" target="_blank" class="notification-item-content">
+                <div class="notification-item-icon">
+                    <!-- Icon will be set by JS based on type -->
+                    🟢
+                </div>
+                <div class="notification-item-body">
+                    <p class="notification-item-message">Notification message goes here.</p>
+                    <span class="notification-item-time">Just now</span>
+                </div>
+            </a>
+            <div class="notification-item-actions">
+                <button class="notification-item-action mark-action" type="button" aria-label="Mark notification">
+                    <svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </button>
+                <button class="notification-item-action delete-action" type="button" aria-label="Delete notification" title="Delete">
+                    <svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
             </div>
-            <div class="notification-item-body">
-                <p class="notification-item-title">Notification Title</p>
-                <p class="notification-item-message">Notification message goes here.</p>
-                <span class="notification-item-time">Just now</span>
-            </div>
-            <button class="notification-item-action" type="button" aria-label="Mark as read">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            </button>
         </div>
     </template>
 

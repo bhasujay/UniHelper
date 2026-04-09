@@ -27,6 +27,14 @@
     };
     const newCountBadge = document.getElementById('newNotifCount');
 
+    // icons for the notification types
+    const icons = {
+        'qa': '🗯️',
+        'session': '💻',
+        'connection': '👥',
+        'other': '🔔'
+    };
+
     // ── Modal open / close ──────────────────────────────────────────
     function openModal() {
         overlay.classList.add('show');
@@ -149,13 +157,35 @@
         const clone = template.content.cloneNode(true);
         const item  = clone.querySelector('.notification-item');
 
-        if (data.id)      item.setAttribute('data-notif-id', data.id);
-        if (data.title)   item.querySelector('.notification-item-title').textContent   = data.title;
-        if (data.message) item.querySelector('.notification-item-message').textContent = data.message;
-        if (data.time)    item.querySelector('.notification-item-time').textContent    = data.time;
+        if (data.id) {
+            item.setAttribute('data-notif-id', data.id);
+        }
+        
+        const contentLink = item.querySelector('.notification-item-content');
+        if (contentLink && data.link) {
+            contentLink.setAttribute('href', data.link);
+        }
 
-        if (data.iconHtml) {
-            item.querySelector('.notification-item-icon').innerHTML = data.iconHtml;
+        const titleEl = item.querySelector('.notification-item-title');
+        if (titleEl && data.title) {
+            titleEl.textContent = data.title;
+        } else if (titleEl) {
+            titleEl.remove(); // If no title is given, remove the element entirely to save space
+        }
+
+        const messageEl = item.querySelector('.notification-item-message');
+        if (messageEl && data.message) {
+            messageEl.textContent = data.message;
+        }
+
+        const timeEl = item.querySelector('.notification-item-time');
+        if (timeEl && data.time) {
+            timeEl.textContent = data.time;
+        }
+
+        const iconContainer = item.querySelector('.notification-item-icon');
+        if (iconContainer && data.iconHtml) {
+            iconContainer.innerHTML = data.iconHtml;
         }
 
         return item;
@@ -234,18 +264,4 @@
         if (tabName === 'new') updateNewCount(0);
     }
 
-    // ── Expose public API on window for external scripts ────────────
-    window.NotificationModal = {
-        open:               openModal,
-        close:              closeModal,
-        toggle:             toggleModal,
-        switchTab:           switchTab,
-        addNotification:     addNotification,
-        removeNotification:  removeNotification,
-        markAsOpened:        markAsOpened,
-        clearTab:            clearTab,
-        setDotActive:        setDotActive,
-        updateNewCount:      updateNewCount,
-        refreshEmpty:        refreshEmpty,
-    };
 })();
