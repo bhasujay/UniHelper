@@ -56,17 +56,17 @@
     </div>
 </div>
 
-<!-- Z-Score Modal Form -->
-<div id="zScoreModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
+<!-- Z-Score Form (inline, scrolls with dashboard) -->
+<div id="zScoreModal" style="display: none;">
+    <div class="zscore-form-card">
+        <div class="zscore-form-header">
             <h2>Enter Your Z-Score Details</h2>
             <span class="close" id="closeModal">&times;</span>
         </div>
-        
-        <form id="zScoreForm" class="modal-form">
+
+        <form id="zScoreForm">
             <div class="form-group">
-                <label for="district" class="form-label required">District</label>
+                <label for="district" class="form-label">District</label>
                 <select id="district" name="district" class="form-select" required>
                     <option value="">Select District</option>
                     <option value="Colombo">Colombo</option>
@@ -98,7 +98,7 @@
             </div>
 
             <div class="form-group">
-                <label for="stream" class="form-label required">Stream</label>
+                <label for="stream" class="form-label">Stream</label>
                 <select id="stream" name="stream" class="form-select" required>
                     <option value="">Select Stream</option>
                     <option value="physical-science">Physical Science</option>
@@ -109,50 +109,33 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label class="form-label required">A/L Subjects</label>
+            <div class="form-group full-width">
+                <label class="form-label">A/L Subjects</label>
                 <div class="subjects-container">
-                    <div>
-                        <input type="text" id="subject1" name="subject1" class="form-input" placeholder="Subject 1" required>
-                    </div>
-                    <div>
-                        <input type="text" id="subject2" name="subject2" class="form-input" placeholder="Subject 2" required>
-                    </div>
-                    <div>
-                        <input type="text" id="subject3" name="subject3" class="form-input" placeholder="Subject 3" required>
-                    </div>
+                    <input type="text" id="subject1" name="subject1" class="form-input" placeholder="Subject 1" required>
+                    <input type="text" id="subject2" name="subject2" class="form-input" placeholder="Subject 2" required>
+                    <input type="text" id="subject3" name="subject3" class="form-input" placeholder="Subject 3" required>
                 </div>
                 <small class="form-instructions">Subjects will auto-fill based on stream selection</small>
             </div>
 
-            <div class="form-group">
-                <label for="zScore" class="form-label required">Z-Score</label>
+            <div class="form-group full-width">
+                <label for="zScore" class="form-label">Z-Score</label>
                 <input type="number" id="zScore" name="zScore" class="form-input" step="0.0001" min="0" max="3" placeholder="e.g., 1.8234" required>
                 <small class="form-instructions">Enter your Z-Score (0.0000 to 3.0000)</small>
             </div>
 
             <div class="form-actions">
-                <button type="button" id="cancelBtn" class="btn btn-outline btn-full">Cancel</button>
-                <button type="submit" class="btn btn-primary btn-full">Save Z-Score</button>
+                <button type="button" id="cancelBtn" class="btn btn-outline">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Z-Score</button>
             </div>
         </form>
     </div>
 </div>
 
+
 <!-- Eligible Programs Results Section -->
 <div id="eligibleProgramsSection" style="display: none; margin-top: 30px;">
-    <div style="background: #1a1a1a; border: 1px solid #444; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2 style="color: white; margin: 0;">🎓 Eligible Degree Programs</h2>
-            <button onclick="closeEligibleProgramsModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-        </div>
-        <p style="color: #ccc; margin: 10px 0 0 0; font-size: 14px;">
-            <strong>Your Z-Score:</strong> <span id="resultZScore">-</span> | 
-            <strong>Stream:</strong> <span id="resultStream">-</span> | 
-            <strong>District:</strong> <span id="resultDistrict">-</span> | 
-            <strong style="color: #007bff;">Total Eligible:</strong> <span id="resultTotal" style="color: #007bff; font-weight: bold;">0</span> programs
-        </p>
-    </div>
     
     <div id="programsList" class="search-results">
         <!-- Programs will be inserted here by JavaScript as degree-program-card -->

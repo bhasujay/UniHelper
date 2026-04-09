@@ -173,9 +173,12 @@ class ZScoreController
             $zScore = $zScoreData['z_score'];
             $stream = $zScoreData['stream'];
             $district = $zScoreData['district'];
+            $subject1 = $zScoreData['subject1'] ?? '';
+            $subject2 = $zScoreData['subject2'] ?? '';
+            $subject3 = $zScoreData['subject3'] ?? '';
             
             // Build Python script path (absolute path)
-            $scriptPath = dirname(__DIR__) . '/python/simple_eligibility.py';
+            $scriptPath = dirname(__DIR__) . '/python/eligibility.py';
             
             // Check if script exists
             if (!file_exists($scriptPath)) {
@@ -183,14 +186,17 @@ class ZScoreController
                 return;
             }
             
-            // Use full path to python3 for better compatibility
-            $pythonPath = '/opt/homebrew/bin/python3'; // macOS Homebrew path
+            // Use the virtual environment python which has mysql-connector installed
+            $pythonPath = dirname(__DIR__) . '/.venv/bin/python';
             
-            // Fallback to system python3 if homebrew version doesn't exist
+            // Fallback to system python3 if virtual environment doesn't exist
             if (!file_exists($pythonPath)) {
-                $pythonPath = trim(shell_exec('which python3'));
-                if (empty($pythonPath)) {
-                    $pythonPath = 'python3'; // Fallback to PATH
+                $pythonPath = '/opt/homebrew/bin/python3'; // macOS Homebrew path
+                if (!file_exists($pythonPath)) {
+                    $pythonPath = trim(shell_exec('which python3'));
+                    if (empty($pythonPath)) {
+                        $pythonPath = 'python3'; // Fallback to PATH
+                    }
                 }
             }
             
@@ -199,7 +205,10 @@ class ZScoreController
                        escapeshellarg($scriptPath) . ' ' .
                        escapeshellarg($zScore) . ' ' .
                        escapeshellarg($stream) . ' ' .
-                       escapeshellarg($district) . ' 2>&1';
+                       escapeshellarg($district) . ' ' .
+                       escapeshellarg($subject1) . ' ' .
+                       escapeshellarg($subject2) . ' ' .
+                       escapeshellarg($subject3) . ' 2>&1';
             
             // Log command for debugging
             error_log("Executing command: " . $command);
