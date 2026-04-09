@@ -639,24 +639,25 @@
 
 /* Degree Program Cards - Better Separation */
 .degree-program-card {
-    border: 2px solid #333;
+    border: 2px solid var(--border);
     border-radius: 8px;
     margin-bottom: 20px;
     padding: 20px;
-    background: #1a1a1a;
+    background: var(--card);
+    color: var(--text);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
 }
 
 .degree-program-card:hover {
-    border-color: #007bff !important;
-    border-top-color: #007bff !important;
-    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.2);
+    border-color: var(--primary) !important;
+    border-top-color: var(--primary) !important;
+    box-shadow: 0 6px 20px rgba(0, 170, 255, 0.2);
 }
 
 /* Add separation between cards */
 .degree-program-card:not(:first-child) {
-    border-top: 3px solid #444;
+    border-top: 3px solid var(--border);
     margin-top: 16px;
 }
 

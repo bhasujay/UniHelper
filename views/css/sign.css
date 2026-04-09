@@ -766,6 +766,7 @@
 /* The tooltip popup */
 .input-tooltip-popup {
     position: absolute;
+    left: 0;
     right: 0;
     top: calc(100% + 8px);
     background: var(--card, #1a1a2e);
@@ -775,7 +776,8 @@
     font-size: 0.82rem;
     color: var(--foreground, #e0e0e0);
     line-height: 1.45;
-    width: 260px;
+    width: auto;
+    max-width: 100%;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     z-index: 100;
     opacity: 0;
@@ -785,7 +787,7 @@
     pointer-events: none;
 }
 
-/* Small arrow pointing up */
+/* Small arrow pointing up — aligned near the info icon on the right */
 .input-tooltip-popup::before {
     content: '';
     position: absolute;
