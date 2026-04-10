@@ -11,6 +11,22 @@ class ApiGateway
         $controller = $request->get('controller');
         $action = $request->get('action');
 
+        // Basic validation for controller and action parameters
+        if (empty($controller) || empty($action)) {
+            throw new \Exception("Controller and action parameters are required.");
+        }
+
+        // Protect API actions behind login, except selected public auth endpoints.
+        if (!$this->isPublicRoute($controller, $action) && !$request->session('user_id')) {
+            http_response_code(401);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Not authenticated.'
+            ]);
+            return null;
+        }
+
         if (file_exists(dirname(__DIR__,1) . '/controllers/' . $controller . '.php')) {
             require_once dirname(__DIR__,1) . '/controllers/' . $controller . '.php';
             $controllerClass = 'app\\controllers\\' . ucfirst($controller);
@@ -27,6 +43,19 @@ class ApiGateway
         } else {
             throw new \Exception("Controller '$controller' not recognized.");
         }
+    }
+
+    private function isPublicRoute(string $controller, string $action): bool
+    {
+        $publicRoutes = [
+            'authcontroller' => ['checkexistsaction'],
+            'otpcontroller' => ['generateotpaction', 'validateotpaction'],
+        ];
+
+        $controllerKey = strtolower($controller);
+        $actionKey = strtolower($action);
+
+        return isset($publicRoutes[$controllerKey]) && in_array($actionKey, $publicRoutes[$controllerKey], true);
     }
 
 }

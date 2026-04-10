@@ -34,9 +34,11 @@ class Request
         }
         
         if ($this->getMethod() === 'POST') {
-            // Handle POST data
+            // Handle POST data.
+            // Use raw $_POST values so multipart/form-data JSON fields (like
+            // the `tags` JSON) are preserved and not mangled by FILTER_SANITIZE.
             foreach ($_POST as $key => $value) {
-            $body[$key] = filter_input(INPUT_POST, $key, FILTER_SANITIZE_SPECIAL_CHARS);
+                $body[$key] = $value;
             }
 
             // Handle uploaded files
@@ -52,21 +54,26 @@ class Request
         // This is not use but we keep it here for future reference
         // Handle PUT and DELETE requests
         if ($this->getMethod() === 'PUT' || $this->getMethod() === 'DELETE') {
+            // First, get query string parameters
+            foreach ($_GET as $key => $value) {
+                $body[$key] = filter_input(INPUT_GET, $key, FILTER_SANITIZE_SPECIAL_CHARS);
+            }
+            
             // Parse the raw input stream
             $rawInput = file_get_contents('php://input');
             
             // Check if it's form-encoded data
             if (strpos($rawInput, '=') !== false) {
-                parse_str($rawInput, $body);
+                parse_str($rawInput, $parsedBody);
                 // Sanitize the parsed data
-                foreach ($body as $key => $value) {
+                foreach ($parsedBody as $key => $value) {
                     $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
                 }
             } else {
                 // Handle JSON data
                 $jsonData = json_decode($rawInput, true);
                 if ($jsonData !== null) {
-                    $body = $jsonData;
+                    $body = array_merge($body, $jsonData);
                 }
             }
         }
@@ -80,5 +87,10 @@ class Request
             $this->reqBody = $this->getBody();
         }
         return $this->reqBody[$key] ?? null;
+    }
+
+    public function session($key)
+    {
+        return $_SESSION[$key] ?? null;
     }
 }

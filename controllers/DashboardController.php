@@ -14,6 +14,7 @@ class DashboardController
     protected $user;
     protected $role_data;
     protected $role_title;
+    protected $queryParams = [];
 
     public function __construct()
     {
@@ -72,13 +73,23 @@ class DashboardController
         // Set active component
         $this->activeComponent = $component;
 
+        // Collect all query-string parameters and store them on the instance
+        // so they are accessible both server-side (inside included component
+        // files) and client-side (via the data-page-params attribute on <main>).
+        $request = new Request();
+        foreach ($_GET as $key => $value) {
+            $this->queryParams[$key] = $request->get($key);
+        }
+
         // Load the requested component
-        $content = $this->loadComponent($component);
+        $content = $this->loadComponent($component, $this->queryParams);
         return $this->renderDashboard($content, $this->role_data[$this->user->role]);
     }
 
     // Loads a component file
-    protected function loadComponent($componentName)
+    // $queryParams: associative array of query-string values passed to the
+    //               component so server-side component code can use them directly.
+    protected function loadComponent($componentName, $queryParams = [])
     {
         $componentPath = Application::$ROOT_DIR . "/views/components/{$componentName}.php";
 
@@ -90,15 +101,11 @@ class DashboardController
             return "<div class='error'>Component {$componentName} not found</div>";
         }
 
-        $user = $this->user; // Make user available to components
-                
-        // Check for session-stored form errors and data
-        $errors = $_SESSION['form_errors'] ?? null;
-        $formData = $_SESSION['form_data'] ?? null;
-        
-        // Clear session data after retrieving
-        unset($_SESSION['form_errors']);
-        unset($_SESSION['form_data']);
+        $user = $this->user;   // Make user available to components
+        // $queryParams is already in scope for the included file.
+        // Individual params are also extracted into local variables so
+        // components can use e.g. $id directly instead of $queryParams['id'].
+        extract($queryParams, EXTR_SKIP);
         
         // Capture the component content
         ob_start();
@@ -109,9 +116,10 @@ class DashboardController
     // Renders the dashboard with the given content
     protected function renderDashboard($content = NULL, $sidebar = NULL, $error = NULL)
     {
-        $user = $this->user; // Make user available to the dashboard template        
-        $activeComponent = $this->activeComponent; // Make active component available to the dashboard template
-        $role_title = $this->role_title; // Make role title available to the dashboard template
+        $user = $this->user;                        // Make user available to the dashboard template
+        $activeComponent = $this->activeComponent;  // Make active component available to the dashboard template
+        $role_title = $this->role_title;            // Make role title available to the dashboard template
+        $pageParams = $this->queryParams;           // Query-string params forwarded to the view for data-page-params
 
         // Make content available to the dashboard template
         include Application::$ROOT_DIR . "/views/dashboard.php";
@@ -127,6 +135,8 @@ class DashboardController
             $component = 'edit-component';
         } elseif ($req === 'view') {
             $component = 'profile-component';
+        } elseif ($req === 'change-password') {
+            $component = 'change-password-component';
         }
 
         $activeComponent = $component;
@@ -207,11 +217,24 @@ class DashboardController
         header('Location: /UniHelper/profile/view');
         exit;
     }
-
-    public function handleDashboardAction(Request $request)
+    
+    // Dynamic profile view (e.g., /view/profile/3)
+    public function viewProfile($params)
     {
-        
-    }
+        $this->activeComponent = 'profile-global';
 
+        // Collect any query-string parameters
+        $request = new Request();
+        foreach ($_GET as $key => $value) {
+            $this->queryParams[$key] = $request->get($key);
+        }
+
+        // Merge dynamic parameters (like 'id') so they are available in the view
+        $this->queryParams = array_merge($this->queryParams, $params);
+
+        // Load the profile global component
+        $content = $this->loadComponent('profile/profile-global', $this->queryParams);
+        return $this->renderDashboard($content, $this->role_data[$this->user->role]);
+    }
 
 }

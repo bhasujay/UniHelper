@@ -4,13 +4,8 @@ namespace app\core;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-use Dotenv\Dotenv;
 
-require __DIR__ . '/../vendor/autoload.php';
-
-// Load .env using vlucas/phpdotenv
-$dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-$dotenv->load();
+require_once __DIR__ . '/../vendor/autoload.php';
 
 class mailer
 {
@@ -21,6 +16,12 @@ class mailer
     {
         $this->recipientEmail = $recipientEmail;
         $this->mail = new PHPMailer(true);
+
+        // Load .env if not already loaded
+        if (class_exists('\Dotenv\Dotenv') && empty($_ENV['GMAIL_USERNAME'])) {
+            $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+            $dotenv->safeLoad();
+        }
     }
 
     public function sendEmail($subject, $body)

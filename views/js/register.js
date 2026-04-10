@@ -383,8 +383,93 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Section validation
-  function validateStep(step) {
+  // ========== Toast Notification System ==========
+  let toastContainer = document.getElementById('toastContainer');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toastContainer';
+    toastContainer.className = 'toast-container';
+    document.body.appendChild(toastContainer);
+  }
+
+  function showToast(message, type = 'error', duration = 5000) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    const typeText = type === 'success' ? 'Success' : 'Error';
+    toast.innerHTML = `
+      <div>
+        <div class="toast-type">${typeText}</div>
+        <div class="toast-message">${message}</div>
+      </div>
+      <button class="toast-close" aria-label="Close">&times;</button>
+    `;
+    toastContainer.appendChild(toast);
+    toast.querySelector('.toast-close').addEventListener('click', () => removeToast(toast));
+    setTimeout(() => removeToast(toast), duration);
+  }
+
+  function removeToast(toast) {
+    if (!toast.parentNode) return;
+    toast.classList.add('hiding');
+    setTimeout(() => toast.remove(), 300);
+  }
+
+  // ========== Uniqueness Flags ==========
+  let emailExists = false;
+  let phoneExists = false;
+
+  async function checkFieldExists(field, value) {
+    try {
+      const response = await fetch(
+        `/unihelper/api?controller=AuthController&action=checkExistsAction&field=${encodeURIComponent(field)}&value=${encodeURIComponent(value)}`
+      );
+      return await response.json();
+    } catch (err) {
+      return { exists: false };
+    }
+  }
+
+  // Check email on blur
+  email.addEventListener('blur', async function() {
+    const val = email.value.trim();
+    if (!val || !/^\S+@\S+\.\S+$/.test(val)) return; // skip if empty or invalid format
+    const result = await checkFieldExists('email', val);
+    emailExists = result.exists;
+    if (result.exists) {
+      showToast(result.message || 'This email is already registered.');
+      email.classList.add('input-error');
+      email.classList.add('shake');
+      setTimeout(() => email.classList.remove('shake'), 500);
+    }
+  });
+
+  // Check phone on blur
+  phone.addEventListener('blur', async function() {
+    const val = phone.value.trim();
+    if (!val || !/^\d{10}$/.test(val)) return; // skip if empty or invalid format
+    const result = await checkFieldExists('phone', val);
+    phoneExists = result.exists;
+    if (result.exists) {
+      showToast(result.message || 'This phone number is already registered.');
+      phone.classList.add('input-error');
+      phone.classList.add('shake');
+      setTimeout(() => phone.classList.remove('shake'), 500);
+    }
+  });
+
+  // Clear uniqueness flags when user edits the field
+  email.addEventListener('input', function() {
+    emailExists = false;
+    email.classList.remove('input-error');
+  });
+
+  phone.addEventListener('input', function() {
+    phoneExists = false;
+    phone.classList.remove('input-error');
+  });
+
+  // Section validation (async for step 0 uniqueness re-check)
+  async function validateStep(step) {
     let errors = [];
     let errorFields = [];
     
@@ -396,6 +481,43 @@ document.addEventListener('DOMContentLoaded', function() {
       else if (!/^\S+@\S+\.\S+$/.test(email.value.trim())) { errors.push('Please enter a valid email address.'); errorFields.push(email);}
       if (!phone.value.trim()) { errors.push('Phone number is required.'); errorFields.push(phone);}
       else if (!/^\d{10}$/.test(phone.value.trim())) { errors.push('Phone number must be exactly 10 digits.'); errorFields.push(phone);}
+
+      // If format validations passed, do a final uniqueness check before proceeding
+      if (errors.length === 0) {
+        nextBtn.disabled = true;
+        nextBtn.querySelector('.btn-text').innerText = 'Checking...';
+
+        const [emailCheck, phoneCheck] = await Promise.all([
+          checkFieldExists('email', email.value.trim()),
+          checkFieldExists('phone', phone.value.trim())
+        ]);
+
+        nextBtn.disabled = false;
+        nextBtn.querySelector('.btn-text').innerText = currentStep === sections.length - 1 ? 'Submit' : 'Next';
+
+        emailExists = emailCheck.exists;
+        phoneExists = phoneCheck.exists;
+
+        if (emailCheck.exists) {
+          showToast(emailCheck.message || 'This email is already registered.');
+          errorFields.push(email);
+        }
+        if (phoneCheck.exists) {
+          showToast(phoneCheck.message || 'This phone number is already registered.');
+          errorFields.push(phone);
+        }
+
+        // If any uniqueness errors, highlight and block
+        if (errorFields.length > 0) {
+          errorFields.forEach(field => {
+            field.classList.add('input-error');
+            field.classList.add('shake');
+            setTimeout(() => field.classList.remove('shake'), 500);
+          });
+          errorFields[0].focus();
+          return false;
+        }
+      }
     }
     
     if (step === 1) {
@@ -456,13 +578,13 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
     
     if (currentStep < sections.length - 1) {
-      if (validateStep(currentStep)) {
+      if (await validateStep(currentStep)) {
         currentStep++;
         showStep(currentStep);
       }
     } else {
       // Final submit
-      if (validateStep(currentStep)) {
+      if (await validateStep(currentStep)) {
         nextBtn.disabled = true;
         nextBtn.querySelector('.btn-text').innerText = 'Sending OTP...';
         
@@ -481,13 +603,13 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Remove error highlight and hide modal on input
-  [firstName, lastName, email, phone, alYear, undergradUniversity, major, profileUniversity, role, password, confirmPassword, profilePicture].forEach(input => {
+  [firstName, lastName, alYear, undergradUniversity, major, profileUniversity, role, password, confirmPassword, profilePicture].forEach(input => {
     if (input) {
       input.addEventListener('input', () => {
         input.classList.remove('input-error');
         modalErrorBox.style.display = 'none';
         nextBtn.disabled = false;
-        if (nextBtn.querySelector('.btn-text').innerText === 'Submitting...' || nextBtn.querySelector('.btn-text').innerText === 'Sending OTP...') {
+        if (nextBtn.querySelector('.btn-text').innerText === 'Submitting...' || nextBtn.querySelector('.btn-text').innerText === 'Sending OTP...' || nextBtn.querySelector('.btn-text').innerText === 'Checking...') {
           nextBtn.querySelector('.btn-text').innerText = currentStep === sections.length - 1 ? 'Submit' : 'Next';
         }
       });

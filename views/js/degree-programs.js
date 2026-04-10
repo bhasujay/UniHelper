@@ -120,7 +120,8 @@ setTimeout(initializeDegreePrograms, 100);
 // Load search filters (universities, majors)
 async function loadSearchFilters() {
     try {
-        const response = await fetch('/UniHelper/api/programs/filters');
+        // Updated to use ProgramController
+        const response = await fetch('/UniHelper/api?controller=ProgramController&action=getSearchFilters');
         const result = await response.json();
         
         if (result.success) {
@@ -172,7 +173,8 @@ async function performSearch() {
     searchResults.innerHTML = '';
     
     try {
-        const response = await fetch(`/UniHelper/api/programs/search?${params}`);
+        // Updated to use ProgramController
+        const response = await fetch(`/UniHelper/api?controller=ProgramController&action=searchPrograms&${params}`);
         const result = await response.json();
         
         if (result.success) {
@@ -326,7 +328,8 @@ async function toggleWishlist(programId) {
 // Check if program is in user's wishlist
 async function checkWishlistStatus(programId) {
     try {
-        const response = await fetch(`/UniHelper/api/wishlist/check?program_id=${programId}`);
+        // Updated to use WishlistController
+        const response = await fetch(`/UniHelper/api?controller=WishlistController&action=checkWishlist&program_id=${programId}`);
         const result = await response.json();
         
         if (result.success) {
@@ -344,7 +347,8 @@ async function checkWishlistStatus(programId) {
 // Add program to wishlist
 async function addToWishlist(programId) {
     try {
-        const response = await fetch('/UniHelper/api/wishlist/add', {
+        // Updated to use WishlistController
+        const response = await fetch('/UniHelper/api?controller=WishlistController&action=addToWishlist', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -364,7 +368,8 @@ async function addToWishlist(programId) {
 // Remove program from wishlist
 async function removeFromWishlist(programId) {
     try {
-        const response = await fetch('/UniHelper/api/wishlist/remove', {
+        // Updated to use WishlistController
+        const response = await fetch('/UniHelper/api?controller=WishlistController&action=removeFromWishlist', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -472,7 +477,8 @@ async function initializeWishlistStatus() {
 // Update wishlist count in the mode toggle button
 async function updateWishlistCount() {
     try {
-        const response = await fetch('/UniHelper/api/wishlist/count');
+        // Updated to use WishlistController
+        const response = await fetch('/UniHelper/api?controller=WishlistController&action=getWishlistCount');
         const result = await response.json();
         
         if (result.success) {
@@ -576,7 +582,8 @@ async function addProgramToWishlistPage(programId) {
 async function refreshWishlistPage() {
     try {
         console.log('🔄 Refreshing wishlist page...');
-        const response = await fetch('/UniHelper/api/wishlist/items');
+        // Updated to use WishlistController
+        const response = await fetch('/UniHelper/api?controller=WishlistController&action=getWishlistItems');
         const result = await response.json();
         console.log('📦 Wishlist API response:', result);
         

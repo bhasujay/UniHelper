@@ -2,46 +2,453 @@
 
 namespace app\controllers;
 
-require_once dirname(__DIR__, 1) . '/models/qa.php';
+require_once dirname(__DIR__) . '\models\qa.php';
+require_once dirname(__DIR__) . '\models\User.php';
 
-use app\core\Request;
 use app\models\Qna;
+use app\core\Request;
+use app\models\User;
+
 
 class QaController
 {
-    private Qna $qnaModel;
-
+    private $model;
+    private $userModel;
+    private $request;
+    
     public function __construct()
     {
-        $this->qnaModel = new Qna();
+        $this->model = new Qna();
+        $this->userModel = new User();
+    }
+    
+    public function create(Request $request)
+    {
+        header('Content-Type: application/json');
+        
+        // Check if user is logged in
+        if (!$request->session('user_id')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'You must be logged in to post a question'
+            ]);
+            return;
+        }
+        
+        // Validate input
+        if (!$request->get('question') || !$request->get('text')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Question title and description are required'
+            ]);
+            return;
+        }
+        
+        $question = trim($request->get('question'));
+        $text = trim($request->get('text'));
+        
+        if (strlen($question) < 10 || strlen($question) > 512) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Question title must be between 10 and 512 characters'
+            ]);
+            return;
+        }
+        
+        if (strlen($text) < 10) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Description must be at least 10 characters'
+            ]);
+            return;
+        }
+        
+        try {
+            // Prepare data for insertion
+            // Read tags from the Request object (raw POST values are preserved
+            // by `Request::getBody()` so JSON won't be mangled)
+            $tagsRaw = $request->get('tags') ?? '[]';
+            $tags = json_decode($tagsRaw, true);
+            if (!is_array($tags)) {
+                $tags = [];
+            }
+
+            $data = [
+                'user_id' => $request->session('user_id'),
+                'question' => $question,
+                'text' => $text,
+                'img_path' => null, // Will be updated after upload
+                'tags' => $tags
+            ];
+
+            // Create question
+            $questionId = $this->model->create($data);
+            
+            // Handle image uploads if present
+            if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
+                $imagePaths = $this->model->handleImageUploads($_FILES['images'], $questionId);
+                
+                // Update question with image paths
+                if ($imagePaths) {
+                    $this->model->update($questionId, ['img_path' => $imagePaths]);
+                }
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Question posted successfully',
+                'data' => ['question_id' => $questionId]
+            ]);
+            
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to post question: ' . $e->getMessage()
+            ]);
+        }
     }
 
-    // Handle creating a new QnA
-    public function createQna(Request $request)
+    public function answerQuestion(Request $request)
     {
-        $data = $request->getBody();
-        return $this->qnaModel->insert($data);
+        header('Content-Type: application/json');
+        
+        // Check if user is logged in
+        if (!$request->session('user_id')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'You must be logged in to answer a question'
+            ]);
+            return;
+        }
+        
+        $questionId = $request->get('question_id');
+        $text = trim($request->get('text'));
+        
+        // Validate input
+        if (!$questionId || !$text) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Question ID and answer text are required'
+            ]);
+            return;
+        }
+        
+        if (strlen($text) < 1) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Answer must be at least 1 character long'
+            ]);
+            return;
+        }
+        
+        try {
+            // Create the answer
+            $data = [
+                'q_id' => $questionId,
+                'user_id' => $request->session('user_id'),
+                'text' => $text
+            ];
+            
+            $answerId = $this->model->answerCreate($data);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Answer posted successfully',
+                'data' => ['a_id' => $answerId]
+            ]);
+            
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to post answer: ' . $e->getMessage()
+            ]);
+        }
     }
 
-    // Handle deleting a QnA by ID
-    public function deleteQna(Request $request)
+    public function getQuestions(Request $request)
     {
-        $id = $request->get('id');
-        return $this->qnaModel->delete($id);
+        $offset = $request->get('offset');
+        $limit = $request->get('limit');
+        $tag = $request->get('tag');
+        header('Content-Type: application/json');
+        
+        try {
+            $questions = $this->model->getQuestionBatch($offset, $limit, $tag);
+
+            // For each question, get the vote status for the current user
+            foreach ($questions as &$question) {
+                $question['user_vote'] = $this->model->checkUserVoteStatus($question['q_id'], $_SESSION['user_id']);
+                $data = $this->userModel->getBasicInfo($question['user_id']);
+                $question['username'] = $data['first_name'] . ' ' . $data['last_name'];
+                $question['user_role'] = ucfirst(explode('-', $data['role'])[1]);
+                $question['moderator_status'] = $data['moderator'];
+                $question['user_avatar'] = $data['profile_picture'];
+            }
+
+            echo json_encode([
+            'success' => true,
+            'data' => empty($questions) ? null : $questions
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+            ]);
+        }
     }
 
-    // Handle retrieving a QnA by ID
-    public function getQna(Request $request)
+    public function getQuestion(Request $request)
     {
-        $id = $request->get('id');
-        return $this->qnaModel->getQna($id);
+        $questionId = $request->get('questionId');
+        header('Content-Type: application/json');
+        
+        try {
+            $question = $this->model->getQuestionById($questionId);
+            if ($question) {
+                $question['user_vote'] = $this->model->checkUserVoteStatus($question['q_id'], $request->session('user_id'));
+                $data = $this->userModel->getBasicInfo($question['user_id']);
+                $question['username'] = $data['first_name'] . ' ' . $data['last_name'];
+                $question['user_role'] = ucfirst(explode('-', $data['role'])[1]);
+                $question['moderator_status'] = $data['moderator'];
+                $question['user_avatar'] = $data['profile_picture'];
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $question ? $question : null
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
-    // Handle updating a QnA by ID
-    public function updateQna(Request $request)
+    public function getAnswers(Request $request)
     {
-        $id = $request->get('id');
-        $data = $request->getBody();
-        return $this->qnaModel->update($id, $data);
+        $questionID = $request->get('questionId');
+        header('Content-Type: application/json');
+
+        try {
+            $answers = $this->model->getAnswersByQuestionId($questionID);
+
+            // For each answer, get the user info
+            foreach ($answers as &$answer) {
+                $data = $this->userModel->getBasicInfo($answer['user_id']);
+                $answer['username'] = $data['first_name'] . ' ' . $data['last_name'];
+                $answer['user_role'] = ucfirst(explode('-', $data['role'])[1]);
+                $answer['moderator_status'] = $data['moderator'];
+                $answer['user_avatar'] = $data['profile_picture'];
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => empty($answers) ? null : $answers
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    public function Vote(Request $request)
+    {
+        header('Content-Type: application/json');
+        
+        $questionId = $request->get('question_id');
+        $userId = $request->session('user_id');
+        $voteValue = $request->get('vote_value');
+        
+        try {
+            $this->model->vote($questionId, $userId, $voteValue);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Vote recorded successfully'
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    public function getTopTags()
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $tags = $this->model->getTopTags();
+            echo json_encode([
+                'success' => true,
+                'data' => $tags
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function deleteQuestion(Request $request)
+    {
+        header('Content-Type: application/json');
+        
+        $questionId = $request->get('questionId');
+        $userId = $request->session('user_id');
+        
+        try {
+            $test = $this->model->deleteQuestion($questionId, $userId);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Question deleted successfully',
+                'data' => $test
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function deleteAnswer(Request $request)
+    {
+        header('Content-Type: application/json');
+        
+        $answerId = $request->get('answerId');
+        $userId = $request->session('user_id');
+        
+        try {
+            $test = $this->model->deleteAnswer($answerId, $userId);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Answer deleted successfully',
+                'data' => $test
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function editQuestion(Request $request)
+    {
+        header('Content-Type: application/json');
+        
+        // Check if user is logged in
+        if (!$request->session('user_id')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'You must be logged in to edit a question'
+            ]);
+            return;
+        }
+        
+        $questionId = $request->get('question_id');
+        $userId = $request->session('user_id');
+        
+        if (!$questionId) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Question ID is required'
+            ]);
+            return;
+        }
+        
+        // Verify ownership or admin
+        $question = $this->model->getQuestionById($questionId);
+        if (!$question) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Question not found'
+            ]);
+            return;
+        }
+        
+        if ($question['user_id'] != $userId) {
+            if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You do not have permission to edit this question'
+                ]);
+                return;
+            }
+        }
+        
+        // Validate input
+        $questionTitle = trim($request->get('question') ?? '');
+        $text = trim($request->get('text') ?? '');
+        
+        if (!$questionTitle || !$text) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Question title and description are required'
+            ]);
+            return;
+        }
+        
+        if (strlen($questionTitle) < 10 || strlen($questionTitle) > 512) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Question title must be between 10 and 512 characters'
+            ]);
+            return;
+        }
+        
+        if (strlen($text) < 10) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Description must be at least 10 characters'
+            ]);
+            return;
+        }
+        
+        try {
+            // Re-evaluate tags: decrement old, add new
+            $tagsRaw = $request->get('tags') ?? '[]';
+            $tags = json_decode($tagsRaw, true);
+            if (!is_array($tags)) {
+                $tags = [];
+            }
+            $this->model->reEvaluateTags($questionId, $tags);
+
+            // Delete existing images (if any)
+            $this->model->deleteQuestionImages($questionId);
+            
+            // Handle new image uploads (re-save whatever the client sent)
+            $imagePaths = null;
+            if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
+                $imagePaths = $this->model->handleImageUploads($_FILES['images'], $questionId);
+            }
+            
+            // Update the question (only question, text, img_path + last_modified via model)
+            $updateData = [
+                'question' => $questionTitle,
+                'text' => $text,
+                'img_path' => $imagePaths
+            ];
+            
+            $this->model->updateQuestion($questionId, $updateData);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Question updated successfully',
+                'data' => ['question_id' => $questionId]
+            ]);
+            
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to update question: ' . $e->getMessage()
+            ]);
+        }
     }
 }
+

@@ -75,7 +75,8 @@ public function generateOtpAction(Request $request)
     } catch (\Exception $e) {
         echo json_encode([
             'success' => false,
-            'message' => 'Failed to generate OTP.'
+            'message' => 'Failed to generate OTP.',
+            'error' => $e->getMessage()
         ]);
         exit;
     }
@@ -91,44 +92,46 @@ public function generateOtpAction(Request $request)
         $otpId = $_SESSION['otp_id'] ?? null;
 
         if (!$userOtp || !$otpId) {
-            return json_encode(['success' => false, 'message' => 'Missing OTP or session.']);
+            echo json_encode(['success' => false, 'message' => 'Missing OTP or session.']);
+            exit;
         }
 
         $otpRecord = $this->otpModel->getOTP($otpId);
 
         if (!$otpRecord) {
-            return json_encode(['success' => false, 'message' => 'OTP not found.']);
+            echo json_encode(['success' => false, 'message' => 'OTP not found.']);
+            exit;
         }
 
         if ($otpRecord['is_used']) {
-            return json_encode(['success' => false, 'message' => 'OTP already used.']);
+            echo json_encode(['success' => false, 'message' => 'OTP already used.']);
+            exit;
         }
 
         if ($otpRecord['expires_at'] < time()) {
-            return json_encode(['success' => false, 'message' => 'OTP expired.']);
+            echo json_encode(['success' => false, 'message' => 'OTP expired.']);
+            exit;
         }
 
-        // Check attempts (optional: limit attempts, e.g., 5)
+        // Check attempts (limit: 5)
         if ($otpRecord['attempts'] >= 5) {
-            return json_encode(['success' => false, 'message' => 'Too many attempts.']);
+            echo json_encode(['success' => false, 'message' => 'Too many attempts.']);
+            exit;
         }
 
         // Verify OTP
         if (password_verify($userOtp, $otpRecord['otp_hash'])) {
-            // Mark OTP as used using the model's update method
             $this->otpModel->update($otpId, ['is_used' => 1]);
-
             $_SESSION['otp_verified'] = true;
-            return json_encode(['success' => true, 'message' => 'OTP verified.']);
+            echo json_encode(['success' => true, 'message' => 'OTP verified.']);
+            exit;
         } else {
-            // Increment attempts using the model's update method
             $this->otpModel->update($otpId, ['attempts' => $otpRecord['attempts'] + 1]);
-            
-            return json_encode([
+            echo json_encode([
                 'success' => false,
                 'message' => 'Invalid OTP.',
-                'user_otp' => $userOtp
             ]);
+            exit;
         }
     }
 
