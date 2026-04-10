@@ -2,6 +2,14 @@
 // create-session.php
 // Display form for creating a new study session
 // Variables passed: $user, $userData, $errors (if form submitted with errors), $formData (retained data)
+
+$editingSessionId = isset($editingSessionId)
+    ? (int)$editingSessionId
+    : (int)($formData['session_id'] ?? ($_GET['session_id'] ?? 0));
+$isEditMode = isset($isEditMode)
+    ? (bool)$isEditMode
+    : ($editingSessionId > 0);
+$formAction = '/UniHelper/api?controller=SessionController&action=' . ($isEditMode ? 'update' : 'store');
 ?>
     <link rel="stylesheet" href="/unihelper/views/css/style.css">
     <link rel="stylesheet" href="/unihelper/views/css/dashboard.css">
@@ -10,7 +18,7 @@
     .create-session-container {
         max-width: 800px;
         margin: 0 auto;
-        background: rgba(8, 8, 8, 0.5);
+        background: var(--card); /* #404040 — matches dashboard card tone */
         backdrop-filter: blur(8px);
         border: 1px solid var(--border);
         border-radius: 1rem;
@@ -65,13 +73,14 @@
     .form-textarea,
     .form-select {
         padding: 0.75rem 1rem;
-        border: 1px solid rgba(164, 109, 255, 0.2);
+        border: 1px solid rgba(0, 170, 255, 0.25);
         border-radius: 0.5rem;
-        background: rgba(8, 8, 8, 0.7);
+        background: var(--key); /* #303030 — matches dashboard key bg */
         color: var(--text);
         font-family: inherit;
         font-size: 0.95rem;
         transition: all 0.3s ease;
+        color-scheme: dark; /* ensures browser-native date/time/number widgets render visibly */
     }
 
     .form-input:focus,
@@ -80,6 +89,28 @@
         outline: none;
         border-color: var(--primary);
         box-shadow: 0 0 10px rgba(0, 170, 255, 0.3);
+    }
+
+    /* Make native calendar, clock and spinner icons clearly visible */
+    input[type="date"],
+    input[type="time"],
+    input[type="number"] {
+        color-scheme: dark;
+    }
+
+    /* Webkit: tint the inner date/time picker icon to the accent colour */
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        filter: invert(1) brightness(1.8) sepia(1) saturate(4) hue-rotate(175deg);
+        cursor: pointer;
+        opacity: 1;
+    }
+
+    /* Webkit: tint the number spinner arrows */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        opacity: 1;
+        filter: invert(1) brightness(1.8) sepia(1) saturate(4) hue-rotate(175deg);
     }
 
     .form-textarea {
@@ -250,11 +281,19 @@
 
 <div class="create-session-container">
     <div class="session-form-header">
-        <h1 class="session-form-title">Create Study Session</h1>
-        <p class="session-form-subtitle">Set up a new study session for peer learning</p>
+        <h1 class="session-form-title"><?= $isEditMode ? 'Edit Study Session' : 'Create Study Session' ?></h1>
+        <p class="session-form-subtitle"><?= $isEditMode ? 'Update your study session details' : 'Set up a new study session for peer learning' ?></p>
     </div>
 
-    <form class="session-form" id="createSessionForm" method="POST" action="/UniHelper/api?controller=SessionController&action=store">
+    <?php if (isset($errors['form'])): ?>
+        <div class="form-error show" style="display:block; margin-bottom: 1rem;"><?= htmlspecialchars($errors['form']) ?></div>
+    <?php endif; ?>
+
+    <form class="session-form" id="createSessionForm" method="POST" action="<?= htmlspecialchars($formAction) ?>">
+        <?php if ($isEditMode): ?>
+            <input type="hidden" name="session_id" id="session_id" value="<?= (int)$editingSessionId ?>">
+        <?php endif; ?>
+
         <!-- Title Field -->
         <div class="form-group">
             <label for="title" class="form-label required">Session Title</label>
@@ -415,12 +454,17 @@
         <!-- Form Actions -->
         <div class="form-actions">
             <button type="button" class="btn btn-cancel" onclick="window.history.back()">Cancel</button>
-            <button type="submit" class="btn btn-create">Create Session</button>
+            <button type="submit" class="btn btn-create"><?= $isEditMode ? 'Update Session' : 'Create Session' ?></button>
         </div>
     </form>
 </div>
 
 <script>
+    const BASE_URL = '/UniHelper';
+    const IS_EDIT_MODE = <?= $isEditMode ? 'true' : 'false' ?>;
+    const EDIT_SESSION_ID = <?= (int)$editingSessionId ?>;
+    const HAS_SERVER_FORM_DATA = <?= !empty($formData) ? 'true' : 'false' ?>;
+
     // Form Validation and Error Handling
     const createSessionForm = document.getElementById('createSessionForm');
 
@@ -540,4 +584,35 @@
             clearFieldError('my-university');
         });
     });
+
+    function populateEditForm(session) {
+        document.getElementById('title').value = session.title || '';
+        document.getElementById('subject').value = session.subject || '';
+        document.getElementById('description').value = session.description || '';
+        document.getElementById('date').value = session.date || '';
+        document.getElementById('time').value = session.time || '';
+        document.getElementById('duration').value = session.duration || '';
+        document.getElementById('sessionLink').value = session.session_link || '';
+        document.getElementById('tags').value = session.tags || '';
+
+        const audienceRadio = document.querySelector(`input[name="audience"][value="${session.audience}"]`);
+        if (audienceRadio) {
+            audienceRadio.checked = true;
+        }
+    }
+
+    if (IS_EDIT_MODE && EDIT_SESSION_ID && !HAS_SERVER_FORM_DATA) {
+        fetch(`${BASE_URL}/api?controller=SessionController&action=getSessionForEdit&id=${EDIT_SESSION_ID}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success || !data.data) {
+                    throw new Error(data.error || 'Failed to load session for editing.');
+                }
+                populateEditForm(data.data);
+            })
+            .catch(error => {
+                alert(error.message || 'Failed to load session details.');
+                window.location.href = `${BASE_URL}/peer-learning`;
+            });
+    }
 </script>

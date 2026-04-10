@@ -175,6 +175,44 @@ class Session_model extends BaseModel {
             throw new Exception("Failed to delete session: " . $e->getMessage());
         }
     }
+
+    /**
+     * Update a session owned by a specific user
+     */
+    public function updateByOwner($id, $userId, $data) {
+        $sql = "UPDATE {$this->table}
+                SET title = :title,
+                    subject = :subject,
+                    description = :description,
+                    date = :date,
+                    time = :time,
+                    duration = :duration,
+                    session_link = :session_link,
+                    audience = :audience,
+                    tags = :tags
+                WHERE id = :id AND user_id = :user_id AND is_deleted = 0";
+
+        $params = [
+            'id' => $id,
+            'user_id' => $userId,
+            'title' => $data['title'],
+            'subject' => $data['subject'],
+            'description' => $data['description'],
+            'date' => $data['date'],
+            'time' => $data['time'],
+            'duration' => $data['duration'],
+            'session_link' => $data['session_link'],
+            'audience' => $data['audience'],
+            'tags' => $data['tags']
+        ];
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute($params);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to update session: " . $e->getMessage());
+        }
+    }
     
     /**
      * Restore a soft-deleted session
