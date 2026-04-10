@@ -311,12 +311,12 @@
     }
 
     .session-delete-btn {
-        background: #fc8181;
+        background: #9f0505;
         color: white;
     }
 
     .session-delete-btn:hover {
-        background: #f56565;
+        background: #a10808;
     }
 
     /* Empty State */
