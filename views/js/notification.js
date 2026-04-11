@@ -6,6 +6,9 @@
 (function () {
     'use strict';
 
+    const API_BASE = '/unihelper/api';
+    const POLL_INTERVAL_MS = 60 * 1000;
+
     // ── DOM references ──────────────────────────────────────────────
     const bellBtn       = document.getElementById('notificationBellBtn');
     const dot           = document.getElementById('notificationDot');
@@ -15,6 +18,7 @@
     const tabs          = document.querySelectorAll('.notification-tab');
     const panels        = document.querySelectorAll('.notification-panel');
     const template      = document.getElementById('notificationItemTemplate');
+    const markAllReadBtn = document.getElementById('markAllReadBtn');
 
     // List & empty-state references per tab
     const lists = {
@@ -27,6 +31,13 @@
     };
     const newCountBadge = document.getElementById('newNotifCount');
 
+    const state = {
+        shouldRefreshFromServer: false,
+        hasFetchedUnread: false,
+        hasFetchedRead: false,
+        activeTab: 'new',
+    };
+
     // icons for the notification types
     const icons = {
         'qa': '🗯️',
@@ -35,10 +46,150 @@
         'other': '🔔'
     };
 
+    function buildApiUrl(action, extraParams) {
+        const query = new URLSearchParams(
+            Object.assign(
+                {
+                    controller: 'notificationController',
+                    action: action,
+                },
+                extraParams || {}
+            )
+        );
+        return API_BASE + '?' + query.toString();
+    }
+
+    async function apiGet(action, extraParams) {
+        const response = await fetch(buildApiUrl(action, extraParams), {
+            method: 'GET',
+            credentials: 'same-origin',
+        });
+
+        let payload;
+        try {
+            payload = await response.json();
+        } catch (e) {
+            throw new Error('Invalid server response.');
+        }
+
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || 'Request failed.');
+        }
+
+        return payload;
+    }
+
+    async function apiPost(action, bodyParams) {
+        const formData = new FormData();
+        Object.keys(bodyParams || {}).forEach(function (key) {
+            formData.append(key, String(bodyParams[key]));
+        });
+
+        const response = await fetch(buildApiUrl(action), {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData,
+        });
+
+        let payload;
+        try {
+            payload = await response.json();
+        } catch (e) {
+            throw new Error('Invalid server response.');
+        }
+
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || 'Request failed.');
+        }
+
+        return payload;
+    }
+
+    function notify(message, type) {
+        if (typeof window.showToast === 'function') {
+            window.showToast(message, type || 'success');
+        }
+    }
+
+    function formatTime(value) {
+        if (!value) return 'Just now';
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return 'Just now';
+
+        const now = Date.now();
+        const diffMs = Math.max(0, now - date.getTime());
+        const diffMinutes = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMinutes / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffMinutes < 1) return 'Just now';
+        if (diffMinutes < 60) return diffMinutes + 'm ago';
+        if (diffHours < 24) return diffHours + 'h ago';
+        if (diffDays < 7) return diffDays + 'd ago';
+
+        return date.toLocaleString();
+    }
+
+    function mapNotification(row) {
+        const type = row.type && icons[row.type] ? row.type : 'other';
+        return {
+            id: String(row.id || ''),
+            message: row.message || '',
+            time: formatTime(row.created_at),
+            link: row.link || '',
+            iconHtml: icons[type],
+        };
+    }
+
+    function clearAndRender(tabName, rows) {
+        clearTab(tabName);
+        (rows || []).forEach(function (row) {
+            addNotification(tabName, mapNotification(row));
+        });
+        refreshEmpty(tabName);
+    }
+
+    async function checkAnyNewNotifications() {
+        try {
+            const payload = await apiGet('checkAny');
+            const hasUnread = !!payload.has_unread;
+            state.shouldRefreshFromServer = hasUnread;
+            setDotActive(hasUnread);
+        } catch (error) {
+            // Keep UI usable even if the periodic check fails.
+        }
+    }
+
+    async function fetchUnread() {
+        const payload = await apiGet('getUnread');
+        clearAndRender('new', payload.data || []);
+        state.hasFetchedUnread = true;
+        state.shouldRefreshFromServer = false;
+        setDotActive(false);
+    }
+
+    async function fetchRead() {
+        const payload = await apiGet('getRead');
+        clearAndRender('opened', payload.data || []);
+        state.hasFetchedRead = true;
+        state.shouldRefreshFromServer = false;
+        setDotActive(false);
+    }
+
     // ── Modal open / close ──────────────────────────────────────────
     function openModal() {
         overlay.classList.add('show');
         document.body.style.overflow = 'hidden'; // prevent bg scroll
+        switchTab('new');
+
+        if (state.shouldRefreshFromServer || !state.hasFetchedUnread) {
+            fetchUnread().catch(function (error) {
+                notify(error.message || 'Failed to load notifications.', 'error');
+            });
+        }
+
+        // Bell is opened, so remove the visual dot immediately.
+        setDotActive(false);
     }
 
     function closeModal() {
@@ -86,6 +237,8 @@
     });
 
     function switchTab(name) {
+        state.activeTab = name;
+
         // Update tab buttons
         tabs.forEach(function (t) {
             t.classList.toggle('active', t.getAttribute('data-tab') === name);
@@ -100,6 +253,18 @@
         panels.forEach(function (p) {
             p.classList.toggle('active', p.getAttribute('data-panel') === name);
         });
+
+        if (name === 'new' && (state.shouldRefreshFromServer || !state.hasFetchedUnread)) {
+            fetchUnread().catch(function (error) {
+                notify(error.message || 'Failed to load unread notifications.', 'error');
+            });
+        }
+
+        if (name === 'opened' && (state.shouldRefreshFromServer || !state.hasFetchedRead)) {
+            fetchRead().catch(function (error) {
+                notify(error.message || 'Failed to load opened notifications.', 'error');
+            });
+        }
     }
 
     // ── Empty-state helpers ─────────────────────────────────────────
@@ -162,8 +327,15 @@
         }
         
         const contentLink = item.querySelector('.notification-item-content');
-        if (contentLink && data.link) {
-            contentLink.setAttribute('href', data.link);
+        if (contentLink) {
+            if (data.link) {
+                contentLink.setAttribute('href', data.link);
+            } else {
+                contentLink.removeAttribute('href');
+                contentLink.addEventListener('click', function (event) {
+                    event.preventDefault();
+                });
+            }
         }
 
         const titleEl = item.querySelector('.notification-item-title');
@@ -184,8 +356,8 @@
         }
 
         const iconContainer = item.querySelector('.notification-item-icon');
-        if (iconContainer && data.iconHtml) {
-            iconContainer.innerHTML = data.iconHtml;
+        if (iconContainer) {
+            iconContainer.textContent = data.iconHtml || icons.other;
         }
 
         return item;
@@ -203,6 +375,13 @@
 
         const list = lists[tabName];
         if (!list) return;
+
+        if (tabName === 'opened') {
+            const markBtn = item.querySelector('.notification-item-action.mark-action');
+            if (markBtn) {
+                markBtn.remove();
+            }
+        }
 
         list.appendChild(item);
         refreshEmpty(tabName);
@@ -244,7 +423,7 @@
         updateNewCount(lists.new.children.length);
 
         // Hide the action button once opened
-        const actionBtn = item.querySelector('.notification-item-action');
+        const actionBtn = item.querySelector('.notification-item-action.mark-action');
         if (actionBtn) actionBtn.style.display = 'none';
 
         lists.opened.prepend(item);
@@ -263,5 +442,112 @@
         refreshEmpty(tabName);
         if (tabName === 'new') updateNewCount(0);
     }
+
+    async function handleMarkAsRead(notificationId) {
+        await apiPost('markAsRead', { notification_id: notificationId });
+        markAsOpened(notificationId);
+    }
+
+    async function handleDelete(notificationId) {
+        await apiPost('delete', { notification_id: notificationId });
+        removeNotification(notificationId);
+    }
+
+    async function handleMarkAllAsRead() {
+        await apiPost('markAllAsRead', {});
+
+        const items = lists.new.querySelectorAll('.notification-item[data-notif-id]');
+        Array.prototype.slice.call(items).forEach(function (item) {
+            const id = item.getAttribute('data-notif-id');
+            if (id) {
+                markAsOpened(id);
+            }
+        });
+
+        updateNewCount(0);
+        notify('All notifications marked as read.', 'success');
+    }
+
+    if (lists.new) {
+        lists.new.addEventListener('click', function (event) {
+            const markBtn = event.target.closest('.mark-action');
+            if (!markBtn) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const item = markBtn.closest('.notification-item');
+            if (!item) return;
+
+            const id = item.getAttribute('data-notif-id');
+            if (!id) return;
+
+            handleMarkAsRead(id)
+                .catch(function (error) {
+                    notify(error.message || 'Failed to mark notification.', 'error');
+                });
+        });
+
+        lists.new.addEventListener('click', function (event) {
+            const deleteBtn = event.target.closest('.delete-action');
+            if (!deleteBtn) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const item = deleteBtn.closest('.notification-item');
+            if (!item) return;
+
+            const id = item.getAttribute('data-notif-id');
+            if (!id) return;
+
+            handleDelete(id)
+                .catch(function (error) {
+                    notify(error.message || 'Failed to delete notification.', 'error');
+                });
+        });
+    }
+
+    if (lists.opened) {
+        lists.opened.addEventListener('click', function (event) {
+            const deleteBtn = event.target.closest('.delete-action');
+            if (!deleteBtn) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const item = deleteBtn.closest('.notification-item');
+            if (!item) return;
+
+            const id = item.getAttribute('data-notif-id');
+            if (!id) return;
+
+            handleDelete(id)
+                .catch(function (error) {
+                    notify(error.message || 'Failed to delete notification.', 'error');
+                });
+        });
+    }
+
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', function () {
+            if (!lists.new || lists.new.children.length === 0) {
+                return;
+            }
+
+            handleMarkAllAsRead().catch(function (error) {
+                notify(error.message || 'Failed to mark all as read.', 'error');
+            });
+        });
+    }
+
+    // Remove static placeholders from the server template; runtime rendering is API-driven.
+    clearTab('new');
+    clearTab('opened');
+    switchTab('new');
+
+    // Initial check on page load and periodic polling every 1 minute.
+    checkAnyNewNotifications();
+    setInterval(checkAnyNewNotifications, POLL_INTERVAL_MS);
 
 })();
