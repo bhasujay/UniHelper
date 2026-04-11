@@ -739,7 +739,7 @@
                 </div>
                 ${tags ? `<div class="session-tags">${tags}</div>` : ''}
                 <div class="session-creator">
-                    ${session.creator_name || 'Unknown'} • ${session.university || 'Unknown University'}
+                    Author: ${session.creator_name || 'Unknown'} • ${session.creator_university || session.university || 'Unknown University'}
                 </div>
                 ${actions}
             </div>
