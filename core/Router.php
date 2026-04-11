@@ -15,7 +15,6 @@ class Router
             '/dashboard' => ['DashboardController', 'index'],
             '/profile/view' => ['DashboardController', 'profileIndex'],
             '/profile/edit' => ['DashboardController', 'profileIndex'],
-            '/profile/change-password' => ['DashboardController', 'profileIndex'],
         ],
         'POST' => [
             '/register' => ['AuthController', 'register'],

@@ -10,6 +10,70 @@
         width: 100%;
     }
 
+    .peer-learning-toolbar {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-bottom: 1rem;
+        min-height: 3rem;
+    }
+
+    .peer-create-session-btn {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        border: 1px solid var(--primary);
+        background: var(--primary);
+        color: rgb(255, 255, 255);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 0 transparent;
+        text-decoration: none;
+        flex-shrink: 0;
+        position: relative;
+        overflow: visible;
+    }
+
+    .peer-create-session-btn:hover {
+        background: var(--primary);
+        color: rgb(0, 0, 0);
+        transform: translateY(-2px);
+        box-shadow: var(--glow-primary);
+    }
+
+    .peer-create-session-btn svg {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    .peer-create-session-label {
+        position: absolute;
+        right: calc(100% + 0.65rem);
+        top: 50%;
+        transform: translateY(-50%) translateX(10px);
+        background: rgba(164, 109, 255, 0.16);
+        color: var(--primary);
+        border: 1px solid rgba(164, 109, 255, 0.35);
+        border-radius: 999px;
+        padding: 0.45rem 0.85rem;
+        white-space: nowrap;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .peer-create-session-btn:hover .peer-create-session-label,
+    .peer-create-session-btn:focus-visible .peer-create-session-label {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+
     .peer-tabs {
         display: flex;
         gap: 0;
@@ -247,12 +311,12 @@
     }
 
     .session-delete-btn {
-        background: #fc8181;
+        background: #9f0505;
         color: white;
     }
 
     .session-delete-btn:hover {
-        background: #f56565;
+        background: #a10808;
     }
 
     /* Empty State */
@@ -433,10 +497,26 @@
         .peer-tab {
             padding: 0.75rem 1rem;
         }
+
+        .peer-create-session-label {
+            display: none;
+        }
     }
 </style>
 
 <div class="peer-learning-container">
+    <?php if (!isset($user) || $user->role !== 'role-applicant'): ?>
+        <div class="peer-learning-toolbar">
+            <a href="/UniHelper/create-session" class="peer-create-session-btn" title="Create Session" aria-label="Create Session">
+                <span class="peer-create-session-label">Create New Session</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                </svg>
+            </a>
+        </div>
+    <?php endif; ?>
+
     <!-- Tabs -->
     <div class="peer-tabs">
         <button class="peer-tab active" data-tab="my-sessions">My Sessions</button>
@@ -527,7 +607,11 @@
             .then(data => {
                 loading.style.display = 'none';
 
-                if (data.success && data.data.length > 0) {
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load your sessions');
+                }
+
+                if (data.data && data.data.length > 0) {
                     if (page === 1) {
                         container.innerHTML = '';
                     }
@@ -552,6 +636,7 @@
             .catch(error => {
                 loading.style.display = 'none';
                 console.error('Error loading sessions:', error);
+                alert(error.message || 'Failed to load your sessions. Please try again.');
                 container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
             });
     }
@@ -571,7 +656,11 @@
             .then(data => {
                 loading.style.display = 'none';
 
-                if (data.success && data.data.length > 0) {
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load sessions');
+                }
+
+                if (data.data && data.data.length > 0) {
                     if (page === 1) {
                         container.innerHTML = '';
                     }
@@ -596,6 +685,7 @@
             .catch(error => {
                 loading.style.display = 'none';
                 console.error('Error loading sessions:', error);
+                alert(error.message || 'Failed to load sessions. Please try again.');
                 container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
             });
     }
@@ -676,7 +766,7 @@
 
     // Edit session (redirect to edit page - to be implemented)
     function editSession(sessionId) {
-        alert('Edit feature coming soon!');
+        window.location.href = `${BASE_URL}/create-session?session_id=${sessionId}`;
     }
 
     // Open delete confirmation modal
@@ -716,18 +806,18 @@
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Delete';
 
-            if (data.success) {
-                closeDeleteModal();
-                loadMyessions(1);
-            } else {
-                alert('Error: ' + data.error);
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to delete session');
             }
+
+            closeDeleteModal();
+            loadMyessions(1);
         })
         .catch(error => {
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Delete';
-            console.error('Error:', error);
-            alert('Failed to delete session');
+            console.error('Error deleting session:', error);
+            alert(error.message || 'Failed to delete session. Please try again.');
         });
     }
 
