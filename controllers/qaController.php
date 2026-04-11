@@ -450,5 +450,27 @@ class QaController
             ]);
         }
     }
-}
 
+    public function report(Request $request)
+    {
+        header('Content-Type: application/json');
+        
+        $type = $request->get('type');
+        $id = $request->get('id');
+        $reason = $request->get('reason');
+        $userId = $request->session('user_id'); 
+        
+        try {
+            $this->model->report($type, $id, $reason, $userId);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Report submitted successfully'
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+}

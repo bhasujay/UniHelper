@@ -477,18 +477,18 @@ class Qna extends BaseModel
         return true;
     }
 
-    public function reportContent($reporterId, $type, $targetId, $reason, $details)
+    public function report($type, $id, $reason, $userId)
     {
-        $q_id = ($type === 'question') ? $targetId : null;
-        $a_id = ($type === 'answer') ? $targetId : null;
+        $q_id = ($type === 'question') ? $id : null;
+        $a_id = ($type === 'answer') ? $id : null;
 
         // Check for existing report from same user for same content to avoid spam
         $checkCol = ($type === 'question') ? 'q_id' : 'a_id';
         $checkSql = "SELECT report_id FROM reports WHERE reporter_id = :reporter_id AND $checkCol = :target_id LIMIT 1";
         $checkStmt = $this->db->prepare($checkSql);
         $checkStmt->execute([
-            'reporter_id' => $reporterId,
-            'target_id' => $targetId
+            'reporter_id' => $userId,
+            'target_id' => $id
         ]);
 
         if ($checkStmt->fetch()) {
@@ -496,15 +496,14 @@ class Qna extends BaseModel
         }
 
         // Insert report
-        $sql = "INSERT INTO reports (reporter_id, q_id, a_id, reason, details)
-                VALUES (:reporter_id, :q_id, :a_id, :reason, :details)";
+        $sql = "INSERT INTO reports (reporter_id, q_id, a_id, reason)
+                VALUES (:reporter_id, :q_id, :a_id, :reason)";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
-            'reporter_id' => $reporterId,
+            'reporter_id' => $userId,
             'q_id' => $q_id,
             'a_id' => $a_id,
-            'reason' => $reason,
-            'details' => $details
+            'reason' => $reason
         ]);
         
         return true;
