@@ -156,7 +156,7 @@ class Qna extends BaseModel
             $sql = "
                 SELECT *
                 FROM questions
-                WHERE status = 'normal'
+                WHERE status IN ('normal', 'flagged')
                 ORDER BY vote_count DESC, answer_count DESC, added_time DESC, last_modified DESC
                 LIMIT :offset, :limit
             ";
@@ -474,6 +474,39 @@ class Qna extends BaseModel
         $updateStmt = $this->db->prepare($updateSql);
         $updateStmt->execute(['q_id' => $answer['q_id']]);
 
+        return true;
+    }
+
+    public function reportContent($reporterId, $type, $targetId, $reason, $details)
+    {
+        $q_id = ($type === 'question') ? $targetId : null;
+        $a_id = ($type === 'answer') ? $targetId : null;
+
+        // Check for existing report from same user for same content to avoid spam
+        $checkCol = ($type === 'question') ? 'q_id' : 'a_id';
+        $checkSql = "SELECT report_id FROM reports WHERE reporter_id = :reporter_id AND $checkCol = :target_id LIMIT 1";
+        $checkStmt = $this->db->prepare($checkSql);
+        $checkStmt->execute([
+            'reporter_id' => $reporterId,
+            'target_id' => $targetId
+        ]);
+
+        if ($checkStmt->fetch()) {
+            throw new \Exception("You have already reported this $type.");
+        }
+
+        // Insert report
+        $sql = "INSERT INTO reports (reporter_id, q_id, a_id, reason, details)
+                VALUES (:reporter_id, :q_id, :a_id, :reason, :details)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'reporter_id' => $reporterId,
+            'q_id' => $q_id,
+            'a_id' => $a_id,
+            'reason' => $reason,
+            'details' => $details
+        ]);
+        
         return true;
     }
 

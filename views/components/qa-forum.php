@@ -253,7 +253,7 @@
     <button class="qa-menu-item close-btn">×</button>
     <button class="qa-menu-item edit-btn" style="display: none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit</button>
     <button class="qa-menu-item delete-btn" style="display: none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="m19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Delete</button>
-    <button class="qa-menu-item report-btn" style="display: none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V3"></path><path d="M4 15l8-8 8 8"></path></svg> Report</button>
+    <button class="qa-menu-item report-btn" style="display: none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg> Report</button>
 </div>
 
 <!------------------------------------------------------------------>
@@ -404,5 +404,75 @@
         </div>
         <h3 class="qa-search-no-results-title">No Results Found</h3>
         <p class="qa-search-no-results-text">We couldn't find any questions or answers matching your search. Try different keywords or check your spelling.</p>
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div class="qa-reportmodal" style="display: none;">
+    <div class="qa-reportmodal-content">
+        <button class="qa-reportmodal-close" aria-label="Close">×</button>
+        <div class="qa-reportmodal-header">
+            <h2 class="qa-reportmodal-title">Report Content</h2>
+            <p class="qa-reportmodal-desc">Help us understand what's wrong with this content. Your report will be reviewed by our moderators.</p>
+        </div>
+        <form class="qa-report-form" id="qaReportForm">
+            <div class="qa-form-group">
+                <div class="qa-radio-group">
+                    <label class="qa-report-radio-label">
+                        <input type="radio" name="report_reason" value="spam" required>
+                        <div class="qa-report-radio-content">
+                            <span class="qa-report-radio-title">Spam</span>
+                            <span class="qa-report-radio-desc">General clutter, promotional content, or repetitive posts.</span>
+                        </div>
+                    </label>
+                    <label class="qa-report-radio-label">
+                        <input type="radio" name="report_reason" value="harassment">
+                        <div class="qa-report-radio-content">
+                            <span class="qa-report-radio-title">Harassment</span>
+                            <span class="qa-report-radio-desc">Targeting a specific user, bullying, or threats.</span>
+                        </div>
+                    </label>
+                    <label class="qa-report-radio-label">
+                        <input type="radio" name="report_reason" value="inappropriate">
+                        <div class="qa-report-radio-content">
+                            <span class="qa-report-radio-title">Inappropriate</span>
+                            <span class="qa-report-radio-desc">NSFW, offensive, or otherwise inappropriate content.</span>
+                        </div>
+                    </label>
+                    <label class="qa-report-radio-label">
+                        <input type="radio" name="report_reason" value="misinformation">
+                        <div class="qa-report-radio-content">
+                            <span class="qa-report-radio-title">Misinformation</span>
+                            <span class="qa-report-radio-desc">Incorrect academic or university information.</span>
+                        </div>
+                    </label>
+                    <label class="qa-report-radio-label">
+                        <input type="radio" name="report_reason" value="other">
+                        <div class="qa-report-radio-content">
+                            <span class="qa-report-radio-title">Other</span>
+                            <span class="qa-report-radio-desc">Another reason not listed above.</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="qa-form-group" id="qa-report-details-group" style="display: none;">
+                <label for="qa-report-details" class="qa-form-label">Details</label>
+                <textarea 
+                    id="qa-report-details" 
+                    class="qa-form-textarea qa-report-textarea" 
+                    placeholder="Provide more specific details about your report..."
+                    rows="3"
+                ></textarea>
+            </div>
+            
+            <input type="hidden" id="qa-report-type" value="">
+            <input type="hidden" id="qa-report-id" value="">
+
+            <div class="qa-report-actions">
+                <button type="button" class="btn btn-outline qa-report-cancel-btn">Cancel</button>
+                <button type="submit" class="btn qa-report-submit-btn">Submit Report</button>
+            </div>
+        </form>
     </div>
 </div>

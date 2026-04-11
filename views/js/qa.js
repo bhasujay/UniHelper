@@ -34,6 +34,11 @@ document.addEventListener('DOMContentLoaded', function() {
     answermodal.parentElement.removeChild(answermodal);
     document.body.appendChild(answermodal);
 
+    // Locate existing report modal and move it to document.body
+    let reportModal = document.querySelector('.qa-reportmodal');
+    reportModal.parentElement.removeChild(reportModal);
+    document.body.appendChild(reportModal);
+
 /////////////////////////////////////////////////////////////////////////////
 
     // the question card template
@@ -513,6 +518,104 @@ document.addEventListener('DOMContentLoaded', function() {
         if (btn.parentElement) btn.remove();
         if (askmodal.parentElement) askmodal.remove();
         if (answermodal.parentElement) answermodal.remove();
+        if (reportModal.parentElement) reportModal.remove();
+    });
+
+/////////////////////////////////////////////////////////////////////////////
+// Report modal logic
+
+    const reportForm = document.getElementById('qaReportForm');
+    const reportDetailsGroup = document.getElementById('qa-report-details-group');
+    const reportRadios = reportForm.querySelectorAll('input[name="report_reason"]');
+
+    // Toggle details textarea when "Other" is selected
+    reportRadios.forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            if (this.value === 'other') {
+                reportDetailsGroup.style.display = 'flex';
+            } else {
+                reportDetailsGroup.style.display = 'none';
+            }
+        });
+    });
+
+    // Close button
+    reportModal.querySelector('.qa-reportmodal-close').addEventListener('click', function() {
+        reportModal.style.display = 'none';
+        reportForm.reset();
+        reportDetailsGroup.style.display = 'none';
+    });
+
+    // Cancel button
+    reportModal.querySelector('.qa-report-cancel-btn').addEventListener('click', function() {
+        reportModal.style.display = 'none';
+        reportForm.reset();
+        reportDetailsGroup.style.display = 'none';
+    });
+
+    // Form submission
+    reportForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const reason = reportForm.querySelector('input[name="report_reason"]:checked');
+        if (!reason) {
+            showToast('Please select a reason for reporting.', 'error');
+            return;
+        }
+
+        const reportType = document.getElementById('qa-report-type').value;
+        const reportId = document.getElementById('qa-report-id').value;
+        const details = document.getElementById('qa-report-details').value.trim();
+
+        if (reason.value === 'other' && !details) {
+            showToast('Please provide details for your report.', 'error');
+            return;
+        }
+
+        const submitBtn = reportForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+
+        const formData = new FormData();
+        formData.append('type', reportType);
+        formData.append('id', reportId);
+        
+        if (reason.value === 'other') {
+            formData.append('reason', details);
+        } else {
+            const reasonFormats = {
+                'spam': 'Spam',
+                'harassment': 'Harassment',
+                'inappropriate': 'Inappropriate',
+                'misinformation': 'Misinformation'
+            };
+            formData.append('reason', reasonFormats[reason.value] || reason.value);
+        }
+
+        fetch(`/unihelper/api?controller=qaController&action=report`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Report submitted successfully. Thank you!', 'success');
+            } else {
+                showToast('Error: ' + (data.message || 'Failed to submit report.'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting report:', error);
+            showToast('An error occurred while submitting your report. Please try again.', 'error');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            reportModal.style.display = 'none';
+            reportForm.reset();
+            reportDetailsGroup.style.display = 'none';
+        });
     });
     
     // Fetch and populate tags

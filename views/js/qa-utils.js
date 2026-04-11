@@ -1,6 +1,25 @@
 var questions_ids = [];
 var questions_ids_temp = [];
 var hasMoreQuestions_temp = true;
+var FLAGGED_TOOLTIP_TEXT = 'This content may violate our community guidelines and is under review by moderators.';
+
+function isFlaggedStatus(status) {
+    return String(status || '').toLowerCase() === 'flagged';
+}
+
+function applyFlaggedState(element, status) {
+    if (!element) {
+        return;
+    }
+
+    if (isFlaggedStatus(status)) {
+        element.classList.add('flagged-content');
+        element.setAttribute('title', FLAGGED_TOOLTIP_TEXT);
+    } else {
+        element.classList.remove('flagged-content');
+        element.removeAttribute('title');
+    }
+}
 
 //////////////////////////////////////////////////////////////////////
 
@@ -39,9 +58,7 @@ function generateMenuDropdown(element, questionUserId, currentUserId, isModerato
         }
     }
 
-    if (isModerator && reportBtn) {
-        reportBtn.style.display = 'block';
-    }
+    reportBtn.style.display = 'block';
 
     if (!menuContainer.dataset.initialized) {
         menuContainer.dataset.initialized = 'true';
@@ -91,6 +108,19 @@ function generateMenuDropdown(element, questionUserId, currentUserId, isModerato
         };
     }
 
+    if (reportBtn) {
+        reportBtn.onclick = function(e) {
+            e.stopPropagation();
+            menuContainer.style.display = 'none';
+            document.getElementById('qa-report-type').value = isAnswer >= 0 ? 'answer' : 'question';
+            document.getElementById('qa-report-id').value = isAnswer >= 0 ? isAnswer : questionId;
+            const reportModal = document.querySelector('.qa-reportmodal');
+            if (reportModal) {
+                reportModal.style.display = 'flex';
+            }
+        };
+    }
+
     if (editBtn) {
         editBtn.onclick = async function(e) {
             e.stopPropagation();
@@ -128,6 +158,7 @@ function resetForm() {
 
 function resetQuestionView() {
     const qaViewModal = document.querySelector('.qa-question-view');
+    applyFlaggedState(qaViewModal.querySelector('.qa-view-content'), 'normal');
     
     // Reset user info
     qaViewModal.querySelector('.qa-avatar-img').src = document.getElementById('default-pfp').src;
@@ -274,7 +305,8 @@ function goBackFromQuestionView(questionId) {
                 timestamp:       timestamp,
                 imagecount:      question.img_path ? question.img_path.split(',').length : 0,
                 firstImage:      question.img_path ? question.img_path.split(',')[0] : '',
-                modified:        modified
+                modified:        modified,
+                status:          question.status
             };
 
             // Temporarily force the default filter so the card goes into .qa-main
@@ -403,12 +435,9 @@ async function viewQuestion(questionId) {
     }
 
     // Create and append the menu container
-    if (question.user_id == userID || isModerator) {
-        qaViewModal.querySelector('.qa-menu-btn').style.display = 'block';
-        
-        // Create and append the menu container
-        generateMenuDropdown(qaViewModal, question.user_id, userID, isModerator, questionId);
-    }
+    qaViewModal.querySelector('.qa-menu-btn').style.display = 'block';
+    generateMenuDropdown(qaViewModal, question.user_id, userID, isModerator, questionId);
+    applyFlaggedState(qaViewModal.querySelector('.qa-view-content'), question.status);
 
     // Style the title with hashtags
     const styledTitle = question.question.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
@@ -512,12 +541,9 @@ async function viewQuestion(questionId) {
             card.querySelector('.qa-answer-body').textContent = answer.text;
 
             // Create and append the menu container
-            if (answer.user_id == userID || isModerator) {
-                card.querySelector('.qa-menu-btn').style.display = 'block';
-                
-                // Create and append the menu container
-                generateMenuDropdown(card, answer.user_id, userID, isModerator, questionId, answer.a_id);
-            }
+            card.querySelector('.qa-menu-btn').style.display = 'block';
+            generateMenuDropdown(card, answer.user_id, userID, isModerator, questionId, answer.a_id);
+            applyFlaggedState(card, answer.status);
 
             qaViewModal.querySelector('.qa-view-answers').appendChild(card);
             card.style.display = 'flex';
@@ -536,6 +562,7 @@ function makeQuestionCard(data, position) {
     card.id = data.questionId;
     card.classList.remove('template');
     card.style.display = 'flex';
+    applyFlaggedState(card, data.status);
 
     // Populate user info
     card.querySelector('#qa-user-id').value = data.userID;
@@ -621,10 +648,8 @@ function makeQuestionCard(data, position) {
 
     // add clickable functionalities for the question card
     // Create and append the menu container
-    if (data.userID == userID || isModerator) {
-        card.querySelector('.qa-menu-btn').style.display = 'block';
-        generateMenuDropdown(card, data.userID, userID, isModerator, data.questionId);
-    }
+    card.querySelector('.qa-menu-btn').style.display = 'block';
+    generateMenuDropdown(card, data.userID, userID, isModerator, data.questionId);
     
     // Add click handler for answer button
     const answerBtn = card.querySelector('.answer-btn');
@@ -813,7 +838,8 @@ function fetchQuestions() {
                             timestamp: timestamp,
                             imagecount: question.img_path ? question.img_path.split(',').length : 0,
                             firstImage: question.img_path ? question.img_path.split(',')[0] : '',
-                            modified: modified
+                            modified: modified,
+                            status: question.status
                         };
                         // show the question card
                         makeQuestionCard(mappedData, -1);
