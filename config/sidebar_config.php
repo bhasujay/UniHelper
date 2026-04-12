@@ -14,7 +14,7 @@ return [
         ['component' => 'peer-learning',    'title' => 'Peer Learning'],
         ['component' => 'connections', 'title' => 'Connections'],
         ['component' => 'announcements',   'title' => 'Announcements'],
-        ['component' => 'Moderation', 'title' => 'Moderation'],
+        ['component' => 'moderation', 'title' => 'Moderation'],
     ],
     'role-profile' => [
         ['component' => 'qa-forum',        'title' => 'Q&A Forum'],

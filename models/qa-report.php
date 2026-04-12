@@ -13,11 +13,90 @@ class QaReport
         $this->db = Database::getInstance();
     }
 
-    private function getReportsByStatus(string $status): array
+    public function applyForModerator($user_id, $motivation)
+    {
+        $userId = (int) $user_id;
+        $motivation = trim((string) $motivation);
+
+        // Check for existing request for this user
+        $checkSql = "SELECT request_id, status FROM moderator_requests WHERE user_id = :user_id LIMIT 1";
+        $checkStmt = $this->db->prepare($checkSql);
+        $checkStmt->execute(['user_id' => $userId]);
+        $existing = $checkStmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$existing) {
+            // No existing request — insert new (status defaults to 'pending')
+            $insertSql = "INSERT INTO moderator_requests (user_id, motivation) VALUES (:user_id, :motivation)";
+            $insertStmt = $this->db->prepare($insertSql);
+            $insertStmt->execute([
+                'user_id' => $userId,
+                'motivation' => $motivation,
+            ]);
+
+            return $insertStmt->rowCount() > 0;
+        }
+
+        $status = isset($existing['status']) ? $existing['status'] : null;
+
+        // If already pending or accepted, do not allow re-apply
+        if ($status === 'pending' || $status === 'accepted') {
+            return false;
+        }
+
+        // Only reopen if previously rejected
+        if ($status === 'rejected') {
+            $updateSql = "UPDATE moderator_requests SET status = 'pending', motivation = :motivation, reviewed_at = NULL WHERE request_id = :request_id";
+            $updateStmt = $this->db->prepare($updateSql);
+            $updateStmt->execute([
+                'motivation' => $motivation,
+                'request_id' => (int) $existing['request_id'],
+            ]);
+
+            return $updateStmt->rowCount() > 0;
+        }
+
+        // For any other status, do not allow re-apply
+        return false;
+    }
+
+    public function checkModeratorApplicationStatus($user_id)
+    {
+        // Check the application status
+        // If there is no record of this then we should send 'clear' as status, otherwise return the actual status
+        $sql = "SELECT status FROM moderator_requests WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => (int) $user_id]);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return $result ? $result['status'] : 'clear';
+    }
+
+    public function reviewModeratorApplication($applicationId, $action)
+    {
+        $action = strtolower(trim((string) $action));
+        if (!in_array($action, ['accept', 'reject'], true)) {
+            throw new \InvalidArgumentException('Invalid action. Allowed actions: accept, reject.');
+        }
+
+        $status = $action === 'accept' ? 'accepted' : 'rejected';
+
+        $sql = "UPDATE moderator_requests SET status = :status WHERE request_id = :request_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'status' => $status,
+            'request_id' => (int) $applicationId,
+        ]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    private function getReportsByStatus(string $status, ?int $moderatorId = null): array
     {
         $sql = "
             SELECT
                 r.report_id,
+                r.reason,
+                r.action_taken,
                 CASE
                     WHEN r.q_id IS NOT NULL AND r.a_id IS NULL THEN r.q_id
                     WHEN r.a_id IS NOT NULL AND r.q_id IS NULL THEN a.q_id
@@ -43,11 +122,18 @@ class QaReport
             LEFT JOIN questions q ON q.q_id = r.q_id
             LEFT JOIN answers a ON a.a_id = r.a_id
             WHERE r.status = :status
-            ORDER BY r.created_at DESC, r.report_id DESC
         ";
 
+        $params = ['status' => $status];
+        if ($moderatorId !== null) {
+            $sql .= "\n                AND r.mod_id = :moderator_id";
+            $params['moderator_id'] = $moderatorId;
+        }
+
+        $sql .= "\n            ORDER BY r.created_at DESC, r.report_id DESC";
+
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['status' => $status]);
+        $stmt->execute($params);
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
@@ -57,22 +143,23 @@ class QaReport
         return $this->getReportsByStatus('pending');
     }
 
-    public function getResolvedReports()
+    public function getResolvedReports(int $moderatorId)
     {
-        return $this->getReportsByStatus('resolved');
+        return $this->getReportsByStatus('resolved', $moderatorId);
     }
 
-    public function getForwardedReports()
+    public function getForwardedReports(int $moderatorId)
     {
-        return $this->getReportsByStatus('forwarded_to_admin');
+        return $this->getReportsByStatus('forwarded_to_admin', $moderatorId);
     }
 
-    private function updateStatus($reportId, $status, $moderatorId = null)
+    private function updateStatus($reportId, $status, $actionTaken, $moderatorId = null)
     {
-        $sql = "UPDATE reports SET status = :status, mod_id = :mod_id WHERE report_id = :report_id";
+        $sql = "UPDATE reports SET status = :status, action_taken = :action_taken, mod_id = :mod_id WHERE report_id = :report_id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             'status' => $status,
+            'action_taken' => $actionTaken,
             'mod_id' => $moderatorId,
             'report_id' => (int) $reportId,
         ]);
@@ -87,6 +174,10 @@ class QaReport
         $validActions = ['ignored', 'flagged', 'forwarded to admin'];
         if (!in_array($action, $validActions, true)) {
             throw new \InvalidArgumentException('Invalid action. Allowed actions: ignored, flagged, forwarded to admin.');
+        }
+
+        if ($action === 'forwarded to admin' && $moderatorId === null) {
+            throw new \InvalidArgumentException('A valid moderator ID is required to forward reports to admin.');
         }
 
         $sql = "SELECT report_id, q_id, a_id FROM reports WHERE report_id = :report_id LIMIT 1";
@@ -122,7 +213,7 @@ class QaReport
                 }
             }
 
-            $this->updateStatus((int) $reportId, $reportStatus, $moderatorId);
+            $this->updateStatus((int) $reportId, $reportStatus, $action, $moderatorId);
             $connection->commit();
 
             return true;

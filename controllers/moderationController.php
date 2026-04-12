@@ -42,8 +42,17 @@ class ModerationController
 
     public function getResolvedReports(Request $request)
     {
+        $moderatorId = $request->session('user_id');
+        if (empty($moderatorId) || !is_numeric($moderatorId)) {
+            $this->json([
+                'success' => false,
+                'message' => 'User must be logged in as moderator to view resolved reports.',
+            ], 401);
+            return;
+        }
+
         try {
-            $reports = $this->qaReportModel->getResolvedReports();
+            $reports = $this->qaReportModel->getResolvedReports((int) $moderatorId);
             $this->json([
                 'success' => true,
                 'data' => empty($reports) ? null : $reports,
@@ -58,8 +67,17 @@ class ModerationController
 
     public function getForwardedReports(Request $request)
     {
+        $moderatorId = $request->session('user_id');
+        if (empty($moderatorId) || !is_numeric($moderatorId)) {
+            $this->json([
+                'success' => false,
+                'message' => 'User must be logged in as moderator to view forwarded reports.',
+            ], 401);
+            return;
+        }
+
         try {
-            $reports = $this->qaReportModel->getForwardedReports();
+            $reports = $this->qaReportModel->getForwardedReports((int) $moderatorId);
             $this->json([
                 'success' => true,
                 'data' => empty($reports) ? null : $reports,
@@ -75,7 +93,9 @@ class ModerationController
     public function takeAction(Request $request)
     {
         $reportId = $request->get('report_id');
-        $action = strtolower(trim((string) $request->get('action')));
+        $rawAction = $request->get('report_action');
+        
+        $action = strtolower(trim((string) $rawAction));
 
         if (empty($reportId) || !is_numeric($reportId)) {
             $this->json([
@@ -98,6 +118,14 @@ class ModerationController
             $moderatorId = null;
         } else {
             $moderatorId = (int) $moderatorId;
+        }
+
+        if ($action === 'forwarded to admin' && $moderatorId === null) {
+            $this->json([
+                'success' => false,
+                'message' => 'User must be logged in as moderator to forward reports to admin.',
+            ], 401);
+            return;
         }
 
         try {
@@ -147,7 +175,7 @@ class ModerationController
         }
     }
 
-    // for admin
+    // for admin To remove the content
     public function removeContent(Request $request)
     {
         $reportId = $request->get('report_id');
@@ -177,6 +205,107 @@ class ModerationController
             $this->json([
                 'success' => false,
                 'message' => 'Failed to remove content.',
+            ], 500);
+        }
+    }
+
+    // moderator application
+    public function applyForModerator(Request $request)
+    {
+        $userId = $request->session('user_id');
+        $motivation = trim((string) $request->get('motivation'));
+
+        if (empty($userId) || !is_numeric($userId)) {
+            $this->json([
+                'success' => false,
+                'message' => 'User must be logged in to apply for moderator.',
+            ], 401);
+            return;
+        }
+
+        if (empty($motivation)) {
+            $this->json([
+                'success' => false,
+                'message' => 'Motivation is required to apply for moderator.',
+            ], 400);
+            return;
+        }
+
+        try {
+            $applied = $this->qaReportModel->applyForModerator((int) $userId, $motivation);
+            $this->json([
+                'success' => $applied,
+                'message' => 'Moderator application submitted successfully.',
+            ], $applied ? 200 : 409);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to submit moderator application.',
+            ], 500);
+        }
+    }
+
+    // Check the application status
+    public function checkModeratorApplicationStatus(Request $request)
+    {
+        $userId = $request->session('user_id');
+
+        if (empty($userId) || !is_numeric($userId)) {
+            $this->json([
+                'success' => false,
+                'message' => 'User must be logged in to check application status.',
+            ], 401);
+            return;
+        }
+
+        try {
+            $status = $this->qaReportModel->checkModeratorApplicationStatus((int) $userId);
+            $this->json([
+                'success' => true,
+                'data' => ['status' => $status],
+            ]);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to check moderator application status.',
+            ], 500);
+        }
+    }
+
+    // This is for the admin either Accept or reject the application 
+    public function reviewModeratorApplication(Request $request)
+    {
+        $applicationId = $request->get('application_id');
+        $action = strtolower(trim((string) $request->get('action')));
+
+        if (empty($applicationId) || !is_numeric($applicationId)) {
+            $this->json([
+                'success' => false,
+                'message' => 'Valid application_id is required.',
+            ], 400);
+            return;
+        }
+
+        if (!in_array($action, ['accept', 'reject'], true)) {
+            $this->json([
+                'success' => false,
+                'message' => 'Invalid action. Allowed actions: accept, reject.',
+            ], 400);
+            return;
+        }
+
+        try {
+            $reviewed = $this->qaReportModel->reviewModeratorApplication((int) $applicationId, $action);
+            $this->json([
+                'success' => $reviewed,
+                'message' => $reviewed
+                    ? "Application has been {$action}ed successfully."
+                    : 'Application not found.',
+            ], $reviewed ? 200 : 404);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => "Failed to {$action} moderator application.",
             ], 500);
         }
     }
