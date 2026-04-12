@@ -265,4 +265,61 @@ class Session_model extends BaseModel {
             throw new Exception("Failed to check session existence: " . $e->getMessage());
         }
     }
+
+    /**
+     * Feed helper: sessions visible to the current viewer.
+     * Rule: session cards are visible only to users with the same role as the creator,
+     * while respecting existing university audience settings.
+     */
+    public function findVisibleForFeed($viewerRole, $viewerUniversity = null, $limit = 100)
+    {
+        $limit = max(1, min((int)$limit, 200));
+
+        $sql = "SELECT
+                    s.id,
+                    s.user_id,
+                    s.title,
+                    s.subject,
+                    s.description,
+                    s.date,
+                    s.time,
+                    s.duration,
+                    s.session_link,
+                    s.audience,
+                    s.university,
+                    s.tags,
+                    u.first_name,
+                    u.last_name,
+                    u.role AS creator_role,
+                    TIMESTAMP(s.date, s.time) AS feed_created_at
+                FROM {$this->table} s
+                INNER JOIN users u ON u.id = s.user_id
+                WHERE s.is_deleted = 0
+                  AND s.deleted_at IS NULL
+                  AND u.role = :viewer_role";
+
+        $params = [
+            'viewer_role' => $viewerRole,
+        ];
+
+        if (!empty($viewerUniversity)) {
+            $sql .= " AND (
+                        s.audience = 'all_universities'
+                        OR (s.audience = 'my_university' AND s.university = :viewer_university)
+                      )";
+            $params['viewer_university'] = $viewerUniversity;
+        } else {
+            $sql .= " AND s.audience = 'all_universities'";
+        }
+
+        $sql .= " ORDER BY s.date DESC, s.time DESC LIMIT {$limit}";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to fetch feed-visible sessions: " . $e->getMessage());
+        }
+    }
 }
