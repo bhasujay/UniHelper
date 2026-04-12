@@ -319,6 +319,45 @@
         background: #a10808;
     }
 
+    .session-actions-all {
+        flex-direction: column;
+    }
+
+    .session-subscribe-btn {
+        background: transparent;
+        color: #fc8181;
+        border: 1px solid #fc8181;
+    }
+
+    .session-subscribe-btn:hover {
+        background: rgba(252, 129, 129, 0.12);
+    }
+
+    .session-subscribe-btn.subscribed {
+        background: #fc8181;
+        color: #ffffff;
+        border-color: #fc8181;
+    }
+
+    .session-subscribe-btn.subscribed:hover {
+        background: #f56565;
+    }
+
+    .session-subscribe-btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .subscriber-count {
+        display: inline-block;
+        margin-top: 0.1rem;
+        font-size: 0.82rem;
+        color: var(--muted-foreground);
+        font-weight: 500;
+    }
+
     /* Empty State */
     .empty-state {
         text-align: center;
@@ -695,6 +734,10 @@
         const isExpired = session.is_expired || (session.deleted_at && !session.is_deleted);
         const audienceLabel = session.audience === 'my_university' ? 'My University' : 'All Universities';
         const tags = session.tags ? session.tags.split(',').map(tag => `<span class="session-tag">${tag.trim()}</span>`).join('') : '';
+        const subscribed = Number(session.is_subscribed) === 1;
+        const subscriberCount = Math.max(0, Number(session.sub_count || 0));
+        const subscribeBtnText = subscribed ? 'Subscribed' : 'Subscribe';
+        const subscribeBtnClass = subscribed ? 'session-subscribe-btn subscribed' : 'session-subscribe-btn';
         
         let actions = '';
         if (showEditDelete) {
@@ -704,13 +747,28 @@
                     <button class="session-action-btn session-delete-btn" onclick="openDeleteModal(${session.id})">Delete</button>
                 </div>
             `;
-        } else if (session.session_link) {
+        } else {
+            const joinButton = session.session_link
+                ? `<a href="${session.session_link}" target="_blank" class="session-action-btn session-join-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Join Session</a>`
+                : '';
+
             actions = `
-                <div class="session-actions">
-                    <a href="${session.session_link}" target="_blank" class="session-action-btn session-join-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Join Session</a>
+                <div class="session-actions session-actions-all">
+                    ${joinButton}
+                    <button
+                        type="button"
+                        class="session-action-btn ${subscribeBtnClass}"
+                        data-session-id="${session.id}"
+                        data-subscribed="${subscribed ? 1 : 0}"
+                    >${subscribeBtnText}</button>
+                    <span class="subscriber-count" data-session-id="${session.id}">${formatSubscriberCount(subscriberCount)}</span>
                 </div>
             `;
         }
+
+        const subscriberCountMeta = showEditDelete
+            ? `<span class="subscriber-count">${formatSubscriberCount(subscriberCount)}</span>`
+            : '';
 
         const expiredBadge = isExpired ? '<span class="session-expired-badge">Expired</span>' : '';
 
@@ -741,9 +799,15 @@
                 <div class="session-creator">
                     Author: ${session.creator_name || 'Unknown'} • ${session.creator_university || session.university || 'Unknown University'}
                 </div>
+                ${subscriberCountMeta}
                 ${actions}
             </div>
         `;
+    }
+
+    function formatSubscriberCount(count) {
+        const safeCount = Math.max(0, Number(count || 0));
+        return `${safeCount} subscriber${safeCount === 1 ? '' : 's'}`;
     }
 
     // Create empty state HTML
@@ -820,6 +884,58 @@
             alert(error.message || 'Failed to delete session. Please try again.');
         });
     }
+
+    document.addEventListener('click', function(event) {
+        const button = event.target.closest('.session-subscribe-btn');
+        if (!button) {
+            return;
+        }
+
+        const sessionId = button.getAttribute('data-session-id');
+        const isSubscribed = Number(button.getAttribute('data-subscribed')) === 1;
+        const action = isSubscribed ? 'unsubscribeAction' : 'subscribeAction';
+
+        if (!sessionId) {
+            alert('Invalid session ID.');
+            return;
+        }
+
+        button.disabled = true;
+
+        const formData = new FormData();
+        formData.append('session_id', sessionId);
+
+        fetch(`${BASE_URL}/api?controller=SessionController&action=${action}`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (!result.success) {
+                throw new Error(result.message || result.error || 'Failed to update subscription.');
+            }
+
+            const nextSubscribed = !isSubscribed;
+            button.setAttribute('data-subscribed', nextSubscribed ? '1' : '0');
+            button.textContent = nextSubscribed ? 'Subscribed' : 'Subscribe';
+            button.classList.toggle('subscribed', nextSubscribed);
+
+            const countElement = button.parentElement.querySelector('.subscriber-count');
+            if (countElement) {
+                const currentCount = Number((countElement.textContent.match(/\d+/) || ['0'])[0]);
+                const nextCount = nextSubscribed ? currentCount + 1 : Math.max(0, currentCount - 1);
+                countElement.textContent = formatSubscriberCount(nextCount);
+            }
+        })
+        .catch(error => {
+            console.error('Subscription error:', error);
+            alert(error.message || 'Failed to update subscription. Please try again.');
+        })
+        .finally(() => {
+            button.disabled = false;
+        });
+    });
 
     // Load more buttons
     document.getElementById('my-sessions-load-more').addEventListener('click', function() {

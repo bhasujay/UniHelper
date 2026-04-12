@@ -199,7 +199,7 @@ class SessionController
             $limit = 10;
             $offset = ($page - 1) * $limit;
             
-            $sessions = $this->sessionModel->findAll([], $limit, $offset);
+            $sessions = $this->sessionModel->findAll([], $limit, $offset, (int)$this->user->id);
             
             // Mark expired sessions
             $sessions = $this->markExpiredSessions($sessions);
@@ -230,7 +230,7 @@ class SessionController
             $limit = 10;
             $offset = ($page - 1) * $limit;
             
-            $sessions = $this->sessionModel->findByUserId($this->user->id, $limit, $offset);
+            $sessions = $this->sessionModel->findByUserId($this->user->id, $limit, $offset, (int)$this->user->id);
             
             // Add expired flag
             $sessions = $this->addExpiredFlag($sessions);
@@ -247,6 +247,98 @@ class SessionController
             echo json_encode([
                 'success' => false,
                 'error' => 'Failed to fetch your sessions.'
+            ]);
+        }
+    }
+
+    // POST /api?controller=SessionController&action=subscribeAction
+    public function subscribeAction(Request $request)
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode([
+                'success' => false,
+                'message' => 'User not authenticated'
+            ]);
+            return;
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        $sessionId = filter_var($request->get('session_id'), FILTER_VALIDATE_INT);
+
+        if ($sessionId === false || $sessionId <= 0) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid session ID'
+            ]);
+            return;
+        }
+
+        try {
+            $subscribed = $this->sessionModel->subscribe($userId, (int)$sessionId);
+
+            if ($subscribed) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Subscribed successfully'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to subscribe'
+                ]);
+            }
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to subscribe'
+            ]);
+        }
+    }
+
+    // POST /api?controller=SessionController&action=unsubscribeAction
+    public function unsubscribeAction(Request $request)
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode([
+                'success' => false,
+                'message' => 'User not authenticated'
+            ]);
+            return;
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        $sessionId = filter_var($request->get('session_id'), FILTER_VALIDATE_INT);
+
+        if ($sessionId === false || $sessionId <= 0) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid session ID'
+            ]);
+            return;
+        }
+
+        try {
+            $this->sessionModel->unsubscribe($userId, (int)$sessionId);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Unsubscribed successfully'
+            ]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to unsubscribe'
             ]);
         }
     }

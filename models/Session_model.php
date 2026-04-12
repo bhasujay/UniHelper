@@ -14,12 +14,18 @@ class Session_model extends BaseModel {
     /**
      * Get all sessions excluding soft-deleted and manually deleted ones
      */
-    public function findAll($conditions = [], $limit = null, $offset = null) {
-        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university FROM {$this->table} s 
+    public function findAll($conditions = [], $limit = null, $offset = null, $currentUserId = null) {
+        $currentUserIdValue = (int)$currentUserId;
+        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :current_user_id AND sub.Session_ID = s.id
+                ) THEN 1 ELSE 0 END AS is_subscribed
+            FROM {$this->table} s 
             LEFT JOIN users u ON s.user_id = u.id 
             LEFT JOIN universities uni ON u.university = uni.id 
                 WHERE s.deleted_at IS NULL AND s.is_deleted = 0";
-        $params = [];
+        $params = ['current_user_id' => $currentUserIdValue];
         
         if (!empty($conditions)) {
             foreach ($conditions as $column => $value) {
@@ -64,8 +70,14 @@ class Session_model extends BaseModel {
     /**
      * Get sessions created by a specific user (includes expired, excludes manually deleted)
      */
-    public function findByUserId($userId, $limit = null, $offset = null) {
-        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university FROM {$this->table} s 
+    public function findByUserId($userId, $limit = null, $offset = null, $currentUserId = null) {
+        $currentUserIdValue = (int)$currentUserId;
+        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :current_user_id AND sub.Session_ID = s.id
+                ) THEN 1 ELSE 0 END AS is_subscribed
+            FROM {$this->table} s 
             LEFT JOIN users u ON s.user_id = u.id 
             LEFT JOIN universities uni ON u.university = uni.id 
                 WHERE s.user_id = :user_id AND s.is_deleted = 0 
@@ -80,7 +92,10 @@ class Session_model extends BaseModel {
         
         try {
             $stmt = $this->db->prepare($sql);
-            $stmt->execute(['user_id' => $userId]);
+            $stmt->execute([
+                'user_id' => $userId,
+                'current_user_id' => $currentUserIdValue
+            ]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             throw new Exception("Failed to find sessions by user ID: " . $e->getMessage());
@@ -90,8 +105,14 @@ class Session_model extends BaseModel {
     /**
      * Get sessions by university (excludes expired and manually deleted)
      */
-    public function findByUniversity($university, $limit = null, $offset = null) {
-        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university FROM {$this->table} s 
+    public function findByUniversity($university, $limit = null, $offset = null, $currentUserId = null) {
+        $currentUserIdValue = (int)$currentUserId;
+        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :current_user_id AND sub.Session_ID = s.id
+                ) THEN 1 ELSE 0 END AS is_subscribed
+            FROM {$this->table} s 
             LEFT JOIN users u ON s.user_id = u.id 
             LEFT JOIN universities uni ON u.university = uni.id 
                 WHERE s.university = :university AND s.deleted_at IS NULL AND s.is_deleted = 0 
@@ -106,7 +127,10 @@ class Session_model extends BaseModel {
         
         try {
             $stmt = $this->db->prepare($sql);
-            $stmt->execute(['university' => $university]);
+            $stmt->execute([
+                'university' => $university,
+                'current_user_id' => $currentUserIdValue
+            ]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             throw new Exception("Failed to find sessions by university: " . $e->getMessage());
@@ -117,11 +141,11 @@ class Session_model extends BaseModel {
      * Get sessions by audience type (excludes expired and manually deleted)
      * $audience can be 'my_university' or 'all_universities'
      */
-    public function findByAudience($audience, $userUniversity = null, $limit = null, $offset = null) {
+    public function findByAudience($audience, $userUniversity = null, $limit = null, $offset = null, $currentUserId = null) {
         if ($audience === 'my_university' && $userUniversity) {
-            return $this->findByUniversity($userUniversity, $limit, $offset);
+            return $this->findByUniversity($userUniversity, $limit, $offset, $currentUserId);
         } elseif ($audience === 'all_universities') {
-            return $this->findAll([], $limit, $offset);
+            return $this->findAll([], $limit, $offset, $currentUserId);
         }
         return [];
     }
@@ -129,8 +153,14 @@ class Session_model extends BaseModel {
     /**
      * Get sessions by subject (excludes expired and manually deleted)
      */
-    public function findBySubject($subject, $limit = null, $offset = null) {
-        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university FROM {$this->table} s 
+    public function findBySubject($subject, $limit = null, $offset = null, $currentUserId = null) {
+        $currentUserIdValue = (int)$currentUserId;
+        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :current_user_id AND sub.Session_ID = s.id
+                ) THEN 1 ELSE 0 END AS is_subscribed
+            FROM {$this->table} s 
             LEFT JOIN users u ON s.user_id = u.id 
             LEFT JOIN universities uni ON u.university = uni.id 
                 WHERE s.subject = :subject AND s.deleted_at IS NULL AND s.is_deleted = 0 
@@ -145,10 +175,87 @@ class Session_model extends BaseModel {
         
         try {
             $stmt = $this->db->prepare($sql);
-            $stmt->execute(['subject' => $subject]);
+            $stmt->execute([
+                'subject' => $subject,
+                'current_user_id' => $currentUserIdValue
+            ]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             throw new Exception("Failed to find sessions by subject: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Subscribe a user to a session
+     */
+    public function subscribe($userId, $sessionId) {
+        $sql = "INSERT IGNORE INTO subscribers (Subscriber_ID, Session_ID)
+                VALUES (:subscriber_id, :session_id)";
+
+        $pdo = $this->db->getConnection();
+
+        try {
+            $pdo->beginTransaction();
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'subscriber_id' => $userId,
+                'session_id' => $sessionId
+            ]);
+
+            // Increment count only when a new subscription row is inserted.
+            if ($stmt->rowCount() > 0) {
+                $updateSql = "UPDATE {$this->table}
+                              SET sub_count = COALESCE(sub_count, 0) + 1
+                              WHERE id = :session_id AND is_deleted = 0";
+                $updateStmt = $this->db->prepare($updateSql);
+                $updateStmt->execute(['session_id' => $sessionId]);
+            }
+
+            $pdo->commit();
+            return true;
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new Exception("Failed to subscribe to session: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Unsubscribe a user from a session
+     */
+    public function unsubscribe($userId, $sessionId) {
+        $sql = "DELETE FROM subscribers
+                WHERE Subscriber_ID = :subscriber_id AND Session_ID = :session_id";
+
+        $pdo = $this->db->getConnection();
+
+        try {
+            $pdo->beginTransaction();
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'subscriber_id' => $userId,
+                'session_id' => $sessionId
+            ]);
+
+            $deletedRows = $stmt->rowCount();
+
+            // Decrement count only when an existing subscription row is deleted.
+            if ($deletedRows > 0) {
+                $updateSql = "UPDATE {$this->table}
+                              SET sub_count = GREATEST(COALESCE(sub_count, 0) - 1, 0)
+                              WHERE id = :session_id AND is_deleted = 0";
+                $updateStmt = $this->db->prepare($updateSql);
+                $updateStmt->execute(['session_id' => $sessionId]);
+            }
+
+            $pdo->commit();
+            return $deletedRows > 0;
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new Exception("Failed to unsubscribe from session: " . $e->getMessage());
         }
     }
     
