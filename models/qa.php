@@ -198,7 +198,7 @@ class Qna extends BaseModel
 
     public function getAnswersByQuestionId($questionID)
     {
-        $sql = "SELECT * FROM answers WHERE q_id = :questionID";
+        $sql = "SELECT * FROM answers WHERE q_id = :questionID AND status IN ('normal', 'flagged') ORDER BY added_time ASC";
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':questionID', (int)$questionID, \PDO::PARAM_INT);
         $stmt->execute();
