@@ -46,12 +46,12 @@ function initializeDegreePrograms() {
             
             if (mode === 'search') {
                 searchSection.style.display = 'block';
-                searchResults.style.display = 'block';
+                searchResults.style.display = 'flex';
                 wishlistResults.style.display = 'none';
             } else if (mode === 'wishlist') {
                 searchSection.style.display = 'none';
                 searchResults.style.display = 'none';
-                wishlistResults.style.display = 'block';
+                wishlistResults.style.display = 'flex';
                 // Always refresh wishlist when switching to it to show latest data
                 console.log('Switching to wishlist page - refreshing data...');
                 refreshWishlistPage();

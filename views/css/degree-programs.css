@@ -1,3 +1,5 @@
+@import url('./components/degree-cards.css');
+
 /* Page-based Search Styling */
 
 .global-search-bar {
@@ -629,79 +631,6 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Search Results */
-.search-results {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    margin-top: 40px;
-}
-
-/* Degree Program Cards - Better Separation */
-.degree-program-card {
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    margin-bottom: 20px;
-    padding: 20px;
-    background: var(--card);
-    color: var(--text);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-
-.degree-program-card:hover {
-    border-color: var(--primary) !important;
-    border-top-color: var(--primary) !important;
-    box-shadow: 0 6px 20px rgba(0, 170, 255, 0.2);
-}
-
-/* Add separation between cards */
-.degree-program-card:not(:first-child) {
-    border-top: 3px solid var(--border);
-    margin-top: 16px;
-}
-
-/* No Search Message */
-.no-search-message,
-.no-results {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 60px 20px;
-    color: #666;
-}
-
-.no-search-icon,
-.no-results-icon {
-    margin-bottom: 16px;
-    color: #ccc;
-}
-
-.no-search-message h3,
-.no-results h3 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-    margin: 0 0 8px 0;
-}
-
-.no-search-message p,
-.no-results p {
-    font-size: 14px;
-    margin: 0;
-}
-
-/* Error Messages */
-.error {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 20px;
-    color: #dc3545;
-    background: #f8d7da;
-    border: 1px solid #f5c6cb;
-    border-radius: 6px;
-    margin: 20px 0;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
     .degree-programs-container {
@@ -726,9 +655,6 @@
         justify-content: center;
     }
     
-    .search-results {
-        grid-template-columns: 1fr;
-    }
 }
 
 @media (max-width: 480px) {
@@ -745,105 +671,6 @@
     }
 }
 
-/* Wishlist Button States */
-.wishlist-btn.in-wishlist {
-    color: #dc2626;
-    background: #fef2f2;
-    border-color: #fecaca;
-}
-
-.wishlist-btn.in-wishlist:hover {
-    background: #fee2e2;
-    border-color: #fca5a5;
-}
-
-.wishlist-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Wishlist Messages */
-.wishlist-message {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    max-width: 300px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    animation: slideInRight 0.3s ease;
-}
-
-.wishlist-message-success {
-    background: #d1fae5;
-    border: 1px solid #a7f3d0;
-    color: #065f46;
-}
-
-.wishlist-message-error {
-    background: #fee2e2;
-    border: 1px solid #fecaca;
-    color: #991b1b;
-}
-
-.wishlist-message-info {
-    background: #dbeafe;
-    border: 1px solid #93c5fd;
-    color: #1e40af;
-}
-
-.message-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-}
-
-.message-text {
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.message-close {
-    background: none;
-    border: none;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    color: inherit;
-    opacity: 0.7;
-    margin-left: 12px;
-}
-
-.message-close:hover {
-    opacity: 1;
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-/* Loading animation for heart button */
-.animate-spin {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 /* ====================================
    Eligible Programs Modal Styles
    ==================================== */
@@ -853,30 +680,17 @@
 }
 
 #eligibleProgramsModal .search-results {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 20px;
-}
-
-#eligibleProgramsModal .degree-program-card {
-    margin-bottom: 0;
+    margin-top: 0;
 }
 
 /* Responsive */
 @media (max-width: 1400px) {
-    #eligibleProgramsModal .search-results {
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    }
 }
 
 @media (max-width: 768px) {
     #eligibleProgramsModal .modal-content {
         width: 98vw !important;
         max-width: 98vw !important;
-    }
-    
-    #eligibleProgramsModal .search-results {
-        grid-template-columns: 1fr;
     }
     
     #eligibleProgramsModal .modal-body {

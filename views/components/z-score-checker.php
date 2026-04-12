@@ -46,6 +46,9 @@
             <button type="button" id="findDegreesBtn" class="btn btn-primary btn-large">
                 Find Eligible Degrees for You
             </button>
+            <button type="button" id="generateUnicodeBtn" class="btn btn-outline generate-unicode-btn" style="display: none;">
+                Generate Unicode
+            </button>
             <button type="button" id="changeDetailsBtn" class="btn btn-outline">
                 Change Details
             </button>

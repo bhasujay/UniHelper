@@ -245,7 +245,7 @@ class ZScoreController
             }
             
             // Return the results
-            $this->sendJsonResponse(true, 'Eligible programs found', $result);
+            $this->sendJsonResponse(true, 'Eligible programs found', $payload);
             
         } catch (\Exception $e) {
             $this->sendJsonResponse(false, 'Server error: ' . $e->getMessage(), null, 500);
@@ -299,6 +299,13 @@ class ZScoreController
     private function sendJsonResponse($success, $message, $data = null, $httpCode = 200) {
         http_response_code($httpCode);
         header('Content-Type: application/json');
+
+        // Avoid long float tails (e.g., 1.2773000000000001) in JSON output.
+        // This keeps float serialization compact and stable.
+        if (function_exists('ini_set')) {
+            @ini_set('serialize_precision', '-1');
+            @ini_set('precision', '14');
+        }
         
         $response = [
             'success' => $success,

@@ -1,9 +1,9 @@
 // z-score-modal.js - Z-Score Modal functionality
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
     // Load existing Z-Score data when page loads
     loadZScoreFromAPI();
-
+    
     const startBtn = document.getElementById('startZScoreBtn');
     const modal = document.getElementById('zScoreModal');
     const closeBtn = document.getElementById('closeModal');
@@ -11,12 +11,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('zScoreForm');
     const streamSelect = document.getElementById('stream');
     const streamSubjects = {
-        'physical-science': {
+        'physical-science':{
             subject1: 'Combined Mathematics',
             subject2: 'Physics',
             subject3: 'Chemistry'
         },
-        'biological-science': {
+        'biological-science':{
             subject1: 'Biology',
             subject2: 'Physics',
             subject3: 'Chemistry'
@@ -30,51 +30,52 @@ document.addEventListener('DOMContentLoaded', function () {
         cancelBtn: !!cancelBtn,
         form: !!form
     });
-
+    
     // Show modal when Start Here is clicked
     if (startBtn) {
         console.log('✅ Adding click listener to start button');
-
-        startBtn.addEventListener('click', function (e) {
+        
+        startBtn.addEventListener('click', function(e) {
             console.log('🎯 Start button clicked!');
             modal.style.display = 'block';
+            // Scroll to modal for better UX
             modal.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
-
+        
         // Debug: Check if button is still being covered
         const rect = startBtn.getBoundingClientRect();
-        const elementAtPoint = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        const elementAtPoint = document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
         console.log('🔧 After CSS fix - Element at button center:', elementAtPoint);
         console.log('🔧 Is it the button itself now?', elementAtPoint === startBtn);
-
+        
     } else {
         console.error('❌ Start button not found!');
     }
-
+    
     // Hide modal when close button is clicked
     if (closeBtn) {
-        closeBtn.addEventListener('click', function () {
+        closeBtn.addEventListener('click', function() {
             modal.style.display = 'none';
         });
     }
-
+    
     // Hide modal when cancel button is clicked
     if (cancelBtn) {
-        cancelBtn.addEventListener('click', function () {
+        cancelBtn.addEventListener('click', function() {
             modal.style.display = 'none';
         });
     }
 
-    if (streamSelect) {
-        streamSelect.addEventListener('change', function () {
+    if (streamSelect){
+        streamSelect.addEventListener('change', function() {
             const selectedStream = this.value;
             const subjects = streamSubjects[selectedStream];
 
-            if (subjects) {
+            if (subjects){
                 document.getElementById('subject1').value = subjects.subject1;
                 document.getElementById('subject2').value = subjects.subject2;
                 document.getElementById('subject3').value = subjects.subject3;
-
+                
                 // Make subject fields read-only
                 document.getElementById('subject1').readOnly = true;
                 document.getElementById('subject2').readOnly = true;
@@ -83,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('subject1').value = '';
                 document.getElementById('subject2').value = '';
                 document.getElementById('subject3').value = '';
-
+                
                 // Make subject fields editable for "Other" streams
                 document.getElementById('subject1').readOnly = false;
                 document.getElementById('subject2').readOnly = false;
@@ -93,9 +94,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     // Handle form submission
     if (form) {
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
-
+        
             const formData = new FormData(form);
             const district = formData.get('district');
             const stream = formData.get('stream');
@@ -103,42 +104,42 @@ document.addEventListener('DOMContentLoaded', function () {
             const subject2 = formData.get('subject2');
             const subject3 = formData.get('subject3');
             const zScore = formData.get('zScore');
-
+            
             // Basic validation
             if (!district || !stream || !subject1 || !subject2 || !subject3 || !zScore) {
                 alert('Please fill in all fields');
                 return;
             }
-
+            
             if (parseFloat(zScore) < 0 || parseFloat(zScore) > 3.0) {
                 alert('Z-Score must be between 0 and 3.0');
                 return;
             }
-
+            
             // Validate Z-Score decimal places (max 4 decimal places)
             const decimalPlaces = (zScore.toString().split('.')[1] || '').length;
             if (decimalPlaces > 4) {
                 alert('Z-Score can have maximum 4 decimal places');
                 return;
             }
-
+            
             // Debug: Log form data
             console.log('🔧 Form data being sent:');
             for (let [key, value] of formData.entries()) {
                 console.log(`  ${key}: ${value}`);
             }
-
+            
             console.log('🎯🎯🎯 ABOUT TO CALL API FUNCTIONS 🎯🎯🎯');
-
+            
             // Send data to backend API using ZScoreController
             console.log('🔧 Form submitted, saving Z-Score data');
             saveZScoreToAPI(formData);
         });
     }
-
+    
     // Close modal with Escape key
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && modal.style.display !== 'none') {
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'block') {
             modal.style.display = 'none';
         }
     });
@@ -148,10 +149,20 @@ document.addEventListener('DOMContentLoaded', function () {
 let submittedZScoreData = null;
 let listenersInitialized = false; // Flag to prevent multiple listener additions
 
+function setGenerateUnicodeButtonVisibility(isVisible) {
+    const generateUnicodeBtn = document.getElementById('generateUnicodeBtn');
+    if (!generateUnicodeBtn) {
+        return;
+    }
+
+    generateUnicodeBtn.style.display = isVisible ? 'inline-flex' : 'none';
+    generateUnicodeBtn.classList.toggle('is-visible', isVisible);
+}
+
 // Function to update Z-Score card after submission
 function updateZScoreCard(formData) {
     const card = document.querySelector('.z-score-card');
-
+    
     // Store the form data globally
     submittedZScoreData = {
         zScore: formData.get('zScore'),
@@ -161,14 +172,11 @@ function updateZScoreCard(formData) {
         subject2: formData.get('subject2'),
         subject3: formData.get('subject3')
     };
-
+    
     // Switch from initial-state to submitted-state
     card.classList.remove('initial-state');
     card.classList.add('submitted-state');
-
-    // Clear cache since the user updated their details
-    sessionStorage.removeItem('has_calculated_eligibility');
-
+    
     // Update the values in submitted content
     document.querySelector('.z-score-value').textContent = submittedZScoreData.zScore;
     document.querySelector('.stream-value').textContent = submittedZScoreData.stream;
@@ -177,6 +185,9 @@ function updateZScoreCard(formData) {
     document.querySelector('.subject2-value').textContent = submittedZScoreData.subject2;
     document.querySelector('.subject3-value').textContent = submittedZScoreData.subject3;
 
+    // Hide Unicode button until a fresh eligible-program search completes.
+    setGenerateUnicodeButtonVisibility(false);
+    
     // Only add event listeners once
     if (!listenersInitialized) {
         setTimeout(() => {
@@ -188,15 +199,17 @@ function updateZScoreCard(formData) {
 // Function to reset Z-Score card to initial state
 function resetZScoreCard() {
     const card = document.querySelector('.z-score-card');
-
+    
     // Switch from submitted-state back to initial-state
     card.classList.remove('submitted-state');
     card.classList.add('initial-state');
-
-    // Clear stored data and session cache
+    
+    // Clear stored data
     submittedZScoreData = null;
-    sessionStorage.removeItem('has_calculated_eligibility');
 
+    // Hide Unicode button when clearing Z-Score state.
+    setGenerateUnicodeButtonVisibility(false);
+    
     // Reset the listeners flag so they can be re-added when needed
     listenersInitialized = false;
 }
@@ -208,42 +221,43 @@ function addButtonEventListeners() {
         console.log('⚠️ Event listeners already initialized, skipping...');
         return;
     }
-
+    
     console.log('✅ Initializing button event listeners...');
-
+    
     // Find Eligible Degrees button
     const findDegreesBtn = document.getElementById('findDegreesBtn');
     if (findDegreesBtn) {
-        findDegreesBtn.addEventListener('click', async function () {
+        findDegreesBtn.addEventListener('click', async function() {
             console.log('Find Eligible Degrees clicked');
-
+            
             // Show loading state
             this.disabled = true;
             const originalText = this.innerHTML;
             this.innerHTML = '<span class="spinner-small"></span> Finding programs...';
-
+            
             try {
                 // Call the PHP API to find eligible degrees
                 const response = await fetch('/UniHelper/api?controller=ZScoreController&action=findEligibleDegrees');
                 const result = await response.json();
-
+                
                 if (result.success && result.data) {
-                    const data = result.data; // Now this is an array []
+                    const data = normalizeEligiblePayload(result.data, submittedZScoreData);
                     
-                    // Set flag so we auto-fetch if they reload the page
-                    sessionStorage.setItem('has_calculated_eligibility', 'true');
-
                     // Display results
-                    if (data.length > 0) {
+                    if (data.total_eligible > 0) {
                         displayEligiblePrograms(data);
+                        setGenerateUnicodeButtonVisibility(true);
                     } else {
-                        alert(`No eligible programs found for your Z-Score of ${submittedZScoreData.zScore}.\n\nTry exploring other streams or check back later for updates.`);
+                        setGenerateUnicodeButtonVisibility(false);
+                        alert(`No eligible programs found for your Z-Score of ${data.user_zscore}.\n\nTry exploring other streams or check back later for updates.`);
                     }
                 } else {
+                    setGenerateUnicodeButtonVisibility(false);
                     alert('Error: ' + (result.message || 'Failed to find eligible programs'));
                 }
             } catch (error) {
                 console.error('Error finding eligible degrees:', error);
+                setGenerateUnicodeButtonVisibility(false);
                 alert('Failed to find eligible programs. Please try again.');
             } finally {
                 // Restore button state
@@ -252,18 +266,18 @@ function addButtonEventListeners() {
             }
         });
     }
-
+    
     // Change Details button
     const changeDetailsBtn = document.getElementById('changeDetailsBtn');
     if (changeDetailsBtn) {
-        changeDetailsBtn.addEventListener('click', function () {
+        changeDetailsBtn.addEventListener('click', function() {
             console.log('Change Details clicked');
             // Show the modal again to edit details
             const modal = document.getElementById('zScoreModal');
             if (modal) {
                 modal.style.display = 'block';
                 modal.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
+                
                 // Pre-fill form with existing data
                 if (submittedZScoreData) {
                     document.getElementById('district').value = submittedZScoreData.district;
@@ -271,29 +285,33 @@ function addButtonEventListeners() {
                     document.getElementById('subject1').value = submittedZScoreData.subject1;
                     document.getElementById('subject2').value = submittedZScoreData.subject2;
                     document.getElementById('subject3').value = submittedZScoreData.subject3;
-                    document.getElementById('zScore').value = submittedZScoreData.z_score;
+                    document.getElementById('zScore').value = submittedZScoreData.zScore || submittedZScoreData.z_score;
                 }
             }
         });
     }
 
+    // Generate Unicode button (UI-only placeholder action for now)
+    const generateUnicodeBtn = document.getElementById('generateUnicodeBtn');
+    if (generateUnicodeBtn) {
+        generateUnicodeBtn.addEventListener('click', function() {
+            alert('Unicode generation UI is ready. Functional logic will be added in the next step.');
+        });
+    }
+    
     // Remove Z-Score button
     const removeZScoreBtn = document.getElementById('removeZScoreBtn');
     if (removeZScoreBtn) {
-        removeZScoreBtn.addEventListener('click', function () {
+        removeZScoreBtn.addEventListener('click', function() {
             console.log('Remove Z-Score clicked');
-
-            // window.confirm is overridden in dashboard.php to return a Promise.
-            // Must use .then() — using it synchronously (if confirm(...)) evaluates
-            // the Promise object itself, which is always truthy and fires immediately.
-            confirm('Are you sure you want to remove your Z-Score?').then(function (confirmed) {
-                if (confirmed) {
-                    deleteZScoreFromAPI();
-                }
-            });
+            
+            // Confirm removal
+            if (confirm('Are you sure you want to remove your Z-Score?')) {
+                deleteZScoreFromAPI();
+            }
         });
     }
-
+    
     // Mark listeners as initialized
     listenersInitialized = true;
     console.log('✅ Event listeners initialized successfully');
@@ -310,11 +328,11 @@ async function saveZScoreToAPI(formData) {
             method: 'POST',
             body: formData
         });
-
+        
         console.log('📡 Response received:', response);
         const result = await response.json();
         console.log('📡 Response data:', result);
-
+        
         if (result.success) {
             console.log('✅ Z-Score saved/updated successfully');
             const action = submittedZScoreData ? 'updated' : 'saved';
@@ -336,17 +354,17 @@ async function updateZScoreToAPI(formData) {
     try {
         console.log('🚀🚀🚀 API FUNCTION CALLED - updateZScoreToAPI 🚀🚀🚀');
         console.log('🚀 updateZScoreToAPI called with formData:', formData);
-
+        
         // Updated to use ZScoreController
         const response = await fetch('/UniHelper/api?controller=ZScoreController&action=saveZScore', {
             method: 'POST',
             body: formData
         });
-
+        
         console.log('📡 Response received:', response);
         const result = await response.json();
         console.log('📡 Response data:', result);
-
+        
         if (result.success) {
             console.log('✅ Z-Score updated successfully');
             alert('Z-Score updated successfully!');
@@ -368,13 +386,13 @@ async function loadZScoreFromAPI() {
         // Updated to use ZScoreController
         const response = await fetch('/UniHelper/api?controller=ZScoreController&action=getZScore');
         const result = await response.json();
-
+        
         if (result.success && result.data) {
             // User has existing Z-Score, show submitted state
             const card = document.querySelector('.z-score-card');
             card.classList.remove('initial-state');
             card.classList.add('submitted-state');
-
+            
             // Update the values
             document.querySelector('.z-score-value').textContent = result.data.z_score;
             document.querySelector('.stream-value').textContent = result.data.stream;
@@ -382,21 +400,16 @@ async function loadZScoreFromAPI() {
             document.querySelector('.subject1-value').textContent = result.data.subject1;
             document.querySelector('.subject2-value').textContent = result.data.subject2;
             document.querySelector('.subject3-value').textContent = result.data.subject3;
-
+            
             // Store data globally
             submittedZScoreData = result.data;
 
+            // Keep hidden until user requests eligible degrees in this session.
+            setGenerateUnicodeButtonVisibility(false);
+            
             // Add button listeners
             setTimeout(() => {
                 addButtonEventListeners();
-
-                // Automatically re-fetch programs if user previously calculated them this session
-                if (sessionStorage.getItem('has_calculated_eligibility') === 'true') {
-                    const findDegreesBtn = document.getElementById('findDegreesBtn');
-                    if (findDegreesBtn) {
-                        findDegreesBtn.click(); // Programmatically trigger the search to get fresh data
-                    }
-                }
             }, 100);
         }
     } catch (error) {
@@ -411,9 +424,9 @@ async function deleteZScoreFromAPI() {
         const response = await fetch('/UniHelper/api?controller=ZScoreController&action=deleteZScore', {
             method: 'DELETE'
         });
-
+        
         const result = await response.json();
-
+        
         if (result.success) {
             alert('Z-Score removed successfully!');
             resetZScoreCard();
@@ -426,50 +439,105 @@ async function deleteZScoreFromAPI() {
     }
 }
 
+function normalizeEligiblePayload(rawData, zScoreContext = null) {
+    const fallbackStream = zScoreContext?.stream || null;
+    const fallbackDistrict = zScoreContext?.district || null;
+    const fallbackZScore = zScoreContext?.zScore || zScoreContext?.z_score || null;
+
+    // If backend returns plain array
+    if (Array.isArray(rawData)) {
+        const eligiblePrograms = rawData.map((program) => normalizeEligibleProgram(program, fallbackStream));
+        return {
+            user_zscore: fallbackZScore,
+            user_stream: fallbackStream,
+            user_district: fallbackDistrict,
+            total_eligible: eligiblePrograms.length,
+            eligible_programs: eligiblePrograms
+        };
+    }
+
+    // If backend returns wrapped object
+    const eligibleProgramsRaw = Array.isArray(rawData?.eligible_programs) ? rawData.eligible_programs : [];
+    const eligiblePrograms = eligibleProgramsRaw.map((program) => normalizeEligibleProgram(program, rawData?.user_stream || fallbackStream));
+
+    return {
+        user_zscore: rawData?.user_zscore ?? fallbackZScore,
+        user_stream: rawData?.user_stream ?? fallbackStream,
+        user_district: rawData?.user_district ?? fallbackDistrict,
+        total_eligible: rawData?.total_eligible ?? eligiblePrograms.length,
+        eligible_programs: eligiblePrograms
+    };
+}
+
+function normalizeEligibleProgram(program, fallbackStream = null) {
+    const predicted = program?.predicted != null ? Number(program.predicted) : null;
+    const minCutoff = program?.min_cutoff != null ? Number(program.min_cutoff) : null;
+    const maxCutoff = program?.max_cutoff != null ? Number(program.max_cutoff) : null;
+    const cutoffZScore = program?.cutoff_zscore != null
+        ? Number(program.cutoff_zscore)
+        : (predicted ?? maxCutoff ?? minCutoff);
+
+    const unicode = program?.unicode ?? (program?.program_id != null ? String(program.program_id) : 'N/A');
+    const stream = program?.stream ?? fallbackStream ?? 'unknown';
+
+    return {
+        ...program,
+        stream,
+        unicode,
+        cutoff_zscore: cutoffZScore,
+        predicted,
+        min_cutoff: minCutoff,
+        max_cutoff: maxCutoff,
+        eligibility: program?.eligibility ?? null,
+        probability_percent: program?.probability_percent != null ? Number(program.probability_percent) : null,
+        district_specific: Boolean(program?.district_specific)
+    };
+}
+
 // Function to display eligible programs in a modal or section
-function displayEligiblePrograms(programs) {
-    // 2. Get programs container
+function displayEligiblePrograms(data) {
+    const normalizedData = normalizeEligiblePayload(data, submittedZScoreData);
+    const { user_zscore, user_stream, user_district, eligible_programs, total_eligible } = normalizedData;
+    
+    // Populate summary section
+    const resultZScore = document.getElementById('resultZScore');
+    const resultStream = document.getElementById('resultStream');
+    const resultDistrict = document.getElementById('resultDistrict');
+    const resultTotal = document.getElementById('resultTotal');
+
+    if (resultZScore) resultZScore.textContent = user_zscore;
+    if (resultStream) resultStream.textContent = user_stream;
+    if (resultDistrict) resultDistrict.textContent = user_district || 'Any';
+    if (resultTotal) resultTotal.textContent = total_eligible;
+    
+    // Get programs container
     const programsList = document.getElementById('programsList');
     const noResults = document.getElementById('noResultsMessage');
-
+    
     // Clear previous results
     programsList.innerHTML = '';
-
-    if (programs.length === 0) {
+    
+    if (eligible_programs.length === 0) {
         programsList.style.display = 'none';
         noResults.style.display = 'block';
     } else {
         programsList.style.display = 'flex';
         noResults.style.display = 'none';
-
-        // Badge settings mapping
-        const badgeConfig = {
-            'very_likely': { label: 'Very Likely', color: '#22c55e', bg: '#f0fdf4' },  // Green
-            'likely':      { label: 'Likely',      color: '#3b82f6', bg: '#eff6ff' },  // Blue
-            'possible':    { label: 'Possible',    color: '#f59e0b', bg: '#fffbeb' },  // Amber
-            'unlikely':    { label: 'Low Chance',  color: '#ef4444', bg: '#fef2f2' },  // Red
-            'noc':         { label: 'Open Entry',  color: '#8b5cf6', bg: '#f5f3ff' }   // Purple
-        };
-
+        
         // Create program cards using the same structure as degree programs search
-        programs.forEach(program => {
-            const badge = badgeConfig[program.eligibility] || badgeConfig['noc'];
-            
-            // Format cutoff predictions nicely
-            let cutoffDisplay = 'No matching history';
-            if (program.eligibility !== 'noc') {
-                cutoffDisplay = program.predicted 
-                    ? `Predicted: <strong style="color: #007bff;">${program.predicted.toFixed(4)}</strong>` 
-                    : `Lowest: <strong style="color: #007bff;">${(program.min_cutoff || 0).toFixed(4)}</strong>`;
-            }
+        eligible_programs.forEach(program => {
+            const streamText = (program.stream || 'unknown').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            const cutoffText = (program.cutoff_zscore !== null && program.cutoff_zscore !== undefined)
+                ? Number(program.cutoff_zscore).toFixed(4)
+                : 'N/A';
+            const unicodeText = program.unicode || (program.program_id != null ? String(program.program_id) : 'N/A');
+            const safeName = (program.name || '').replace(/'/g, "\\'");
+            const safeUniversity = (program.university || '').replace(/'/g, "\\'");
 
             const card = document.createElement('div');
             card.className = 'degree-program-card';
-            card.setAttribute('data-program-id', program.program_id);
-
-            // Format probability percentage display
-            const probDisplay = program.probability_percent ? `${program.probability_percent}% - ` : '';
-
+            card.setAttribute('data-program-id', program.program_id ?? unicodeText);
+            
             card.innerHTML = `
                 <div class="card-header">
                     <h3>${program.name}</h3>
@@ -477,34 +545,26 @@ function displayEligiblePrograms(programs) {
                 </div>
                 
                 <div class="card-body">
-                    <p class="faculty-name">${submittedZScoreData.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                    <p class="faculty-name">${streamText}</p>
                     
-                    <div class="degree-metrics" style="flex-direction: column; align-items: flex-start; gap: 12px;">
-                        <div class="cutoff-info" style="width: 100%;">${cutoffDisplay}</div>
-                        <!-- UI Probability Progress Bar -->
-                        <div class="probability-container" style="width: 100%;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <span style="font-size: 0.85rem; font-weight: 700; color: ${badge.color}; text-transform: uppercase; letter-spacing: 0.5px;">${badge.label}</span>
-                                <span style="font-size: 0.9rem; font-weight: 800; color: #374151;">${program.probability_percent ? program.probability_percent + '%' : 'N/A'}</span>
-                            </div>
-                            <div style="width: 100%; height: 8px; background-color: ${badge.bg}; border-radius: 6px; overflow: hidden; border: 1px solid ${badge.color}20;">
-                                <div style="height: 100%; width: ${program.probability_percent || 100}%; background: linear-gradient(90deg, ${badge.color}dd, ${badge.color}); border-radius: 6px; box-shadow: 0 0 10px ${badge.color}40; transition: width 1.5s cubic-bezier(0.1, 0.7, 0.1, 1);"></div>
-                            </div>
-                        </div>
+                    <div class="degree-metrics">
+                        <div class="cutoff-info eligible-cutoff">Cutoff Z-Score: <strong>${cutoffText}</strong></div>
+                        <div class="unicode-info">Unicode: <strong>${unicodeText}</strong></div>
                     </div>
                     
                     <div class="degree-tags">
-                        <span class="tag">${submittedZScoreData.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} Stream</span>
+                        <span class="tag">${streamText} Stream</span>
+                        ${program.district_specific ? '<span class="tag tag-district-specific">📍 District Specific</span>' : ''}
                     </div>
                 </div>
                 
                 <div class="card-footer">
                     <div class="footer-details">
-                        <span>Min: <strong>${program.min_cutoff ? program.min_cutoff.toFixed(4) : 'N/A'}</strong></span>
-                        <span>Max: <strong>${program.max_cutoff ? program.max_cutoff.toFixed(4) : 'N/A'}</strong></span>
+                        <span>Stream: <strong>${streamText}</strong></span>
+                        <span>Unicode: <strong>${unicodeText}</strong></span>
                     </div>
                     <div class="card-actions">
-                        <button class="icon-btn wishlist-btn" onclick="if(typeof toggleWishlist === 'function') toggleWishlist(${program.program_id})" aria-label="Add to Wishlist">
+                        <button class="icon-btn wishlist-btn" onclick="addEligibleToWishlist('${unicodeText}', '${safeName}', '${safeUniversity}')" aria-label="Add to Wishlist">
                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                         </button>
                         <button class="icon-btn" aria-label="View Details">
@@ -513,22 +573,17 @@ function displayEligiblePrograms(programs) {
                     </div>
                 </div>
             `;
-
+            
             programsList.appendChild(card);
         });
     }
-
+    
     // Show section (not modal)
     const section = document.getElementById('eligibleProgramsSection');
     section.style.display = 'block';
-
+    
     // Scroll to results
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    
-    // Check if the wishlist check exists to set proper heart icons
-    if (typeof initializeWishlistStatus === 'function') {
-        initializeWishlistStatus();
-    }
 }
 
 // Function to close eligible programs section

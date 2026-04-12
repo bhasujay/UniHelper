@@ -1,0 +1,291 @@
+/* Shared Degree Program Card Styles (search + eligible results) */
+
+.search-results,
+.wishlist-results {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	margin-top: 40px;
+}
+
+.no-search-message,
+.no-results {
+	grid-column: 1 / -1;
+	text-align: center;
+	padding: 60px 20px;
+	color: #666;
+}
+
+.no-search-icon,
+.no-results-icon {
+	margin-bottom: 16px;
+	color: #ccc;
+}
+
+.no-search-message h3,
+.no-results h3 {
+	font-size: 20px;
+	font-weight: 600;
+	color: #333;
+	margin: 0 0 8px 0;
+}
+
+.no-search-message p,
+.no-results p {
+	font-size: 14px;
+	margin: 0;
+}
+
+.error {
+	grid-column: 1 / -1;
+	text-align: center;
+	padding: 20px;
+	color: #dc3545;
+	background: #f8d7da;
+	border: 1px solid #f5c6cb;
+	border-radius: 6px;
+	margin: 20px 0;
+}
+
+.degree-program-card {
+	border: 2px solid var(--border);
+	border-radius: 8px;
+	margin-bottom: 20px;
+	padding: 20px;
+	background: var(--card);
+	color: var(--text);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	transition: all 0.3s ease;
+}
+
+.degree-program-card:hover {
+	border-color: var(--primary) !important;
+	border-top-color: var(--primary) !important;
+	box-shadow: 0 6px 20px rgba(0, 170, 255, 0.2);
+}
+
+.degree-program-card:not(:first-child) {
+	border-top: 3px solid var(--border);
+	margin-top: 16px;
+}
+
+.degree-program-card .card-header {
+	display: block;
+	margin-bottom: 0.85rem;
+}
+
+.degree-program-card .card-header h3 {
+	margin: 0;
+	font-size: 1.05rem;
+	line-height: 1.4;
+	color: var(--foreground);
+}
+
+.degree-program-card .card-header p {
+	margin: 0.3rem 0 0;
+	font-size: 0.9rem;
+	color: var(--muted-foreground);
+}
+
+.degree-program-card .card-body {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.degree-program-card .faculty-name {
+	margin: 0;
+	font-size: 0.92rem;
+	color: var(--muted-foreground);
+}
+
+.degree-program-card .degree-metrics {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.65rem 1.25rem;
+	font-size: 0.9rem;
+	color: var(--muted-foreground);
+}
+
+.degree-program-card .cutoff-info,
+.degree-program-card .unicode-info {
+	margin: 0;
+}
+
+.degree-program-card .eligible-cutoff strong {
+	color: var(--primary);
+}
+
+.degree-program-card .degree-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+.degree-program-card .tag {
+	display: inline-flex;
+	align-items: center;
+	font-size: 0.74rem;
+	line-height: 1;
+	padding: 0.35rem 0.55rem;
+	border-radius: 999px;
+	border: 1px solid var(--border);
+	background: var(--text_background);
+	color: var(--muted-foreground);
+}
+
+.degree-program-card .degree-tags .tag.tag-district-specific {
+	background: rgba(40, 167, 69, 0.18);
+	border-color: rgba(40, 167, 69, 0.45);
+	color: #9ee6b0;
+}
+
+.degree-program-card .card-footer {
+	margin-top: 0.95rem;
+	padding-top: 0.75rem;
+	border-top: 1px solid var(--border);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.degree-program-card .footer-details {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	font-size: 0.84rem;
+	color: var(--muted-foreground);
+}
+
+.degree-program-card .card-actions {
+	display: flex;
+	gap: 0.45rem;
+}
+
+.degree-program-card .icon-btn {
+	width: 34px;
+	height: 34px;
+	border-radius: 0.5rem;
+	border: 1px solid var(--border);
+	background: var(--text_background);
+	color: var(--foreground);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.degree-program-card .icon-btn:hover {
+	border-color: var(--primary);
+	color: var(--primary);
+	background: rgba(0, 170, 255, 0.08);
+}
+
+.wishlist-btn.in-wishlist {
+	color: #dc2626;
+	background: #fef2f2;
+	border-color: #fecaca;
+}
+
+.wishlist-btn.in-wishlist:hover {
+	background: #fee2e2;
+	border-color: #fca5a5;
+}
+
+.wishlist-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.wishlist-message {
+	position: fixed;
+	top: 20px;
+	right: 20px;
+	z-index: 1000;
+	max-width: 300px;
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	animation: slideInRight 0.3s ease;
+}
+
+.wishlist-message-success {
+	background: #d1fae5;
+	border: 1px solid #a7f3d0;
+	color: #065f46;
+}
+
+.wishlist-message-error {
+	background: #fee2e2;
+	border: 1px solid #fecaca;
+	color: #991b1b;
+}
+
+.wishlist-message-info {
+	background: #dbeafe;
+	border: 1px solid #93c5fd;
+	color: #1e40af;
+}
+
+.message-content {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 16px;
+}
+
+.message-text {
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.message-close {
+	background: none;
+	border: none;
+	font-size: 18px;
+	font-weight: bold;
+	cursor: pointer;
+	color: inherit;
+	opacity: 0.7;
+	margin-left: 12px;
+}
+
+.message-close:hover {
+	opacity: 1;
+}
+
+@keyframes slideInRight {
+	from {
+		transform: translateX(100%);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+.animate-spin {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (max-width: 768px) {
+	.search-results,
+	.wishlist-results {
+		margin-top: 24px;
+	}
+
+	.degree-program-card .card-footer {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}

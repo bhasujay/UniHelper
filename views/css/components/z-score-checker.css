@@ -1,3 +1,5 @@
+@import url('./degree-cards.css');
+
 /* ================================================
    Z-Score Checker — All Component Styles
    Auto-loaded by dashboard.php for this component
@@ -45,6 +47,14 @@
     gap: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--border);
+}
+
+.generate-unicode-btn {
+    display: none;
+}
+
+.generate-unicode-btn.is-visible {
+    display: inline-flex;
 }
 
 /* ------------------------------------------------
@@ -181,4 +191,12 @@
     font-size: 0.9rem;
     font-weight: 600;
     min-width: 110px;
+}
+
+/* ------------------------------------------------
+   Eligible Program Results (Find Eligible Degrees)
+   Scoped to avoid clashes with dashboard card styles
+   ------------------------------------------------ */
+#eligibleProgramsSection {
+    margin-top: 2rem;
 }
