@@ -265,13 +265,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             actionsContainer.append(ignoreBtn, flagBtn, forwardBtn);
 
         } else if (tabType === 'resolved') {
-            // Delete
-            const deleteBtn = makeActionBtn('Delete', 'action-delete', async () => {
-                const ok = await window.confirm('Permanently delete this report record?');
+            // Undo
+            const undoBtn = makeActionBtn('Undo', 'action-undo', async () => {
+                const ok = await window.confirm('Undo this action?');
                 if (!ok) return;
-                await deleteReport(report.report_id, card);
+                if (report.action_taken === 'ignored') {
+                    await undoAction(report.report_id, 'backToPending', card);
+                } else if (report.action_taken === 'flagged') {
+                    await undoAction(report.report_id, 'unflagReport', card);
+                }
             });
-            actionsContainer.append(deleteBtn);
+            actionsContainer.append(undoBtn);
 
         } else if (tabType === 'forwarded') {
             // Read-only indicator
@@ -333,8 +337,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // API: delete report
-    async function deleteReport(reportId, cardEl) {
+    // API: undo action
+    async function undoAction(reportId, endpoint, cardEl) {
         const btns = cardEl.querySelectorAll('.mod-action-btn');
         btns.forEach(b => b.disabled = true);
 
@@ -342,7 +346,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const formData = new URLSearchParams();
             formData.append('report_id', reportId);
 
-            const res = await fetch(API + 'deleteReport', {
+            const res = await fetch(API + endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: formData.toString()
@@ -350,7 +354,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const result = await res.json();
 
             if (res.ok && result.success) {
-                if (typeof showToast === 'function') showToast('Report deleted.', 'success');
+                if (typeof showToast === 'function') showToast(result.message || 'Action undone.', 'success');
                 cardEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                 cardEl.style.opacity = '0';
                 cardEl.style.transform = 'translateX(30px)';
@@ -358,8 +362,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     cardEl.remove();
                     checkEmpty('resolved');
                 }, 300);
+                loadReports('pending');
             } else {
-                if (typeof showToast === 'function') showToast(result.message || 'Delete failed.', 'error');
+                if (typeof showToast === 'function') showToast(result.message || 'Undo failed.', 'error');
                 btns.forEach(b => b.disabled = false);
             }
         } catch (err) {
@@ -427,6 +432,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Initial load all tabs
+    const refreshBtn = document.getElementById('refreshPendingBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', async () => {
+            if (refreshBtn.disabled) return;
+            refreshBtn.classList.add('spin');
+            refreshBtn.disabled = true;
+            try {
+                await loadReports('pending');
+                if (typeof showToast === 'function') showToast('Pending list updated', 'success');
+            } catch(e) {
+                if (typeof showToast === 'function') showToast('Failed to refresh', 'error');
+            } finally {
+                refreshBtn.classList.remove('spin');
+                refreshBtn.disabled = false;
+            }
+        });
+    }
+
     await Promise.all([
         loadReports('pending'),
         loadReports('resolved'),

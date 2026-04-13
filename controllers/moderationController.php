@@ -2,7 +2,7 @@
 
 namespace app\controllers;
 
-require_once dirname(__DIR__) . '\models\qa-report.php';
+require_once dirname(__DIR__) . '\models\moderation.php';
 
 use app\models\QaReport;
 use app\core\Request;
@@ -153,6 +153,16 @@ class ModerationController
     {
         $reportId = $request->get('report_id');
 
+        // only admin can delete a report, this is useful when a report is deemed invalid or abusive, and we want to remove it from the system entirely, without taking any action on the reported content
+        $isAdmin = $request->session('user_role') === 'role-admin';
+        if (!$isAdmin) {
+            $this->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only admins can delete reports.',
+            ], 403);
+            return;
+        }
+
         if (empty($reportId) || !is_numeric($reportId)) {
             $this->json([
                 'success' => false,
@@ -175,10 +185,72 @@ class ModerationController
         }
     }
 
-    // for admin To remove the content
+    public function unflagReport(Request $request)
+    {
+        $reportId = $request->get('report_id');
+
+        if (empty($reportId) || !is_numeric($reportId)) {
+            $this->json([
+                'success' => false,
+                'message' => 'Valid report_id is required.',
+            ], 400);
+            return;
+        }
+
+        try {
+            $revoked = $this->qaReportModel->unflag((int) $reportId);
+            $this->json([
+                'success' => $revoked,
+                'message' => $revoked ? 'Report status reset to pending successfully.' : 'Report not found.',
+            ], $revoked ? 200 : 404);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to reset report status.',
+            ], 500);
+        }
+    }
+
+    public function backToPending(Request $request)
+    {
+        $reportId = $request->get('report_id');
+
+        if (empty($reportId) || !is_numeric($reportId)) {
+            $this->json([
+                'success' => false,
+                'message' => 'Valid report_id is required.',
+            ], 400);
+            return;
+        }
+
+        try {
+            $revoked = $this->qaReportModel->backToPending((int) $reportId);
+            $this->json([
+                'success' => $revoked,
+                'message' => $revoked ? 'Report status reset to pending successfully.' : 'Report not found.',
+            ], $revoked ? 200 : 404);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to reset report status.',
+            ], 500);
+        }
+    }
+
+    // for admin To remove the content by the admin
     public function removeContent(Request $request)
     {
         $reportId = $request->get('report_id');
+
+        // only admin can remove content, this is useful when a report is deemed valid and the content is found to be in violation of the platform's guidelines, and we want to remove the offending content from the system entirely, along with all associated reports
+        $isAdmin = $request->session('user_role') === 'role-admin';
+        if (!$isAdmin) {
+            $this->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only admins can remove content.',
+            ], 403);
+            return;
+        }
 
         if (empty($reportId) || !is_numeric($reportId)) {
             $this->json([
@@ -245,7 +317,7 @@ class ModerationController
         }
     }
 
-    // Check the application status
+    // Check the application status for the moderator whether it is accepted or rejected or still pending
     public function checkModeratorApplicationStatus(Request $request)
     {
         $userId = $request->session('user_id');
@@ -309,5 +381,7 @@ class ModerationController
             ], 500);
         }
     }
+
+
 
 }

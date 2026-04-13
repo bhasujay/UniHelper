@@ -110,8 +110,13 @@ $is_moderator = ($user && (int) $user->mod === 1) ? 1 : 0;
         <!-- ========== MODERATOR PANEL ========== -->
         <div class="mod-panel">
             <div class="mod-panel-header">
-                <h1 class="mod-panel-title">Moderation</h1>
-                <p class="mod-panel-subtitle">Review and manage reported content</p>
+                <div class="mod-header-text">
+                    <h1 class="mod-panel-title">Moderation</h1>
+                    <p class="mod-panel-subtitle">Review and manage reported content</p>
+                </div>
+                <button id="refreshPendingBtn" class="mod-refresh-btn">
+                    <span class="refresh-icon">🔄</span> Refresh Pending
+                </button>
             </div>
 
             <div class="mod-tabs">

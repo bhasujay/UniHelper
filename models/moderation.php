@@ -143,12 +143,12 @@ class QaReport
         return $this->getReportsByStatus('pending');
     }
 
-    public function getResolvedReports(int $moderatorId)
+    public function getResolvedReports(?int $moderatorId = null)
     {
         return $this->getReportsByStatus('resolved', $moderatorId);
     }
 
-    public function getForwardedReports(int $moderatorId)
+    public function getForwardedReports(?int $moderatorId = null)
     {
         return $this->getReportsByStatus('forwarded_to_admin', $moderatorId);
     }
@@ -234,6 +234,50 @@ class QaReport
         return $stmt->rowCount() > 0;
     }
 
+    public function unflag($reportId)
+    {
+        $sql = "SELECT report_id, q_id, a_id FROM reports WHERE report_id = :report_id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['report_id' => (int) $reportId]);
+        $report = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$report) {
+            return false;
+        }
+
+        $isQuestionReport = !empty($report['q_id']) && empty($report['a_id']);
+        $isAnswerReport = !empty($report['a_id']) && empty($report['q_id']);
+
+        if (!$isQuestionReport && !$isAnswerReport) {
+            throw new \InvalidArgumentException('Invalid report content reference.');
+        }
+
+        if ($isQuestionReport) {
+            $unflagStmt = $this->db->prepare("UPDATE questions SET status = 'normal' WHERE q_id = :id");
+            $unflagStmt->execute(['id' => (int) $report['q_id']]);
+        } else {
+            $unflagStmt = $this->db->prepare("UPDATE answers SET status = 'normal' WHERE a_id = :id");
+            $unflagStmt->execute(['id' => (int) $report['a_id']]);
+        }
+
+        // also reset the report status back to pending and clear the action taken and mod_id, this is useful when a moderator wants to re-evaluate a report after unflagging the content
+        $sql = "UPDATE reports SET status = 'pending', action_taken = NULL, mod_id = NULL WHERE report_id = :report_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['report_id' => (int) $reportId]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    public function backToPending($reportId)
+    {
+        // this should set the report status back to pending and clear the action taken and mod_id, this is useful when a moderator wants to re-evaluate a report after taking an action
+        $sql = "UPDATE reports SET status = 'pending', action_taken = NULL, mod_id = NULL WHERE report_id = :report_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['report_id' => (int) $reportId]);
+
+        return $stmt->rowCount() > 0;
+    }
+
     public function removeContent($reportId)
     {
         $sql = "SELECT report_id, q_id, a_id FROM reports WHERE report_id = :report_id LIMIT 1";
@@ -286,5 +330,23 @@ class QaReport
             }
             throw $e;
         }
+    }
+
+    public function getModeratorRequests()
+    {
+        // Get all moderator applications for admin review
+        // this should give all the applications with user details and motivation
+        // user name,  user id and profile picture should be included for better admin experience
+        // this should also include the status of the application (pending, accepted, rejected) and the date of application
+        // and the motivation provided by the user for applying as a moderator
+    }
+
+    // this function gets the current moderators in the system, this is useful for admin to see the current moderators and their details
+    public function getCurrentModerators()
+    {        
+        // Get all current moderators for admin
+        // this should give all the current moderators with user details and the date they were accepted as moderators
+        // user name,  user id and profile picture should be included for better admin experience
+        // and all the posts that were resolved by the moderator should also be included for admin to see the performance of the moderator
     }
 }
