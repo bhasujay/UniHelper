@@ -23,8 +23,8 @@ return [
         ['component' => 'announcements',   'title' => 'Announcements'],
     ],
     'role-admin' => [
-        ['component' => 'degree-programs-management', 'title' => 'Degree Programs'],
-        ['component' => 'content-review-queue',       'title' => 'Content Review Queue'],
-        ['component' => 'role-applications',          'title' => 'Role Applications'],
+        ['component' => 'connections', 'title' => 'Connections'],
+        ['component' => 'qa-forum',        'title' => 'Q&A Forum'],
+        ['component' => 'moderation', 'title' => 'Moderation'],
     ],
 ];

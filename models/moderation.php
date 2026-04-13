@@ -78,16 +78,68 @@ class QaReport
             throw new \InvalidArgumentException('Invalid action. Allowed actions: accept, reject.');
         }
 
-        $status = $action === 'accept' ? 'accepted' : 'rejected';
+        $connection = $this->db->getConnection();
+        $connection->beginTransaction();
 
-        $sql = "UPDATE moderator_requests SET status = :status WHERE request_id = :request_id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            'status' => $status,
-            'request_id' => (int) $applicationId,
-        ]);
+        try {
+            $status = $action === 'accept' ? 'accepted' : 'rejected';
 
-        return $stmt->rowCount() > 0;
+            $sql = "UPDATE moderator_requests SET status = :status WHERE request_id = :request_id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'status' => $status,
+                'request_id' => (int) $applicationId,
+            ]);
+
+            if ($stmt->rowCount() > 0) {
+                $sel = "SELECT user_id FROM moderator_requests WHERE request_id = :request_id";
+                $selStmt = $this->db->prepare($sel);
+                $selStmt->execute(['request_id' => (int) $applicationId]);
+                $req = $selStmt->fetch(\PDO::FETCH_ASSOC);
+
+                if ($req) {
+                    $modValue = ($action === 'accept') ? 1 : 0;
+                    $updUser = "UPDATE users SET moderator = :mod_val WHERE id = :user_id";
+                    $updStmt = $this->db->prepare($updUser);
+                    $updStmt->execute([
+                        'mod_val' => $modValue, 
+                        'user_id' => (int) $req['user_id']
+                    ]);
+                }
+            }
+
+            $connection->commit();
+            return true;
+        } catch (\Throwable $e) {
+            if ($connection->inTransaction()) {
+                $connection->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public function removeModerator($userId)
+    {
+        $connection = $this->db->getConnection();
+        $connection->beginTransaction();
+
+        try {
+            $sqlUser = "UPDATE users SET moderator = 0 WHERE id = :user_id";
+            $stmtUser = $this->db->prepare($sqlUser);
+            $stmtUser->execute(['user_id' => (int) $userId]);
+
+            $sqlReq = "UPDATE moderator_requests SET status = 'rejected' WHERE user_id = :user_id AND status = 'accepted'";
+            $stmtReq = $this->db->prepare($sqlReq);
+            $stmtReq->execute(['user_id' => (int) $userId]);
+
+            $connection->commit();
+            return $stmtUser->rowCount() > 0 || $stmtReq->rowCount() > 0;
+        } catch (\Throwable $e) {
+            if ($connection->inTransaction()) {
+                $connection->rollBack();
+            }
+            throw $e;
+        }
     }
 
     private function getReportsByStatus(string $status, ?int $moderatorId = null): array
@@ -278,7 +330,7 @@ class QaReport
         return $stmt->rowCount() > 0;
     }
 
-    public function removeContent($reportId)
+    public function removeContent($reportId, $adminId = null)
     {
         $sql = "SELECT report_id, q_id, a_id FROM reports WHERE report_id = :report_id LIMIT 1";
         $stmt = $this->db->prepare($sql);
@@ -307,9 +359,9 @@ class QaReport
                 $contentStmt = $this->db->prepare("UPDATE questions SET status = 'removed' WHERE q_id = :id");
                 $contentStmt->execute(['id' => $contentId]);
 
-                // Mark all reports about this question as resolved and clear mod_id
-                $reportsStmt = $this->db->prepare("UPDATE reports SET status = 'resolved', mod_id = NULL WHERE q_id = :id");
-                $reportsStmt->execute(['id' => $contentId]);
+                // Mark all reports about this question as resolved and update mod_id
+                $reportsStmt = $this->db->prepare("UPDATE reports SET status = 'resolved', action_taken = 'removed', mod_id = :mod_id WHERE q_id = :id");
+                $reportsStmt->execute(['id' => $contentId, 'mod_id' => $adminId]);
             } else {
                 $contentId = (int) $report['a_id'];
 
@@ -317,9 +369,9 @@ class QaReport
                 $contentStmt = $this->db->prepare("UPDATE answers SET status = 'removed' WHERE a_id = :id");
                 $contentStmt->execute(['id' => $contentId]);
 
-                // Mark all reports about this answer as resolved and clear mod_id
-                $reportsStmt = $this->db->prepare("UPDATE reports SET status = 'resolved', mod_id = NULL WHERE a_id = :id");
-                $reportsStmt->execute(['id' => $contentId]);
+                // Mark all reports about this answer as resolved and update mod_id
+                $reportsStmt = $this->db->prepare("UPDATE reports SET status = 'resolved', action_taken = 'removed', mod_id = :mod_id WHERE a_id = :id");
+                $reportsStmt->execute(['id' => $contentId, 'mod_id' => $adminId]);
             }
 
             $connection->commit();
@@ -334,19 +386,151 @@ class QaReport
 
     public function getModeratorRequests()
     {
-        // Get all moderator applications for admin review
-        // this should give all the applications with user details and motivation
-        // user name,  user id and profile picture should be included for better admin experience
-        // this should also include the status of the application (pending, accepted, rejected) and the date of application
-        // and the motivation provided by the user for applying as a moderator
+        $sql = "
+            SELECT
+                mr.request_id,
+                mr.user_id,
+                CONCAT(u.first_name, ' ', u.last_name) AS user_name,
+                u.profile_picture AS user_profile_picture,
+                uni.name AS university_name,
+                mr.motivation,
+                mr.status,
+                mr.created_at,
+                mr.reviewed_at
+            FROM moderator_requests mr
+            INNER JOIN users u ON u.id = mr.user_id
+            LEFT JOIN universities uni ON uni.id = u.university
+            ORDER BY mr.created_at DESC, mr.request_id DESC
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     // this function gets the current moderators in the system, this is useful for admin to see the current moderators and their details
     public function getCurrentModerators()
-    {        
-        // Get all current moderators for admin
-        // this should give all the current moderators with user details and the date they were accepted as moderators
-        // user name,  user id and profile picture should be included for better admin experience
-        // and all the posts that were resolved by the moderator should also be included for admin to see the performance of the moderator
+    {
+        $sql = "
+            SELECT
+                u.id AS user_id,
+                CONCAT(u.first_name, ' ', u.last_name) AS user_name,
+                u.profile_picture AS user_profile_picture,
+                uni.name AS university_name,
+                mr.reviewed_at AS accepted_at,
+                COUNT(r.report_id) AS resolved_reports_count
+            FROM users u
+            LEFT JOIN moderator_requests mr
+                ON mr.user_id = u.id
+                AND mr.status = 'accepted'
+            LEFT JOIN universities uni
+                ON uni.id = u.university
+            LEFT JOIN reports r
+                ON r.mod_id = u.id
+                AND r.status = 'resolved'
+            WHERE u.moderator = 1
+            GROUP BY u.id, u.first_name, u.last_name, u.profile_picture, uni.name, mr.reviewed_at
+            ORDER BY COALESCE(mr.reviewed_at, u.created_at) DESC, u.id DESC
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getAllResolvedReports()
+    {
+        $sql = "
+            SELECT
+                r.report_id,
+                r.reason,
+                r.status,
+                r.action_taken,
+                CASE
+                    WHEN r.q_id IS NOT NULL AND r.a_id IS NULL THEN r.q_id
+                    WHEN r.a_id IS NOT NULL AND r.q_id IS NULL THEN a.q_id
+                    ELSE NULL
+                END AS q_id,
+                r.a_id,
+                r.reporter_id,
+                CONCAT(reporter.first_name, ' ', reporter.last_name) AS reporter_name,
+                reporter.profile_picture AS reporter_profile_picture,
+                r.mod_id AS moderator_id,
+                CONCAT(moderator.first_name, ' ', moderator.last_name) AS moderator_name,
+                moderator.profile_picture AS moderator_profile_picture,
+                moderator.role AS moderator_role,
+                CASE
+                    WHEN r.q_id IS NOT NULL AND r.a_id IS NULL THEN 'question'
+                    WHEN r.a_id IS NOT NULL AND r.q_id IS NULL THEN 'answer'
+                    ELSE 'unknown'
+                END AS reported_content_type,
+                CASE
+                    WHEN r.q_id IS NOT NULL AND r.a_id IS NULL THEN q.question
+                    WHEN r.a_id IS NOT NULL AND r.q_id IS NULL THEN a.text
+                    ELSE NULL
+                END AS text,
+                r.created_at AS created_time
+            FROM reports r
+            LEFT JOIN users reporter ON reporter.id = r.reporter_id
+            LEFT JOIN users moderator ON moderator.id = r.mod_id
+            LEFT JOIN questions q ON q.q_id = r.q_id
+            LEFT JOIN answers a ON a.a_id = r.a_id
+            WHERE r.status = 'resolved'
+            ORDER BY r.created_at DESC, r.report_id DESC
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getAllForwardedReports()
+    {
+        $sql = "
+            SELECT
+                r.report_id,
+                r.reason,
+                r.status,
+                r.action_taken,
+                CASE
+                    WHEN r.q_id IS NOT NULL AND r.a_id IS NULL THEN r.q_id
+                    WHEN r.a_id IS NOT NULL AND r.q_id IS NULL THEN a.q_id
+                    ELSE NULL
+                END AS q_id,
+                r.a_id,
+                r.reporter_id,
+                CONCAT(reporter.first_name, ' ', reporter.last_name) AS reporter_name,
+                reporter.profile_picture AS reporter_profile_picture,
+                r.mod_id AS moderator_id,
+                CONCAT(moderator.first_name, ' ', moderator.last_name) AS moderator_name,
+                moderator.profile_picture AS moderator_profile_picture,
+                moderator.role AS moderator_role,
+                CASE
+                    WHEN r.q_id IS NOT NULL AND r.a_id IS NULL THEN 'question'
+                    WHEN r.a_id IS NOT NULL AND r.q_id IS NULL THEN 'answer'
+                    ELSE 'unknown'
+                END AS reported_content_type,
+                CASE
+                    WHEN r.q_id IS NOT NULL AND r.a_id IS NULL THEN q.question
+                    WHEN r.a_id IS NOT NULL AND r.q_id IS NULL THEN a.text
+                    ELSE NULL
+                END AS text,
+                r.created_at AS created_time
+            FROM reports r
+            LEFT JOIN users reporter ON reporter.id = r.reporter_id
+            LEFT JOIN users moderator ON moderator.id = r.mod_id
+            LEFT JOIN questions q ON q.q_id = r.q_id
+            LEFT JOIN answers a ON a.a_id = r.a_id
+            WHERE r.status = 'forwarded_to_admin'
+            ORDER BY r.created_at DESC, r.report_id DESC
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 }

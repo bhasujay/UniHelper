@@ -65,6 +65,33 @@ class ModerationController
         }
     }
 
+    // admin only
+    public function getAllResolvedReports(Request $request)
+    {
+        // only for admin to view all resolved reports, this is useful for admins to monitor the moderation activities and ensure that moderators are taking appropriate actions on reported content, and to identify any patterns or trends in the types of content being reported and how they are being handled
+        $isAdmin = $request->session('user_role') === 'role-admin';
+        if (!$isAdmin) {
+            $this->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only admins can view all resolved reports.',
+            ], 403);
+            return;
+        }
+
+        try {
+            $reports = $this->qaReportModel->getAllResolvedReports();
+            $this->json([
+                'success' => true,
+                'data' => empty($reports) ? null : $reports,
+            ]);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to fetch resolved reports.',
+            ], 500);
+        }
+    }
+
     public function getForwardedReports(Request $request)
     {
         $moderatorId = $request->session('user_id');
@@ -78,6 +105,33 @@ class ModerationController
 
         try {
             $reports = $this->qaReportModel->getForwardedReports((int) $moderatorId);
+            $this->json([
+                'success' => true,
+                'data' => empty($reports) ? null : $reports,
+            ]);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to fetch forwarded reports.',
+            ], 500);
+        }
+    }
+
+    // admin only
+    public function getAllForwardedReports(Request $request)
+    {
+        // only for admin to view all forwarded reports, this is useful for admins to monitor the moderation activities and ensure that moderators are taking appropriate actions on reported content, and to identify any patterns or trends in the types of content being reported and how they are being handled
+        $isAdmin = $request->session('user_role') === 'role-admin';
+        if (!$isAdmin) {
+            $this->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only admins can view all forwarded reports.',
+            ], 403);
+            return;
+        }
+
+        try {
+            $reports = $this->qaReportModel->getAllForwardedReports();
             $this->json([
                 'success' => true,
                 'data' => empty($reports) ? null : $reports,
@@ -149,6 +203,7 @@ class ModerationController
 
     }
 
+    // admin only
     public function deleteReport(Request $request)
     {
         $reportId = $request->get('report_id');
@@ -261,7 +316,7 @@ class ModerationController
         }
 
         try {
-            $removed = $this->qaReportModel->removeContent((int) $reportId);
+            $removed = $this->qaReportModel->removeContent((int) $reportId, $request->session('user_id'));
             $this->json([
                 'success' => $removed,
                 'message' => $removed
@@ -347,8 +402,17 @@ class ModerationController
     // This is for the admin either Accept or reject the application 
     public function reviewModeratorApplication(Request $request)
     {
+        $isAdmin = $request->session('user_role') === 'role-admin';
+        if (!$isAdmin) {
+            $this->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only admins can review moderator applications.',
+            ], 403);
+            return;
+        }
+
         $applicationId = $request->get('application_id');
-        $action = strtolower(trim((string) $request->get('action')));
+        $action = strtolower(trim((string) $request->get('review_action')));
 
         if (empty($applicationId) || !is_numeric($applicationId)) {
             $this->json([
@@ -382,6 +446,89 @@ class ModerationController
         }
     }
 
+    public function getModeratorRequests(Request $request)
+    {
+        // only for admin to view moderator applications, this is useful for admins to review and manage moderator applications, and to identify potential candidates for the moderator role based on their motivations and qualifications
+        $isAdmin = $request->session('user_role') === 'role-admin';
+        if (!$isAdmin) {
+            $this->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only admins can view moderator applications.',
+            ], 403);
+            return;
+        }
 
+        try {
+            $applications = $this->qaReportModel->getModeratorRequests();
+            $this->json([
+                'success' => true,
+                'data' => empty($applications) ? null : $applications,
+            ]);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to fetch moderator applications.',
+            ], 500);
+        }
+    }
 
+    public function getCurrentModerators(Request $request)
+    {
+        // only for admin to view current moderators, this is useful for admins to monitor the current moderators on the platform, and to identify any potential issues or concerns with their performance or behavior, and to ensure that they are fulfilling their responsibilities effectively
+        $isAdmin = $request->session('user_role') === 'role-admin';
+        if (!$isAdmin) {
+            $this->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only admins can view current moderators.',
+            ], 403);
+            return;
+        }
+
+        try {
+            $moderators = $this->qaReportModel->getCurrentModerators();
+            $this->json([
+                'success' => true,
+                'data' => empty($moderators) ? null : $moderators,
+            ]);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to fetch current moderators.',
+            ], 500);
+        }
+    }
+
+    public function removeModerator(Request $request)
+    {
+        $isAdmin = $request->session('user_role') === 'role-admin';
+        if (!$isAdmin) {
+            $this->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only admins can remove moderators.',
+            ], 403);
+            return;
+        }
+
+        $userId = $request->get('user_id');
+        if (empty($userId) || !is_numeric($userId)) {
+            $this->json([
+                'success' => false,
+                'message' => 'Valid user_id is required.',
+            ], 400);
+            return;
+        }
+
+        try {
+            $removed = $this->qaReportModel->removeModerator((int) $userId);
+            $this->json([
+                'success' => $removed,
+                'message' => $removed ? 'Moderator access removed successfully.' : 'User not found or not a moderator.',
+            ], $removed ? 200 : 404);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to remove moderator access.',
+            ], 500);
+        }
+    }
 }

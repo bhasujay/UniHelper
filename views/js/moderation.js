@@ -436,13 +436,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (refreshBtn) {
         refreshBtn.addEventListener('click', async () => {
             if (refreshBtn.disabled) return;
+            const tabsToRefresh = ['pending', 'resolved', 'forwarded'];
             refreshBtn.classList.add('spin');
             refreshBtn.disabled = true;
             try {
-                await loadReports('pending');
-                if (typeof showToast === 'function') showToast('Pending list updated', 'success');
-            } catch(e) {
-                if (typeof showToast === 'function') showToast('Failed to refresh', 'error');
+                await Promise.all(tabsToRefresh.map(t => loadReports(t)));
+                if (typeof showToast === 'function') showToast('All lists updated', 'success');
+            } catch (e) {
+                console.error('Failed refreshing all lists', e);
+                if (typeof showToast === 'function') showToast('Failed to refresh all lists', 'error');
             } finally {
                 refreshBtn.classList.remove('spin');
                 refreshBtn.disabled = false;
