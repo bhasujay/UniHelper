@@ -2,7 +2,7 @@
 
 namespace app\controllers;
 
-require_once dirname(__DIR__) . '\models\notification.php';
+require_once dirname(__DIR__) . '/models/notification.php';
 
 use app\models\Notification;
 use app\core\Request;

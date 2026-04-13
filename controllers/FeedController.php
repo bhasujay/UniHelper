@@ -15,6 +15,13 @@ class FeedController
 {
     private const VALID_ROLES = ['role-applicant', 'role-undergrad', 'role-profile', 'role-admin'];
     private const VALID_TYPES = ['announcement', 'event', 'general'];
+    private const MAX_IMAGE_BYTES = 5242880;
+    private const IMAGE_MIME_TO_EXT = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/gif' => 'gif',
+        'image/webp' => 'webp',
+    ];
 
     private $feedPostModel;
     private $sessionModel;
@@ -58,11 +65,18 @@ class FeedController
             $fetchWindow = max(40, $offset + $limit + 20);
 
             $feedPosts = $this->feedPostModel->getVisiblePostsForRole((string)$this->viewer->role, $fetchWindow);
-            $sessions = $this->sessionModel->findVisibleForFeed(
-                (string)$this->viewer->role,
-                (string)($this->viewer->University ?? ''),
-                $fetchWindow
-            );
+            $sessions = [];
+
+            try {
+                $sessions = $this->sessionModel->findVisibleForFeed(
+                    (string)$this->viewer->role,
+                    (string)($this->viewer->University ?? ''),
+                    $fetchWindow
+                );
+            } catch (\Throwable $sessionError) {
+                // Keep feed usable even if the session source is unavailable.
+                error_log('FeedController getFeed: session source unavailable - ' . $sessionError->getMessage());
+            }
 
             $items = [];
 
@@ -103,6 +117,8 @@ class FeedController
         $postType = trim((string)($request->get('post_type') ?? 'announcement'));
         $audienceMode = trim((string)($request->get('audience_mode') ?? 'all_roles'));
         $audienceRolesInput = $request->get('audience_roles');
+        $imageFile = $_FILES['image'] ?? null;
+        $imagePath = null;
 
         if ($title === '') {
             $this->json(['success' => false, 'message' => 'Title is required.'], 422);
@@ -136,16 +152,29 @@ class FeedController
             return;
         }
 
+        if (is_array($imageFile) && (int)($imageFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            $imageValidationError = $this->validateUploadedImage($imageFile);
+            if ($imageValidationError !== null) {
+                $this->json(['success' => false, 'message' => $imageValidationError], 422);
+                return;
+            }
+        }
+
         $audienceRoles = $audienceMode === 'selected_roles'
             ? $this->serializeAudienceRoles($roles)
             : null;
 
         try {
+            if (is_array($imageFile) && (int)($imageFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $imagePath = $this->saveUploadedImage($imageFile);
+            }
+
             $newId = $this->feedPostModel->createPost([
                 'user_id' => (int)$this->viewer->id,
                 'post_type' => $postType,
                 'title' => $title,
                 'body' => $body,
+                'image_path' => $imagePath,
                 'audience_mode' => $audienceMode,
                 'audience_roles' => $audienceRoles,
             ]);
@@ -154,11 +183,16 @@ class FeedController
                 'success' => true,
                 'message' => 'Post published successfully.',
                 'id' => $newId,
+                'image_path' => $imagePath,
             ]);
         } catch (\Throwable $e) {
+            if (!empty($imagePath)) {
+                $this->removeUploadedImage($imagePath);
+            }
+
             $this->json([
                 'success' => false,
-                'message' => 'Failed to publish post. Please run the feed table migration first.'
+                'message' => 'Failed to publish post.'
             ], 500);
         }
     }
@@ -182,6 +216,7 @@ class FeedController
             'post_type' => (string)$post['post_type'],
             'title' => (string)$post['title'],
             'body' => (string)$post['body'],
+            'image_path' => (string)($post['image_path'] ?? ''),
             'created_at' => (string)$post['created_at'],
             'audience_label' => $audienceLabel,
             'author_name' => $authorName,
@@ -271,6 +306,92 @@ class FeedController
         }
 
         return array_keys($result);
+    }
+
+    private function validateUploadedImage(array $file): ?string
+    {
+        $uploadError = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($uploadError === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        if ($uploadError !== UPLOAD_ERR_OK) {
+            return 'Image upload failed. Please try again.';
+        }
+
+        $tmpPath = (string)($file['tmp_name'] ?? '');
+        if ($tmpPath === '' || !is_uploaded_file($tmpPath)) {
+            return 'Invalid uploaded image.';
+        }
+
+        $size = (int)($file['size'] ?? 0);
+        if ($size <= 0) {
+            return 'Uploaded image appears to be empty.';
+        }
+
+        if ($size > self::MAX_IMAGE_BYTES) {
+            return 'Image must be 5MB or smaller.';
+        }
+
+        $mimeType = $this->detectUploadedMimeType($tmpPath);
+        if ($mimeType === null || !isset(self::IMAGE_MIME_TO_EXT[$mimeType])) {
+            return 'Only JPG, PNG, GIF, and WEBP images are allowed.';
+        }
+
+        return null;
+    }
+
+    private function saveUploadedImage(array $file): string
+    {
+        $tmpPath = (string)($file['tmp_name'] ?? '');
+        $mimeType = $this->detectUploadedMimeType($tmpPath);
+        if ($mimeType === null || !isset(self::IMAGE_MIME_TO_EXT[$mimeType])) {
+            throw new \RuntimeException('Unsupported image format.');
+        }
+
+        $uploadDir = dirname(__DIR__, 1) . '/public/uploads/feedPosts';
+        if (!is_dir($uploadDir) && !mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
+            throw new \RuntimeException('Failed to create feed upload directory.');
+        }
+
+        $fileName = 'feed-' . time() . '-' . bin2hex(random_bytes(6)) . '.' . self::IMAGE_MIME_TO_EXT[$mimeType];
+        $destination = $uploadDir . '/' . $fileName;
+
+        if (!move_uploaded_file($tmpPath, $destination)) {
+            throw new \RuntimeException('Failed to save uploaded image.');
+        }
+
+        return 'public/uploads/feedPosts/' . $fileName;
+    }
+
+    private function detectUploadedMimeType(string $tmpPath): ?string
+    {
+        if ($tmpPath === '' || !is_file($tmpPath)) {
+            return null;
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        if ($finfo === false) {
+            return null;
+        }
+
+        $mimeType = finfo_file($finfo, $tmpPath) ?: null;
+        finfo_close($finfo);
+
+        return is_string($mimeType) ? strtolower($mimeType) : null;
+    }
+
+    private function removeUploadedImage(string $relativePath): void
+    {
+        $relativePath = ltrim($relativePath, '/');
+        if ($relativePath === '') {
+            return;
+        }
+
+        $absolutePath = dirname(__DIR__, 1) . '/' . $relativePath;
+        if (is_file($absolutePath)) {
+            @unlink($absolutePath);
+        }
     }
 
     private function roleLabel(string $role): string

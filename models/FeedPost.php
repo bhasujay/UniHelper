@@ -38,6 +38,7 @@ class FeedPost extends BaseModel
                     p.post_type,
                     p.title,
                     p.body,
+                    p.image_path,
                     p.audience_mode,
                     p.audience_roles,
                     p.created_at,

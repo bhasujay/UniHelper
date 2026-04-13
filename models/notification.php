@@ -4,7 +4,7 @@ namespace app\models;
 use app\core\Database;
 use PDO;
 
-require_once dirname(__DIR__) . '\models\base-model.php';
+require_once dirname(__DIR__) . '/models/base-model.php';
 
 
 class Notification extends BaseModel

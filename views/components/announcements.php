@@ -21,16 +21,17 @@ $currentRole = isset($user->role) ? (string)$user->role : '';
         </button>
     </div>
 
-    <div id="feedComposer" class="feed-composer is-hidden" hidden>
-        <div class="feed-composer-header">
-            <div>
-                <h2 class="feed-title"><?= htmlspecialchars($composerHeading) ?></h2>
-                <p class="feed-subtitle"><?= htmlspecialchars($composerSubheading) ?></p>
+    <div id="feedComposer" class="feed-composer-overlay is-hidden" hidden>
+        <div class="feed-composer" role="dialog" aria-modal="true" aria-labelledby="feedComposerTitle">
+            <div class="feed-composer-header">
+                <div>
+                    <h2 id="feedComposerTitle" class="feed-title"><?= htmlspecialchars($composerHeading) ?></h2>
+                    <p class="feed-subtitle"><?= htmlspecialchars($composerSubheading) ?></p>
+                </div>
+                <button type="button" id="feedCloseComposerBtn" class="feed-composer-close" aria-label="Close form">×</button>
             </div>
-            <button type="button" id="feedCloseComposerBtn" class="feed-composer-close" aria-label="Close form">×</button>
-        </div>
 
-        <form id="feedComposerForm" class="feed-form" autocomplete="off">
+            <form id="feedComposerForm" class="feed-form" autocomplete="off">
             <div class="feed-field">
                 <label for="feedTitle">Title</label>
                 <input id="feedTitle" name="title" class="feed-input" type="text" maxlength="255" placeholder="Write a short, clear title" required>
@@ -39,6 +40,17 @@ $currentRole = isset($user->role) ? (string)$user->role : '';
             <div class="feed-field">
                 <label for="feedBody">Message</label>
                 <textarea id="feedBody" name="body" class="feed-textarea" placeholder="Share details, links, and context..." required></textarea>
+            </div>
+
+            <div class="feed-field">
+                <label for="feedImage">Image (Optional)</label>
+                <input id="feedImage" name="image" class="feed-input feed-file-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+                <p class="feed-help">Attach a JPG, PNG, GIF, or WEBP image (max 5MB).</p>
+
+                <div id="feedImagePreviewWrap" class="feed-image-preview is-hidden" hidden>
+                    <img id="feedImagePreview" src="" alt="Selected image preview">
+                    <button type="button" id="feedImageRemoveBtn" class="feed-btn-secondary feed-image-remove">Remove image</button>
+                </div>
             </div>
 
             <div class="feed-grid">
@@ -67,15 +79,29 @@ $currentRole = isset($user->role) ? (string)$user->role : '';
                 <label class="feed-role-chip"><input type="checkbox" name="audience_roles[]" value="role-admin"> Admin</label>
             </div>
 
-            <div class="feed-actions">
-                <p class="feed-help">Session posts are automatically included here and follow session audience rules.</p>
-                <div class="feed-action-buttons">
-                    <button type="button" class="feed-btn-secondary" id="feedCancelComposerBtn">Cancel</button>
-                    <button type="submit" class="feed-btn" id="feedPublishBtn">Publish to Feed</button>
+                <div class="feed-actions">
+                    <p class="feed-help">Session posts are automatically included here and follow session audience rules.</p>
+                    <div class="feed-action-buttons">
+                        <button type="button" class="feed-btn-secondary" id="feedCancelComposerBtn">Cancel</button>
+                        <button type="submit" class="feed-btn" id="feedPublishBtn">Publish to Feed</button>
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
+
+    <form id="feedSearchForm" class="feed-search" autocomplete="off">
+        <input
+            id="feedSearchInput"
+            name="feed_search"
+            class="feed-search-input"
+            type="search"
+            placeholder="Search announcements and updates..."
+            aria-label="Search announcements"
+        >
+        <button type="submit" class="feed-search-btn" id="feedSearchBtn">Search</button>
+        <button type="button" class="feed-search-clear" id="feedSearchClearBtn" hidden>Clear</button>
+    </form>
 
     <div id="feedList" class="feed-list"></div>
     <button id="feedLoadMore" class="feed-load-more" type="button" style="display:none;">Load more</button>
