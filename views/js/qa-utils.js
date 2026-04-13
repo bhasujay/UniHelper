@@ -554,6 +554,14 @@ async function viewQuestion(questionId) {
 }
 
 // rendering question cards
+// Truncate plain text to a maximum number of words, adding ellipsis if truncated.
+function truncateWords(text, limit) {
+    if (!text) return '';
+    const words = String(text).trim().split(/\s+/);
+    if (words.length <= limit) return words.join(' ');
+    return words.slice(0, limit).join(' ') + '...';
+}
+
 function makeQuestionCard(data, position) {
     // Clone the template
     const card = questionCardTemplate.cloneNode(true); // Use the global variable
@@ -593,7 +601,7 @@ function makeQuestionCard(data, position) {
     // Populate question content
     const styledTitle = data.questionTitle.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
     card.querySelector('.qa-question-title').innerHTML = styledTitle;
-    card.querySelector('.qa-question-text').textContent = data.questionText;
+    card.querySelector('.qa-question-text').textContent = truncateWords(data.questionText, 100);
 
     // Make hashtag tags clickable in the card
     bindHashtagClicks(card);

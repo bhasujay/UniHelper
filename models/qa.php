@@ -173,7 +173,7 @@ class Qna extends BaseModel
         $sql = "
             SELECT q.* 
             FROM questions q JOIN qa_tag qt ON q.q_id = qt.q_id JOIN tags t ON t.tag_id = qt.tag_id
-            WHERE q.status = 'normal' AND t.tag_name = :tag
+            WHERE q.status IN ('normal', 'flagged') AND t.tag_name = :tag
             ORDER BY q.vote_count DESC, q.answer_count DESC, q.added_time DESC, q.last_modified DESC
             LIMIT :offset, :limit
         ";
