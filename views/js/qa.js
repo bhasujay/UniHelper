@@ -745,9 +745,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
 
-                // Clean the URL so a refresh won't re-trigger the deep link
-                const cleanUrl = window.location.pathname;
-                window.history.replaceState({}, '', cleanUrl);
+                // Intentionally keep the deep-link in the address bar (do not clear URL)
             }
         }, 100);
     })();
