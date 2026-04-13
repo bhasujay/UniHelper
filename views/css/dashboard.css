@@ -864,7 +864,7 @@ body {
   padding: 1rem;
   background: radial-gradient(circle at top, rgba(10, 18, 32, 0.22), rgba(0, 0, 0, 0.72));
   backdrop-filter: blur(6px);
-  z-index: 10099;
+  z-index: 20000;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.1s ease;

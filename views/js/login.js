@@ -263,14 +263,15 @@ document.addEventListener('DOMContentLoaded', function() {
       return false;
     }
 
-    // All good — start OTP flow
+    // All good — temporarily bypass OTP flow
     errorBox.style.display = 'none';
     loginBtn.disabled = true;
-    loginBtn.querySelector('.btn-text').innerText = 'Sending OTP...';
+    loginBtn.querySelector('.btn-text').innerText = 'Signing In...';
     loadingIcon.style.display = 'inline-block';
 
-    generateOtp();
-    showOtpModal();
+    submitFormWithHashedPassword();
+    // generateOtp();
+    // showOtpModal();
   });
 
   // Hide error on input
