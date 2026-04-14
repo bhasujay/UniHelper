@@ -135,6 +135,11 @@
     font-weight: 400;
 }
 
+.profile-view-count {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
 .profile-actions {
     padding-top: 1.5rem;
     border-top: 1px solid var(--border);

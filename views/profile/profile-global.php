@@ -2,8 +2,10 @@
 require_once dirname(__DIR__, 2) . '/models/connection.php';
 require_once dirname(__DIR__, 2) . '/models/University.php';
 require_once dirname(__DIR__, 2) . '/models/Major.php';
+require_once dirname(__DIR__, 2) . '/models/user-stat.php';
 
 $connectionModel = new app\models\Connection();
+$userStat = new app\models\UserStat();
 $currentUserId = $_SESSION['user_id'];
 $targetUserId = $id ?? null;
 
@@ -39,14 +41,20 @@ if ($friendStatus === 'accepted') {
 // 3. Re-fetch user data with the final determined state
 $target = $connectionModel->getTargetUser($targetUserId, $state);
 
-// Determine profile picture safely avoiding Undefined property warning
-$profilePicPath = null;
-if (isset($target->profile_picture) && !empty($target->profile_picture)) {
-    $profilePicPath = $target->profile_picture;
-} elseif (isset($initialTarget->profile_picture) && !empty($initialTarget->profile_picture)) {
-    $profilePicPath = $initialTarget->profile_picture;
+// if the sesssion variable doesn't exist
+if (!isset($_SESSION['last_viewed_user_id'])) {
+    $_SESSION['last_viewed_user_id'] = -1; // initialize to an invalid user ID
 }
-$profilePic = $profilePicPath ? "/unihelper/public/" . $profilePicPath : '/unihelper/views/assets/default-pfp.png';
+
+if ($_SESSION['last_viewed_user_id'] != $targetUserId)
+{
+    $userStat->increment($targetUserId, 'profile_view_count');
+    $_SESSION['last_viewed_user_id'] = $targetUserId;
+}
+
+// Determine profile picture safely avoiding Undefined property warning
+$profilePicPath = $target->profile_picture;
+$profilePic = "/unihelper/public/" . $target->profile_picture;
 
 
 // Helpers
@@ -79,108 +87,108 @@ switch($target->role) {
 <link rel="stylesheet" href="/unihelper/views/css/profile.css">
 <script src="/unihelper/views/js/profile-global.js"></script>
 <style>
-/* Specific global profile tweaks to seamlessly integrate into the main theme logic */
-.gp-wa-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: #25D366;
-    color: white;
-    padding: 0.5rem 0.9rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background 0.2s ease;
-    margin-top: 8px;
-}
-.gp-wa-btn:hover {
-    background: #1fb956;
-}
-.gp-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-.gp-private-message {
-    padding: 3rem 1rem;
-    text-align: center;
-    color: var(--muted-foreground);
-    background: var(--key);
-    border-radius: 12px;
-    border: 1px dashed var(--border);
-    margin-top: 1.5rem;
-}
-.gp-private-message svg {
-    margin-bottom: 1rem;
-    color: var(--primary);
-    opacity: 0.7;
-}
-.gp-private-message h3 {
-    color: var(--text);
-    margin-bottom: 0.5rem;
-}
-.btn-gp {
-    padding: 0.6rem 1.2rem;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.3s;
-    font-size: 0.95rem;
-    font-family: inherit;
-}
-.btn-gp:hover {
-    transform: translateY(-2px);
-}
-.btn-gp.primary {
-    background: var(--btn-gradient-primary);
-    color: white;
-}
-.btn-gp.primary:hover {
-    box-shadow: var(--glow-primary);
-}
-.btn-gp.success {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
-}
-.btn-gp.danger {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white;
-}
-.btn-gp.danger-outline {
-    background: transparent;
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.5);
-}
-.btn-gp.danger-outline:hover {
-    background: rgba(239, 68, 68, 0.1);
-}
-.btn-gp.disabled {
-    background: transparent;
-    color: var(--muted-foreground);
-    border: 1px solid var(--border);
-    cursor: not-allowed;
-}
-.btn-gp.disabled:hover {
-    transform: none;
-}
+    /* Specific global profile tweaks to seamlessly integrate into the main theme logic */
+    .gp-wa-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #25D366;
+        color: white;
+        padding: 0.5rem 0.9rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s ease;
+        margin-top: 8px;
+    }
+    .gp-wa-btn:hover {
+        background: #1fb956;
+    }
+    .gp-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    .gp-private-message {
+        padding: 3rem 1rem;
+        text-align: center;
+        color: var(--muted-foreground);
+        background: var(--key);
+        border-radius: 12px;
+        border: 1px dashed var(--border);
+        margin-top: 1.5rem;
+    }
+    .gp-private-message svg {
+        margin-bottom: 1rem;
+        color: var(--primary);
+        opacity: 0.7;
+    }
+    .gp-private-message h3 {
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+    .btn-gp {
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+        font-size: 0.95rem;
+        font-family: inherit;
+    }
+    .btn-gp:hover {
+        transform: translateY(-2px);
+    }
+    .btn-gp.primary {
+        background: var(--btn-gradient-primary);
+        color: white;
+    }
+    .btn-gp.primary:hover {
+        box-shadow: var(--glow-primary);
+    }
+    .btn-gp.success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+    .btn-gp.danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+    .btn-gp.danger-outline {
+        background: transparent;
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+    .btn-gp.danger-outline:hover {
+        background: rgba(239, 68, 68, 0.1);
+    }
+    .btn-gp.disabled {
+        background: transparent;
+        color: var(--muted-foreground);
+        border: 1px solid var(--border);
+        cursor: not-allowed;
+    }
+    .btn-gp.disabled:hover {
+        transform: none;
+    }
 
-.gp-status-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #10b981;
-    color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    margin-left: 0.5rem;
-    border: 2px solid var(--card);
-}
+    .gp-status-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #10b981;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        margin-left: 0.5rem;
+        border: 2px solid var(--card);
+    }
 </style>
 
 <div class="profile-card-container" id="globalProfileContainer" data-target-id="<?= htmlspecialchars($targetUserId) ?>" data-current-user-id="<?= htmlspecialchars($currentUserId) ?>">

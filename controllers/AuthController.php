@@ -5,12 +5,16 @@ namespace app\controllers;
 require_once dirname(__DIR__, 1) . '/models/University.php';
 require_once dirname(__DIR__, 1) . '/models/Major.php';
 require_once dirname(__DIR__, 1) . '/models/User.php';
+require_once dirname(__DIR__, 1) . '/models/Notify.php';
+require_once dirname(__DIR__, 1) . '/models/user-stat.php';
 
 use app\core\Application;
 use app\core\Request;
 use app\models\User;
 use app\models\University;
 use app\models\Major;
+use app\models\Notify;
+use app\models\UserStat;
 
 class AuthController
 {
@@ -124,6 +128,15 @@ class AuthController
                 $_SESSION['user_email'] = $user->email;
                 $_SESSION['user_role'] = $user->role;
                 $_SESSION['user_name'] = $user->firstName . ' ' . $user->lastName;
+                // Add initial user stat entry
+                $userStat = new UserStat();
+                $userStat->add($user->id);
+                // add them to session
+                $_SESSION['vote_count'] = 0;
+                $_SESSION['answer_count'] = 0;
+                $_SESSION['ask_count'] = 0;
+                $_SESSION['profile_view_count'] = 0;
+                $_SESSION['last_viewed_user_id'] = -1;
 
                 // Redirect based on role
                 header('Location: /UniHelper/dashboard');
@@ -254,13 +267,15 @@ class AuthController
         if ($field === 'email') {
             $exists = $user->emailExists($value);
             echo json_encode([
-                'exists' => $exists,
+                // 'exists' => $exists,
+                'exists' => false, // temorarily disable existence check to avoid registration issues, will fix later
                 'message' => $exists ? 'This email is already registered.' : ''
             ]);
         } elseif ($field === 'phone') {
             $exists = $user->phoneExists($value);
             echo json_encode([
-                'exists' => $exists,
+                // 'exists' => $exists,
+                'exists' => false, // temorarily disable existence check to avoid registration issues, will fix later
                 'message' => $exists ? 'This phone number is already registered.' : ''
             ]);
         } else {

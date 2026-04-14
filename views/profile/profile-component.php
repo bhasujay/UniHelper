@@ -3,9 +3,18 @@
 <?php
 require_once dirname(__DIR__, 2) . '/models/University.php';
 require_once dirname(__DIR__, 2) . '/models/Major.php';
+require_once dirname(__DIR__, 2) . '/models/user-stat.php';
 ?>
 
-<?php ?>
+<?php
+$profileOwnerId = $user->id ?? $user->user_id ?? null;
+$profileViewCount = 0;
+
+if ($profileOwnerId !== null) {
+    $userStatModel = new app\models\UserStat();
+    $profileViewCount = $userStatModel->getProfileViews($profileOwnerId);
+}
+?>
 <div class="profile-card-container">
     <div class="profile-card">
         <div class="profile-header">
@@ -64,6 +73,10 @@ require_once dirname(__DIR__, 2) . '/models/Major.php';
                     <div class="profile-info-item">
                         <span class="info-label">Phone</span>
                         <span class="info-value"><?= htmlspecialchars($user->phone) ?></span>
+                    </div>
+                    <div class="profile-info-item profile-views-item">
+                        <span class="info-label">Profile Views</span>
+                        <span class="info-value profile-view-count"><?= (int) $profileViewCount ?></span>
                     </div>
                 </div>
             </div>
