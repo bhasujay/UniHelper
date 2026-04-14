@@ -135,7 +135,6 @@ class AuthController
                 $_SESSION['vote_count'] = 0;
                 $_SESSION['answer_count'] = 0;
                 $_SESSION['ask_count'] = 0;
-                $_SESSION['profile_view_count'] = 0;
                 $_SESSION['last_viewed_user_id'] = -1;
 
                 // Redirect based on role

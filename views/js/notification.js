@@ -32,10 +32,10 @@
     const newCountBadge = document.getElementById('newNotifCount');
 
     const state = {
-        shouldRefreshFromServer: false,
         hasFetchedUnread: false,
         hasFetchedRead: false,
         activeTab: 'new',
+        serverUnreadCount: 0,
     };
 
     // icons for the notification types
@@ -149,12 +149,38 @@
         refreshEmpty(tabName);
     }
 
+    function normalizeUnreadCount(value) {
+        const count = Number(value);
+        if (!Number.isFinite(count) || count < 0) {
+            return 0;
+        }
+
+        return Math.floor(count);
+    }
+
+    function getLoadedUnreadCount() {
+        if (!lists.new) {
+            return 0;
+        }
+
+        return lists.new.children.length;
+    }
+
+    function shouldFetchUnreadFromServer() {
+        if (!state.hasFetchedUnread) {
+            return true;
+        }
+
+        return state.serverUnreadCount > getLoadedUnreadCount();
+    }
+
     async function checkAnyNewNotifications() {
         try {
             const payload = await apiGet('checkAny');
-            const hasUnread = !!payload.has_unread;
-            state.shouldRefreshFromServer = hasUnread;
-            setDotActive(hasUnread);
+            const unreadCount = normalizeUnreadCount(payload.unread_count);
+
+            state.serverUnreadCount = unreadCount;
+            updateNewCount(unreadCount);
         } catch (error) {
             // Keep UI usable even if the periodic check fails.
         }
@@ -164,16 +190,14 @@
         const payload = await apiGet('getUnread');
         clearAndRender('new', payload.data || []);
         state.hasFetchedUnread = true;
-        state.shouldRefreshFromServer = false;
-        setDotActive(false);
+        state.serverUnreadCount = getLoadedUnreadCount();
+        updateNewCount(state.serverUnreadCount);
     }
 
     async function fetchRead() {
         const payload = await apiGet('getRead');
         clearAndRender('opened', payload.data || []);
         state.hasFetchedRead = true;
-        state.shouldRefreshFromServer = false;
-        setDotActive(false);
     }
 
     // ── Modal open / close ──────────────────────────────────────────
@@ -181,15 +205,6 @@
         overlay.classList.add('show');
         document.body.style.overflow = 'hidden'; // prevent bg scroll
         switchTab('new');
-
-        if (state.shouldRefreshFromServer || !state.hasFetchedUnread) {
-            fetchUnread().catch(function (error) {
-                notify(error.message || 'Failed to load notifications.', 'error');
-            });
-        }
-
-        // Bell is opened, so remove the visual dot immediately.
-        setDotActive(false);
     }
 
     function closeModal() {
@@ -254,13 +269,13 @@
             p.classList.toggle('active', p.getAttribute('data-panel') === name);
         });
 
-        if (name === 'new' && (state.shouldRefreshFromServer || !state.hasFetchedUnread)) {
+        if (name === 'new' && shouldFetchUnreadFromServer()) {
             fetchUnread().catch(function (error) {
                 notify(error.message || 'Failed to load unread notifications.', 'error');
             });
         }
 
-        if (name === 'opened' && (state.shouldRefreshFromServer || !state.hasFetchedRead)) {
+        if (name === 'opened' && !state.hasFetchedRead) {
             fetchRead().catch(function (error) {
                 notify(error.message || 'Failed to load opened notifications.', 'error');
             });
@@ -286,22 +301,35 @@
     refreshEmpty('opened');
 
     // ── Notification dot (red indicator) ────────────────────────────
-    function setDotActive(active) {
+    function setDotCount(count) {
         if (!dot) return;
-        dot.classList.toggle('active', !!active);
+
+        const normalizedCount = normalizeUnreadCount(count);
+
+        if (normalizedCount > 0) {
+            dot.textContent = normalizedCount > 99 ? '99+' : String(normalizedCount);
+            dot.classList.add('active');
+            return;
+        }
+
+        dot.textContent = '';
+        dot.classList.remove('active');
     }
 
     // ── Badge count on the "New" tab ────────────────────────────────
     function updateNewCount(count) {
-        if (!newCountBadge) return;
-        if (count > 0) {
-            newCountBadge.textContent = count > 99 ? '99+' : count;
-            newCountBadge.style.display = '';
-        } else {
-            newCountBadge.style.display = 'none';
+        const normalizedCount = normalizeUnreadCount(count);
+
+        if (newCountBadge) {
+            if (normalizedCount > 0) {
+                newCountBadge.textContent = normalizedCount > 99 ? '99+' : normalizedCount;
+                newCountBadge.style.display = '';
+            } else {
+                newCountBadge.style.display = 'none';
+            }
         }
-        // Also sync the bell dot
-        setDotActive(count > 0);
+
+        setDotCount(normalizedCount);
     }
 
     // ── Template-based item creation ────────────────────────────────

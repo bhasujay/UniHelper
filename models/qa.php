@@ -5,14 +5,20 @@ namespace app\models;
 use app\core\Database;
 
 require_once dirname(__DIR__) . '\models\base-model.php';
+require_once dirname(__DIR__) . '\models\user-stat.php';
+
+use app\models\UserStat;
 
 class Qna extends BaseModel
 {
+    private $userStat;
+
     public function __construct()
     {
         parent::__construct();
         $this->table = 'questions';
         $this->primaryKey = 'q_id';
+        $this->userStat = new UserStat();
     }
 
     public function create($data)
@@ -69,6 +75,9 @@ class Qna extends BaseModel
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $questionId]);
         
+        // Increment the ask_count stat for the user
+        $this->userStat->increment($data['user_id'], 'ask_count');
+
         return $questionId;
     }
     
@@ -99,6 +108,9 @@ class Qna extends BaseModel
                       WHERE q_id = :q_id";
         $updateStmt = $this->db->prepare($updateSql);
         $updateStmt->execute(['q_id' => $data['q_id']]);
+
+        // Increment the answer_count stat for the user
+        $this->userStat->increment($data['user_id'], 'answer_count');
         
         return $answerId;
     }
@@ -266,6 +278,9 @@ class Qna extends BaseModel
             'delta' => $delta,
             'q_id' => $questionId
         ]);
+
+        // Increment the vote_count stat for the user. it does not matter if it's an upvote or downvote, we want to track the total number of votes cast by the user for badge purposes
+        $this->userStat->increment($userId, 'vote_count');
     }
 
     // vote related functions
@@ -404,22 +419,21 @@ class Qna extends BaseModel
         $tagIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
 
         // Handle the image deletion
-        if ($question['img_path']) {
-            $this->deleteQuestionImages($questionId);
-        }
+        // if ($question['img_path']) {
+        //     $this->deleteQuestionImages($questionId);
+        // }
 
-        // Delete the question (this will also delete entries in qa_tag, answers, and votes due to foreign key constraints)
-        $deleteSql = "DELETE FROM questions WHERE q_id = :questionId";
-        $deleteStmt = $this->db->prepare($deleteSql);
-        $deleteStmt->bindValue(':questionId', (int)$questionId, \PDO::PARAM_INT);
-        $deleteStmt->execute();
-        
-        // Check if deletion was successful
-        $rowsAffected = $deleteStmt->rowCount();
+        // Mark the question as removed instead of deleting it
+        $updateSql = "UPDATE questions SET status = 'removed', last_modified = NOW() WHERE q_id = :questionId";
+        $updateStmt = $this->db->prepare($updateSql);
+        $updateStmt->bindValue(':questionId', (int)$questionId, \PDO::PARAM_INT);
+        $updateStmt->execute();
+
+        // Check if update was successful
+        $rowsAffected = $updateStmt->rowCount();
         if ($rowsAffected === 0) {
-            throw new \Exception('Failed to delete question - no rows affected');
+            throw new \Exception('Failed to delete question');
         }
-
         // Update post counts for associated tags
         if (!empty($tagIds)) {
             $updateTagSql = "UPDATE tags SET post_count = post_count - 1 WHERE tag_id IN (" . implode(',', array_map('intval', $tagIds)) . ")";
@@ -429,6 +443,9 @@ class Qna extends BaseModel
         // delete the tags that are no longer associated with any questions
         $cleanupTagSql = "DELETE FROM tags WHERE post_count <= 0";
         $this->db->exec($cleanupTagSql);
+
+        // update the user stats for the ask_count
+        $this->userStat->decrement($userId, 'ask_count');
 
         return true;
     }
@@ -455,16 +472,16 @@ class Qna extends BaseModel
             }
         }
         
-        // Delete the answer
-        $deleteSql = "DELETE FROM answers WHERE a_id = :answerId";
-        $deleteStmt = $this->db->prepare($deleteSql);
-        $deleteStmt->bindValue(':answerId', (int)$answerId, \PDO::PARAM_INT);
-        $deleteStmt->execute();
-        
-        // Check if deletion was successful
-        $rowsAffected = $deleteStmt->rowCount();
+        // Mark the answer as removed instead of deleting it
+        $updateSql = "UPDATE answers SET status = 'removed' WHERE a_id = :answerId";
+        $updateStmt = $this->db->prepare($updateSql);
+        $updateStmt->bindValue(':answerId', (int)$answerId, \PDO::PARAM_INT);
+        $updateStmt->execute();
+
+        // Check if update was successful
+        $rowsAffected = $updateStmt->rowCount();
         if ($rowsAffected === 0) {
-            throw new \Exception('Failed to delete answer - no rows affected');
+            throw new \Exception('Failed to delete answer');
         }
 
         // Update the answer count in the questions table
@@ -473,6 +490,9 @@ class Qna extends BaseModel
                       WHERE q_id = :q_id";
         $updateStmt = $this->db->prepare($updateSql);
         $updateStmt->execute(['q_id' => $answer['q_id']]);
+
+        // Update the user stats for the answer_count
+        $this->userStat->decrement($userId, 'answer_count');
 
         return true;
     }

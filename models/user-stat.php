@@ -41,20 +41,41 @@ class UserStat
             throw new \InvalidArgumentException("Invalid stat type");
         }
 
-        if ($stat === 'profile_view_count') {
-            $sql = "SELECT profile_view_count FROM user_stats WHERE user_id = :user_id";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':user_id', $userId);
-            $stmt->execute();
-            $result = $stmt->fetch();
+        // Fetch current value from DB BEFORE incrementing, so badge thresholds are reliable
+        $sql = "SELECT $stat FROM user_stats WHERE user_id = :user_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->execute();
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $currentValue = $row ? (int)$row[$stat] : 0;
 
-            if ($result && $result['profile_view_count'] >= 49) {
+        // Badge checks — compare against the current DB value (before the +1)
+        if ($stat === 'profile_view_count') {
+            // 'celebrity' badge at 50 profile views (check at 49 because we increment after)
+            if ($currentValue === 49) {
                 $this->badger->add($userId, 'celebrity');
             }
         }
         if ($stat === 'vote_count') {
-            if ($_SESSION['vote_count'] >= 5) {
+            // 'avid-voter' badge at 5 votes cast (set to 4 for testing; change to 29 for production)
+            if ($currentValue === 4) {
                 $this->badger->add($userId, 'avid-voter');
+            }
+        }
+        if ($stat === 'answer_count') {
+            if ($currentValue === 0) { // 1st answer
+                $this->badger->add($userId, 'community-member');
+            }
+            if ($currentValue === 4) { // 5th answer
+                $this->badger->add($userId, 'social-worker');
+            }
+        }
+        if ($stat === 'ask_count') {
+            if ($currentValue === 0) { // 1st question
+                $this->badger->add($userId, 'curious-mind');
+            }
+            if ($currentValue === 9) { // 10th question
+                $this->badger->add($userId, 'regular-inquirer');
             }
         }
 

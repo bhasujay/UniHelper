@@ -80,14 +80,20 @@ class badger
             $stmt->bindParam(':user_id', $userId);
             $stmt->bindParam(':badge_id', $this->badgelookup[$badgeName]['id']);
 
-            if ($badgeName === 'celebrity') {
-                $type = 'other';
-            } else {
-                $type = 'qa';
+            // Execute the insert FIRST — if it fails (e.g. duplicate badge), no notification is sent
+            $inserted = $stmt->execute();
+
+            if ($inserted) {
+                $type = ($badgeName === 'celebrity') ? 'other' : 'qa';
+                $this->notify->insertNotification(
+                    $userId,
+                    "Congratulations! You've earned the '" . $this->badgelookup[$badgeName]['name'] . "' badge.",
+                    $type,
+                    '/unihelper/profile/view'
+                );
             }
-            $this->notify->insertNotification($userId, "Congratulations! You've earned the '" . $this->badgelookup[$badgeName]['name'] . "' badge.", $type, '/unihelper/profile/view');
-            
-            return $stmt->execute();
+
+            return $inserted;
         } catch (\PDOException $e) {
             error_log("Badger add error: " . $e->getMessage());
             return false;
