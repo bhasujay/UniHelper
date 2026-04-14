@@ -22,6 +22,7 @@ class FeedController
         'image/gif' => 'gif',
         'image/webp' => 'webp',
     ];
+    private const FEED_UPLOAD_DIR_RELATIVE = 'public/uploads/feedPosts';
 
     private $feedPostModel;
     private $sessionModel;
@@ -185,6 +186,15 @@ class FeedController
                 'id' => $newId,
                 'image_path' => $imagePath,
             ]);
+        } catch (\RuntimeException $e) {
+            if (!empty($imagePath)) {
+                $this->removeUploadedImage($imagePath);
+            }
+
+            $this->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         } catch (\Throwable $e) {
             if (!empty($imagePath)) {
                 $this->removeUploadedImage($imagePath);
@@ -349,9 +359,13 @@ class FeedController
             throw new \RuntimeException('Unsupported image format.');
         }
 
-        $uploadDir = dirname(__DIR__, 1) . '/public/uploads/feedPosts';
-        if (!is_dir($uploadDir) && !mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
-            throw new \RuntimeException('Failed to create feed upload directory.');
+        $uploadDir = dirname(__DIR__, 1) . '/' . self::FEED_UPLOAD_DIR_RELATIVE;
+        if (!is_dir($uploadDir) && !@mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
+            throw new \RuntimeException('Feed image upload directory is not writable. Please grant write access to public/uploads/feedPosts.');
+        }
+
+        if (!is_writable($uploadDir)) {
+            throw new \RuntimeException('Feed image upload directory is not writable. Please grant write access to public/uploads/feedPosts.');
         }
 
         $fileName = 'feed-' . time() . '-' . bin2hex(random_bytes(6)) . '.' . self::IMAGE_MIME_TO_EXT[$mimeType];
@@ -361,7 +375,7 @@ class FeedController
             throw new \RuntimeException('Failed to save uploaded image.');
         }
 
-        return 'public/uploads/feedPosts/' . $fileName;
+        return self::FEED_UPLOAD_DIR_RELATIVE . '/' . $fileName;
     }
 
     private function detectUploadedMimeType(string $tmpPath): ?string
