@@ -10,7 +10,6 @@ return [
     ],
     'role-undergrad' => [
         ['component' => 'qa-forum',        'title' => 'Q&A Forum'],
-        ['component' => 'create-session',  'title' => 'Create Session'],
         ['component' => 'peer-learning',    'title' => 'Peer Learning'],
         ['component' => 'connections', 'title' => 'Connections'],
         ['component' => 'announcements',   'title' => 'Announcements'],

@@ -71,9 +71,29 @@ class badger
             ];
     }
 
+    // this is a clever helper fuction to check if a user already has a badge, to avoid duplicate entries and unnecessary notifications
+    public function hasBadge($userId, $badgeName)
+    {
+        try {
+            $sql = "SELECT COUNT(*) FROM user_badges WHERE user_id = :user_id AND badge_id = :badge_id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':user_id', $userId);
+            $stmt->bindParam(':badge_id', $this->badgelookup[$badgeName]['id']);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (\PDOException $e) {
+            error_log("Badger hasBadge error: " . $e->getMessage());
+            return false;
+        }
+    }
+
     // add a new badger entry for a user
     public function add($userId, $badgeName)
     {
+        // check if the user already has the badge, if so, skip the insert and notification
+        if ($this->hasBadge($userId, $badgeName)) {
+            return true; // badge already exists, no need to add or notify, return true to indicate "success" since the user effectively has the badge
+        }
         try {
             $sql = "INSERT INTO user_badges (user_id, badge_id) VALUES (:user_id, :badge_id)";
             $stmt = $this->db->prepare($sql);
@@ -99,4 +119,6 @@ class badger
             return false;
         }
     }
+
+
 }

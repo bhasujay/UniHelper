@@ -6,19 +6,25 @@ use app\core\Database;
 
 require_once dirname(__DIR__) . '\models\base-model.php';
 require_once dirname(__DIR__) . '\models\user-stat.php';
+require_once dirname(__DIR__) . '\models\badger.php';
+require_once dirname(__DIR__) . '\models\notify.php';
 
 use app\models\UserStat;
 
 class Qna extends BaseModel
 {
     private $userStat;
-
+    private $badger;
+    private $notify;
     public function __construct()
     {
         parent::__construct();
         $this->table = 'questions';
         $this->primaryKey = 'q_id';
         $this->userStat = new UserStat();
+        $this->badger = new Badger();
+        $this->notify = new Notify();
+
     }
 
     public function create($data)
@@ -37,6 +43,11 @@ class Qna extends BaseModel
         if (isset($data['tags']) && is_array($data['tags'])) {
             $tags = $data['tags'];
         }
+        $tags = array_values(array_filter(array_unique(array_map(function ($tag) {
+            return trim((string)$tag);
+        }, $tags)), function ($tag) {
+            return $tag !== '';
+        }));
         if (isset($data['tags'])) {
             unset($data['tags']);
         }
@@ -55,10 +66,14 @@ class Qna extends BaseModel
         foreach ($tags as $tag) {
             $stmt->execute(['tag_name' => $tag]);
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-            if ($result) {
+            if ($result && !in_array((int)$result['tag_id'], $tagIds, true)) {
                 $tagIds[] = $result['tag_id'];
             }
         }
+
+        $currentUserId = (int)$data['user_id'];
+        $trendsetterUsers = [];
+
         // update the post count for each tag
         $updateTagStmt = $this->db->prepare("UPDATE tags SET post_count = post_count + 1 WHERE tag_id = :tag_id");
         foreach ($tagIds as $tagId) {
@@ -69,11 +84,42 @@ class Qna extends BaseModel
         foreach ($tagIds as $tagId) {
             $questionTagStmt->execute(['q_id' => $questionId, 'tag_id' => $tagId]);
         }
+
+        // Trendsetter: when a tag has exactly two distinct users (requesting user + one other),
+        // reward the other user as the tag starter.
+        $trendsetterStmt = $this->db->prepare(
+                "SELECT DISTINCT q.user_id
+                    FROM qa_tag qt
+                    JOIN questions q ON q.q_id = qt.q_id
+                    WHERE qt.tag_id = :tag_id
+                        AND q.status IN ('normal', 'flagged')"
+        );
+        foreach ($tagIds as $tagId) {
+            $trendsetterStmt->execute(['tag_id' => $tagId]);
+            $distinctUsers = array_map('intval', $trendsetterStmt->fetchAll(\PDO::FETCH_COLUMN));
+
+            if (count($distinctUsers) === 2 && in_array($currentUserId, $distinctUsers, true)) {
+                foreach ($distinctUsers as $userId) {
+                    if ($userId !== $currentUserId) {
+                        $trendsetterUsers[$userId] = true;
+                    }
+                }
+            }
+        }
         
         // Now update the timestamps using MySQL's NOW()
         $sql = "UPDATE questions SET added_time = NOW(), last_modified = NOW() WHERE q_id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $questionId]);
+
+        // Award explorer when a single question has 3 or more unique tags.
+        if (count($tagIds) >= 3) {
+            $this->badger->add($currentUserId, 'explorer');
+        }
+
+        foreach (array_keys($trendsetterUsers) as $oldAuthorId) {
+            $this->badger->add((int)$oldAuthorId, 'trendsetter');
+        }
         
         // Increment the ask_count stat for the user
         $this->userStat->increment($data['user_id'], 'ask_count');
@@ -111,6 +157,16 @@ class Qna extends BaseModel
 
         // Increment the answer_count stat for the user
         $this->userStat->increment($data['user_id'], 'answer_count');
+
+        // check if a question recieves how much answers to award badges
+        $stmt = $this->db->prepare("SELECT user_id, answer_count FROM questions WHERE q_id = :q_id");
+        $stmt->execute(['q_id' => $data['q_id']]);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if ($result && $result['answer_count'] == 3) { // if the question receives 3 answers
+            $this->badger->add($result['user_id'], 'discussion-starter');
+        } else if ($result && $result['answer_count'] == 10) { // if the question receives 10 answers
+            $this->badger->add($result['user_id'], 'peer-influencer');
+        }
         
         return $answerId;
     }
@@ -278,6 +334,18 @@ class Qna extends BaseModel
             'delta' => $delta,
             'q_id' => $questionId
         ]);
+
+        // check the question that has been upvoted 
+        if ($newVote == 1) {
+            $stmt = $this->db->prepare("SELECT user_id, vote_count FROM questions WHERE q_id = :q_id");
+            $stmt->execute(['q_id' => $questionId]);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if ($result && $result['vote_count'] == 5) { // if the question reaches 5 votes
+                $this->badger->add($result['user_id'], 'insightful-question');
+            } else if ($result && $result['vote_count'] == 20) { // if the question reaches 20 votes
+                $this->badger->add($result['user_id'], 'top-question');
+            }
+        }
 
         // Increment the vote_count stat for the user. it does not matter if it's an upvote or downvote, we want to track the total number of votes cast by the user for badge purposes
         $this->userStat->increment($userId, 'vote_count');
