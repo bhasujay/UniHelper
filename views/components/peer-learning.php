@@ -266,10 +266,45 @@
     }
 
     .session-creator {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
         font-size: 0.85rem;
         color: var(--muted-foreground);
         padding-top: 0.5rem;
         border-top: 1px solid rgba(164, 109, 255, 0.1);
+    }
+
+    .session-creator-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(164, 109, 255, 0.4);
+        flex-shrink: 0;
+        background: rgba(164, 109, 255, 0.1);
+    }
+
+    .session-creator-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .session-creator-link,
+    .session-creator-name {
+        color: var(--foreground);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .session-creator-link:hover {
+        text-decoration: underline;
+    }
+
+    .session-creator-university {
+        color: var(--muted-foreground);
+        font-size: 0.8rem;
     }
 
     .session-actions {
@@ -868,6 +903,30 @@
         return 'Pending';
     }
 
+    function getAuthorFullName(session) {
+        const firstName = String(session.creator_first_name || '').trim();
+        const lastName = String(session.creator_last_name || '').trim();
+        const fullName = `${firstName} ${lastName}`.trim();
+        return fullName || 'Unknown User';
+    }
+
+    function getProfileImageUrl(profilePicturePath) {
+        const rawPath = String(profilePicturePath || '').trim();
+        if (!rawPath) {
+            return `${BASE_URL}/views/assets/default-pfp.png`;
+        }
+
+        if (/^https?:\/\//i.test(rawPath)) {
+            return rawPath;
+        }
+
+        if (rawPath.startsWith('/')) {
+            return `${BASE_URL}${rawPath}`;
+        }
+
+        return `${BASE_URL}/${rawPath}`;
+    }
+
     function updateSubscribeButtonState(button, status) {
         const normalizedStatus = normalizeSubscriptionStatus(status);
         const subscribed = normalizedStatus !== 'none';
@@ -1028,6 +1087,15 @@
             : (subscriptionStatus === 'pending' ? 'session-subscribe-btn pending' : 'session-subscribe-btn');
         const subscribeBtnText = getSubscribeButtonLabel(subscriptionStatus);
         const canJoin = Number(session.can_join || 0) === 1;
+        const authorName = getAuthorFullName(session);
+        const authorNameHtml = escapeHtml(authorName);
+        const authorId = Number(session.user_id || 0);
+        const authorLink = authorId ? `${BASE_URL}/view/profile/${authorId}` : '';
+        const authorLinkHtml = authorLink
+            ? `<a class="session-creator-link" href="${authorLink}" target="_blank" rel="noopener">${authorNameHtml}</a>`
+            : `<span class="session-creator-name">${authorNameHtml}</span>`;
+        const authorUniversity = escapeHtml(session.creator_university || session.university || 'Unknown University');
+        const authorAvatarUrl = escapeAttribute(getProfileImageUrl(session.creator_profile_picture));
 
         let actions = '';
         if (showEditDelete) {
@@ -1098,7 +1166,11 @@
                 </div>
                 ${tags ? `<div class="session-tags">${tags}</div>` : ''}
                 <div class="session-creator">
-                    Author: ${session.creator_name || 'Unknown'} • ${session.creator_university || session.university || 'Unknown University'}
+                    <img class="session-creator-avatar" src="${authorAvatarUrl}" alt="${escapeAttribute(authorName)}" loading="lazy" />
+                    <div class="session-creator-details">
+                        ${authorLinkHtml}
+                        <span class="session-creator-university">${authorUniversity}</span>
+                    </div>
                 </div>
                 ${subscriberCountMeta}
                 ${actions}

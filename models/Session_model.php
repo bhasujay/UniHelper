@@ -22,7 +22,8 @@ class Session_model extends BaseModel {
     public function findAll($conditions = [], $limit = null, $offset = null, $currentUserId = null, $currentUserUniversity = null) {
         $currentUserIdValue = (int)$currentUserId;
         $viewerUniversity = $this->normalizeUniversity($currentUserUniversity);
-        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+        $sql = "SELECT s.*, u.first_name as creator_first_name, u.last_name as creator_last_name,
+            u.profile_picture as creator_profile_picture, uni.name as creator_university, 
                 COALESCE((
                     SELECT sub.status
                     FROM subscribers sub
@@ -112,7 +113,8 @@ class Session_model extends BaseModel {
      */
     public function findByUserId($userId, $limit = null, $offset = null, $currentUserId = null) {
         $currentUserIdValue = (int)$currentUserId;
-        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+        $sql = "SELECT s.*, u.first_name as creator_first_name, u.last_name as creator_last_name,
+            u.profile_picture as creator_profile_picture, uni.name as creator_university, 
                 COALESCE((
                     SELECT sub.status
                     FROM subscribers sub
@@ -165,7 +167,8 @@ class Session_model extends BaseModel {
      */
     public function findByUniversity($university, $limit = null, $offset = null, $currentUserId = null) {
         $currentUserIdValue = (int)$currentUserId;
-        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+        $sql = "SELECT s.*, u.first_name as creator_first_name, u.last_name as creator_last_name,
+            u.profile_picture as creator_profile_picture, uni.name as creator_university, 
                 COALESCE((
                     SELECT sub.status
                     FROM subscribers sub
@@ -235,7 +238,8 @@ class Session_model extends BaseModel {
     public function findBySubject($subject, $limit = null, $offset = null, $currentUserId = null, $currentUserUniversity = null) {
         $currentUserIdValue = (int)$currentUserId;
         $viewerUniversity = $this->normalizeUniversity($currentUserUniversity);
-        $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+        $sql = "SELECT s.*, u.first_name as creator_first_name, u.last_name as creator_last_name,
+            u.profile_picture as creator_profile_picture, uni.name as creator_university, 
                 COALESCE((
                     SELECT sub.status
                     FROM subscribers sub
