@@ -16,21 +16,15 @@ class Router
             '/profile/view' => ['DashboardController', 'profileIndex'],
             '/profile/edit' => ['DashboardController', 'profileIndex'],
             '/view/profile/:id' => ['DashboardController', 'viewProfile'], // dynamic route example
-            '/feedback/get' => ['FeedbackController', 'getFeedback'],
         ],
         'POST' => [
             '/register' => ['AuthController', 'register'],
             '/login' => ['AuthController', 'login'],
             '/api' => ['apiGateway', 'handleRequest'],
             '/profile/update' => ['DashboardController', 'profileUpdate'],
-            '/feedback/submit' => ['FeedbackController', 'submitFeedback'],
         ],
-        'PUT' => [
-            '/feedback/update' => ['FeedbackController', 'updateFeedback'],
-        ],
-        'DELETE' => [
-            '/feedback/delete' => ['FeedbackController', 'deleteFeedback'],
-        ],
+        'PUT' => [],
+        'DELETE' => [],
         'DYNAMIC' => [
             '/:component' => ['DashboardController', 'renderComponent'],
             '/this/is/a/test/:id' => ['TestController', 'testMethod']

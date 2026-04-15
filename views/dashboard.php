@@ -94,6 +94,7 @@
     </nav>
 
     <aside class="sidebar">
+        <?php $feedbackPageActive = in_array($activeComponent, ['feedback-forum', 'feedback_us'], true); ?>
         <ul class="sidebar-menu">
             <!-- Undergraduate Features -->
             <div class="sidebar-section">
@@ -112,13 +113,16 @@
         <!-- Minimal footer -->
         <div class="sidebar-footer">
             <div class="sidebar-footer-logo">UniHelper</div>
+            <a href="feedback-forum" class="sidebar-footer-link<?= $feedbackPageActive ? ' active' : '' ?>">Feedback Us</a><br>
             <a href="mailto:unihelper@gmail.com" class="sidebar-footer-link">Support: unihelper@gmail.com</a>
             <div class="sidebar-footer-copy">&copy; <?= date('Y') ?> UniHelper</div>
         </div>
     </aside>
 
     <main class="main-content">
-        <?php if (isset($content)) echo $content; ?>
+        <?php if (isset($content)): ?>
+            <?php echo $content; ?>
+        <?php endif; ?>
     </main>
 
     <!-- Toast Notification Container -->

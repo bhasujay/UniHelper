@@ -19,6 +19,25 @@ use app\core\Request;
  */
 class FeedbackController
 {
+    private function getRequestData(?Request $request = null)
+    {
+        $requestBody = [];
+
+        if ($request !== null) {
+            $requestBody = $request->getBody();
+        }
+
+        $rawInput = file_get_contents('php://input');
+        if ($rawInput) {
+            $decoded = json_decode($rawInput, true);
+            if (is_array($decoded) && !empty($decoded)) {
+                return array_merge($requestBody, $decoded);
+            }
+        }
+
+        return $requestBody;
+    }
+
     /**
      * Submit feedback via AJAX
      * 
@@ -48,15 +67,15 @@ class FeedbackController
                 ]);
             }
             
-            // Get POST data from request body
-            $input = json_decode(file_get_contents('php://input'), true);
-            
-            // Check if JSON decoding failed
-            if ($input === null) {
+            // Get request data from the shared Request object when available,
+            // with JSON fallback for fetch() requests.
+            $input = $this->getRequestData($request);
+
+            if (empty($input)) {
                 http_response_code(400);
                 return json_encode([
                     'success' => false,
-                    'message' => 'Invalid JSON format in request body'
+                    'message' => 'Invalid request body'
                 ]);
             }
             
@@ -100,6 +119,7 @@ class FeedbackController
                         'id' => $insertResult['id'],
                         'name' => $sanitizedName,
                         'title' => $sanitizedTitle,
+                        'message' => $sanitizedMessage,
                         'created_at' => $insertResult['created_at']
                     ]
                 ]);
@@ -209,18 +229,29 @@ class FeedbackController
      * 
      * @return string JSON response with all feedback posts
      */
-    public function getFeedback()
+    public function getFeedback(Request $request = null)
     {
         header('Content-Type: application/json');
         
         try {
             $feedbackModel = new Feedback();
-            $feedbackList = $feedbackModel->getAllFeedback(100, 0); // Get up to 100 posts
+            $limit = $request ? (int) ($request->get('limit') ?? 100) : 100;
+            $offset = $request ? (int) ($request->get('offset') ?? 0) : 0;
+
+            $limit = max(1, min($limit, 100));
+            $offset = max(0, $offset);
+
+            $feedbackList = $feedbackModel->getAllFeedback($limit, $offset);
             
             http_response_code(200);
             return json_encode([
                 'success' => true,
-                'data' => $feedbackList
+                'data' => $feedbackList,
+                'meta' => [
+                    'limit' => $limit,
+                    'offset' => $offset,
+                    'count' => count($feedbackList)
+                ]
             ]);
         } catch (\Exception $e) {
             http_response_code(500);
@@ -244,22 +275,21 @@ class FeedbackController
         header('Content-Type: application/json');
         
         try {
-            if ($request->getMethod() !== 'PUT') {
+            if (!in_array($request->getMethod(), ['PUT', 'POST'])) {
                 http_response_code(405);
                 return json_encode([
                     'success' => false,
-                    'message' => 'Method Not Allowed. Only PUT requests are accepted.'
+                    'message' => 'Method Not Allowed. Only PUT or POST requests are accepted for updates.'
                 ]);
             }
             
-            // Get PUT data from request body
-            $input = json_decode(file_get_contents('php://input'), true);
-            
-            if ($input === null) {
+            $input = $this->getRequestData($request);
+
+            if (empty($input)) {
                 http_response_code(400);
                 return json_encode([
                     'success' => false,
-                    'message' => 'Invalid JSON format in request body'
+                    'message' => 'Invalid request body'
                 ]);
             }
             
@@ -343,22 +373,21 @@ class FeedbackController
         header('Content-Type: application/json');
         
         try {
-            if ($request->getMethod() !== 'DELETE') {
+            if (!in_array($request->getMethod(), ['DELETE', 'POST'])) {
                 http_response_code(405);
                 return json_encode([
                     'success' => false,
-                    'message' => 'Method Not Allowed. Only DELETE requests are accepted.'
+                    'message' => 'Method Not Allowed. Only DELETE or POST requests are accepted for delete.'
                 ]);
             }
             
-            // Get DELETE data from request body
-            $input = json_decode(file_get_contents('php://input'), true);
-            
-            if ($input === null) {
+            $input = $this->getRequestData($request);
+
+            if (empty($input)) {
                 http_response_code(400);
                 return json_encode([
                     'success' => false,
-                    'message' => 'Invalid JSON format in request body'
+                    'message' => 'Invalid request body'
                 ]);
             }
             

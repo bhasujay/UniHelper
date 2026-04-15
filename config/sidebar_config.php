@@ -7,7 +7,6 @@ return [
         ['component' => 'find-applicant',     'title' => 'Find Applicants'],
         ['component' => 'unicode-generator',  'title' => 'Unicode Generator'],
         ['component' => 'connect-undergrads', 'title' => 'Connect with Undergrads'],
-        ['component' => 'feedback-forum',     'title' => 'Feedback Forum'],
     ],
     'role-undergrad' => [
         ['component' => 'qa-forum',        'title' => 'Q&A Forum'],
@@ -16,18 +15,15 @@ return [
         ['component' => 'join-sessions',   'title' => 'Join Sessions'],
         ['component' => 'flagged-content', 'title' => 'Flagged Content'],
         ['component' => 'banned-users',    'title' => 'Banned Users'],
-        ['component' => 'feedback-forum',  'title' => 'Feedback Forum'],
     ],
     'role-profile' => [
         ['component' => 'qa-forum',        'title' => 'Q&A Forum'],
         ['component' => 'publish-events',  'title' => 'Publish Events'],
-        ['component' => 'feedback-forum',  'title' => 'Feedback Forum'],
         ['component' => 'announcements',   'title' => 'Announcements'],
     ],
     'role-admin' => [
         ['component' => 'degree-programs-management', 'title' => 'Degree Programs'],
         ['component' => 'content-review-queue',       'title' => 'Content Review Queue'],
-        ['component' => 'feedback-forum',             'title' => 'Feedback Forum'],
         ['component' => 'role-applications',          'title' => 'Role Applications'],
     ],
 ];
