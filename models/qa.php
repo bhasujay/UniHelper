@@ -167,6 +167,11 @@ class Qna extends BaseModel
         } else if ($result && $result['answer_count'] == 10) { // if the question receives 10 answers
             $this->badger->add($result['user_id'], 'peer-influencer');
         }
+
+        // send notification to the question author when their question receives a new answer
+        $questionAuthorId = $result['user_id'];
+        $questionId = $data['q_id'];
+        $this->notify->insertNotification($questionAuthorId, "Your question has received a new answer.", 'qa', "/unihelper/qa-forum?question=" . $questionId . "&answer=" . $answerId);
         
         return $answerId;
     }
@@ -340,15 +345,19 @@ class Qna extends BaseModel
             $stmt = $this->db->prepare("SELECT user_id, vote_count FROM questions WHERE q_id = :q_id");
             $stmt->execute(['q_id' => $questionId]);
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-            if ($result && $result['vote_count'] == 5) { // if the question reaches 5 votes
+            if ($result && $result['vote_count'] == 1) {
+                $this->notify->insertNotification($result['user_id'], "Your question has received its first upvote!", 'qa', "/unihelper/qa-forum?question=" . $questionId);
+            } else if ($result && $result['vote_count'] == 5) { // if the question reaches 5 votes
                 $this->badger->add($result['user_id'], 'insightful-question');
             } else if ($result && $result['vote_count'] == 20) { // if the question reaches 20 votes
                 $this->badger->add($result['user_id'], 'top-question');
+            } else if ($result && $result['vote_count'] == -5) { // if the question reaches 50 votes 
+                $this->notify->insertNotification($result['user_id'], "Your question has received 50 votes. Keep up the good work!", 'qa', "/unihelper/qa-forum?question=" . $questionId);
             }
-        }
 
         // Increment the vote_count stat for the user. it does not matter if it's an upvote or downvote, we want to track the total number of votes cast by the user for badge purposes
         $this->userStat->increment($userId, 'vote_count');
+        }
     }
 
     // vote related functions

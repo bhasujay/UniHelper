@@ -4,6 +4,8 @@ namespace app\models;
 
 use app\core\Database;
 
+require_once dirname(__DIR__) . '\\models\\notify.php';
+
 class QaReport
 {
     private $db;
@@ -259,9 +261,39 @@ class QaReport
                 if ($isQuestionReport) {
                     $flagStmt = $this->db->prepare("UPDATE questions SET status = 'flagged' WHERE q_id = :id");
                     $flagStmt->execute(['id' => (int) $report['q_id']]);
+
+                    if ($flagStmt->rowCount() > 0) {
+                        $authorStmt = $this->db->prepare("SELECT user_id FROM questions WHERE q_id = :id LIMIT 1");
+                        $authorStmt->execute(['id' => (int) $report['q_id']]);
+                        $authorId = (int) $authorStmt->fetchColumn();
+
+                        if ($authorId > 0) {
+                            (new Notify())->insertNotification(
+                                $authorId,
+                                'Your question has been flagged by moderation.',
+                                'qa',
+                                '/unihelper/qa-forum?question=' . (int) $report['q_id']
+                            );
+                        }
+                    }
                 } else {
                     $flagStmt = $this->db->prepare("UPDATE answers SET status = 'flagged' WHERE a_id = :id");
                     $flagStmt->execute(['id' => (int) $report['a_id']]);
+
+                    if ($flagStmt->rowCount() > 0) {
+                        $authorStmt = $this->db->prepare("SELECT user_id, q_id FROM answers WHERE a_id = :id LIMIT 1");
+                        $authorStmt->execute(['id' => (int) $report['a_id']]);
+                        $author = $authorStmt->fetch(\PDO::FETCH_ASSOC);
+
+                        if ($author && !empty($author['user_id'])) {
+                            (new Notify())->insertNotification(
+                                (int) $author['user_id'],
+                                'Your answer has been flagged by moderation.',
+                                'qa',
+                                '/unihelper/qa-forum?question=' . (int) $author['q_id'] . '&answer=' . (int) $report['a_id']
+                            );
+                        }
+                    }
                 }
             }
 
@@ -359,6 +391,21 @@ class QaReport
                 $contentStmt = $this->db->prepare("UPDATE questions SET status = 'removed' WHERE q_id = :id");
                 $contentStmt->execute(['id' => $contentId]);
 
+                if ($contentStmt->rowCount() > 0) {
+                    $authorStmt = $this->db->prepare("SELECT user_id FROM questions WHERE q_id = :id LIMIT 1");
+                    $authorStmt->execute(['id' => $contentId]);
+                    $authorId = (int) $authorStmt->fetchColumn();
+
+                    if ($authorId > 0) {
+                        (new Notify())->insertNotification(
+                            $authorId,
+                            'Your question has been removed by moderation.',
+                            'qa',
+                            '/unihelper/qa-forum?question=' . $contentId
+                        );
+                    }
+                }
+
                 // Mark all reports about this question as resolved and update mod_id
                 $reportsStmt = $this->db->prepare("UPDATE reports SET status = 'resolved', action_taken = 'removed', mod_id = :mod_id WHERE q_id = :id");
                 $reportsStmt->execute(['id' => $contentId, 'mod_id' => $adminId]);
@@ -368,6 +415,21 @@ class QaReport
                 // Mark content as removed (schema-dependent value)
                 $contentStmt = $this->db->prepare("UPDATE answers SET status = 'removed' WHERE a_id = :id");
                 $contentStmt->execute(['id' => $contentId]);
+
+                if ($contentStmt->rowCount() > 0) {
+                    $authorStmt = $this->db->prepare("SELECT user_id, q_id FROM answers WHERE a_id = :id LIMIT 1");
+                    $authorStmt->execute(['id' => $contentId]);
+                    $author = $authorStmt->fetch(\PDO::FETCH_ASSOC);
+
+                    if ($author && !empty($author['user_id'])) {
+                        (new Notify())->insertNotification(
+                            (int) $author['user_id'],
+                            'Your answer has been removed by moderation.',
+                            'qa',
+                            '/unihelper/qa-forum?question=' . (int) $author['q_id'] . '&answer=' . $contentId
+                        );
+                    }
+                }
 
                 // Mark all reports about this answer as resolved and update mod_id
                 $reportsStmt = $this->db->prepare("UPDATE reports SET status = 'resolved', action_taken = 'removed', mod_id = :mod_id WHERE a_id = :id");
