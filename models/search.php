@@ -4,10 +4,12 @@ namespace app\models;
 
 use app\core\Database;
 
-require_once dirname(__DIR__) . '\models\base-model.php';
+require_once dirname(__DIR__) . '/models/base-model.php';
 
 class search extends BaseModel
 {
+    private const VALID_ROLES = ['role-applicant', 'role-undergrad', 'role-profile', 'role-admin'];
+
     public function __construct()
     {
         parent::__construct();
@@ -276,12 +278,134 @@ class search extends BaseModel
     }
 
     // searching for posts in the feed
-    public function feed_search($query, $index)
+    public function feed_search($query, $index, $viewerRole = '')
     {
+        $query = trim((string)$query);
+        if ($query === '') {
+            return [];
+        }
+
+        $page = max(0, (int)$index);
+        $limit = 20;
+        $offset = $page * $limit;
+
+        $sql = "SELECT
+                    p.id,
+                    p.user_id,
+                    p.post_type,
+                    p.title,
+                    p.body,
+                    p.image_path,
+                    p.audience_mode,
+                    p.audience_roles,
+                    p.created_at,
+                    u.first_name,
+                    u.last_name,
+                    u.role AS author_role
+                FROM feed_posts p
+                INNER JOIN users u ON u.id = p.user_id
+                WHERE p.is_deleted = 0
+                  AND p.deleted_at IS NULL
+                    AND (
+                        p.audience_mode = 'all_roles'
+                        OR (p.audience_mode = 'selected_roles' AND p.audience_roles LIKE :role_pattern)
+                    )
+                  AND (
+                                LOWER(p.title) LIKE LOWER(:query_title)
+                            OR LOWER(p.body) LIKE LOWER(:query_body)
+                  )
+                ORDER BY p.created_at DESC
+                LIMIT {$limit} OFFSET {$offset}";
+
+        $stmt = $this->db->prepare($sql);
+              $rolePattern = '%,' . trim((string)$viewerRole) . ',%';
+              if ($viewerRole === '') {
+                $rolePattern = ',,,';
+              }
+              $stmt->bindValue(':role_pattern', $rolePattern, \PDO::PARAM_STR);
+                $searchLike = '%' . $query . '%';
+                $stmt->bindValue(':query_title', $searchLike, \PDO::PARAM_STR);
+                $stmt->bindValue(':query_body', $searchLike, \PDO::PARAM_STR);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $results = [];
+        foreach ($rows as $row) {
+            $roles = $this->parseAudienceRoles($row['audience_roles'] ?? null);
+            $authorName = trim(((string)($row['first_name'] ?? '')) . ' ' . ((string)($row['last_name'] ?? '')));
+            if ($authorName === '') {
+                $authorName = 'User #' . (int)$row['user_id'];
+            }
+
+            $results[] = [
+                'id' => 'post-' . (int)$row['id'],
+                'source' => 'post',
+                'source_id' => (int)$row['id'],
+                'post_type' => (string)$row['post_type'],
+                'title' => (string)$row['title'],
+                'body' => (string)$row['body'],
+                'image_path' => (string)($row['image_path'] ?? ''),
+                'created_at' => (string)$row['created_at'],
+                'audience_label' => $this->audienceLabel((string)($row['audience_mode'] ?? 'all_roles'), $roles),
+                'author_name' => $authorName,
+                'author_role_label' => $this->roleLabel((string)($row['author_role'] ?? '')),
+                'meta' => [
+                    'roles' => $roles,
+                ],
+            ];
+        }
+
+        return $results;
     }
 
     // searching for sessions
     public function session_search($query, $index)
     {
+        return [];
+    }
+
+    private function parseAudienceRoles($serialized)
+    {
+        $value = (string)($serialized ?? '');
+        if ($value === '') {
+            return [];
+        }
+
+        $parts = array_filter(array_map('trim', explode(',', trim($value, ','))));
+        $result = [];
+        foreach ($parts as $part) {
+            if (in_array($part, self::VALID_ROLES, true)) {
+                $result[$part] = true;
+            }
+        }
+
+        return array_keys($result);
+    }
+
+    private function roleLabel($role)
+    {
+        $labels = [
+            'role-applicant' => 'Applicant',
+            'role-undergrad' => 'Undergraduate',
+            'role-profile' => 'Profile',
+            'role-admin' => 'Admin',
+        ];
+
+        return $labels[$role] ?? 'User';
+    }
+
+    private function audienceLabel($mode, $roles)
+    {
+        if ($mode !== 'selected_roles') {
+            return 'All Roles';
+        }
+
+        if (empty($roles)) {
+            return 'Selected Roles';
+        }
+
+        return implode(', ', array_map(function ($role) {
+            return $this->roleLabel($role);
+        }, $roles));
     }
 }

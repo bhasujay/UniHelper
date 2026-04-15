@@ -2,9 +2,11 @@
 
 namespace app\controllers;
 
-require_once dirname(__DIR__) . '\models\search.php';
+require_once dirname(__DIR__) . '/models/search.php';
+require_once dirname(__DIR__) . '/models/User.php';
 
 use app\models\search;
+use app\models\User;
 use app\core\Request;
 
 class searchController
@@ -45,7 +47,17 @@ class searchController
                 // Do not exclude the current user from search results
                 $results = $this->model->user_search($query, $index);
             } elseif ($type === 'feed') {
-                $results = $this->model->feed_search($query, $index);
+                $viewerRole = '';
+                $sessionUserId = $request->session('user_id');
+                if (!empty($sessionUserId)) {
+                    $userModel = new User();
+                    $viewer = $userModel->findById((int)$sessionUserId);
+                    if ($viewer && isset($viewer->role)) {
+                        $viewerRole = (string)$viewer->role;
+                    }
+                }
+
+                $results = $this->model->feed_search($query, $index, $viewerRole);
             } elseif ($type === 'session') {
                 $results = $this->model->session_search($query, $index);
             } else {
