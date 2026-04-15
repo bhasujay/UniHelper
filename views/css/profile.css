@@ -33,6 +33,7 @@
     padding: 0 0 1.5rem;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 2rem;
     border-bottom: 1px solid var(--border);
     margin-bottom: 2rem;
@@ -55,6 +56,22 @@
 
 .profile-card-name-section {
     flex: 1;
+    min-width: 220px;
+}
+
+.profile-top-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    margin-right: 1.5rem;
+}
+
+.profile-top-actions .btn {
+    white-space: nowrap;
+    width: 100%;
 }
 
 .profile-card-name {
@@ -322,7 +339,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: auto;
+    margin-left: 0;
     margin-right: 0;
     border: 1px solid var(--border, #e0e0e0);
     height: 60px;
@@ -447,6 +464,16 @@ input#publicSwitch:not(:checked) ~ .switch-label .switch-status {
         align-items: center;
         text-align: center;
         padding: 0 0 1.5rem;
+    }
+
+    .profile-top-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .profile-top-actions .btn {
+        width: 100%;
+        justify-content: center;
     }
 
     .profile-image {
@@ -992,4 +1019,456 @@ input#publicSwitch:not(:checked) ~ .switch-label .switch-status {
         min-width: unset;
         max-width: calc(100vw - 48px);
     }
+}
+
+/* ===== Badge Showcase Modal ===== */
+.badge-showcase-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(12px);
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    overflow: hidden;
+}
+
+.badge-showcase-modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 500px;
+    width: 100%;
+    max-height: min(100vh, 1000px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1.25rem;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.24);
+    animation: badgeModalIn 0.22s ease-out;
+}
+
+@keyframes badgeModalIn {
+    from { transform: translateY(-10px) scale(0.985); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.badge-showcase-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.badge-showcase-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.badge-showcase-header h2 {
+    font-size: 1.12rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+
+.badge-showcase-count {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--gradient-secondary);
+    padding: 0.22rem 0.6rem;
+    border-radius: 2rem;
+    letter-spacing: 0.3px;
+}
+
+.badge-showcase-close {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+    transition: all 0.16s ease;
+}
+
+.badge-showcase-close:hover {
+    color: var(--text);
+    border-color: var(--primary);
+    background: rgba(0, 170, 255, 0.08);
+}
+
+/* Badge Grid */
+.badge-showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: 0.05rem;
+    row-gap: 0.5rem;
+}
+
+/* Individual Badge Item */
+.badge-showcase-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.2rem 0.08rem;
+    border-radius: 8px;
+    transition: background 0.16s ease;
+    cursor: default;
+}
+
+.badge-showcase-item:hover {
+    background: transparent;
+}
+
+/* Badge Image Wrapper */
+.badge-img-wrapper {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform;
+    transform-origin: center;
+}
+
+.badge-showcase-item:hover .badge-img-wrapper {
+    transform: translateY(-3px) scale(1.22);
+}
+
+.badge-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 0;
+    transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
+.badge-showcase-item.acquired:hover .badge-img-wrapper img {
+    filter: drop-shadow(0 6px 14px rgba(58, 150, 255, 0.28));
+}
+
+/* Locked badge styling */
+.badge-showcase-item.locked .badge-img-wrapper img {
+    filter: grayscale(100%) brightness(0.7);
+    opacity: 0.5;
+}
+
+.badge-showcase-item.locked:hover .badge-img-wrapper img {
+    filter: grayscale(80%) brightness(0.8);
+    opacity: 0.62;
+}
+
+/* Lock icon overlay */
+.badge-lock-icon {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+}
+
+/* Tooltip */
+.badge-showcase-tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: linear-gradient(155deg, rgba(24, 28, 34, 0.96), rgba(16, 20, 24, 0.96));
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.58rem 0.7rem;
+    min-width: 172px;
+    max-width: 196px;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.28);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s ease;
+    z-index: 10;
+    text-align: left;
+    overflow: hidden;
+}
+
+.badge-showcase-tooltip::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(58, 150, 255, 0.92), rgba(39, 205, 255, 0.82));
+}
+
+/* Tooltip arrow */
+.badge-showcase-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--border);
+}
+
+.badge-showcase-item:hover .badge-showcase-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Top row tooltips open downward so they are never clipped by the modal edge */
+.badge-showcase-grid > .badge-showcase-item:nth-child(-n+4) .badge-showcase-tooltip {
+    top: calc(100% + 10px);
+    bottom: auto;
+    transform: translateX(-50%) translateY(-6px);
+}
+
+.badge-showcase-grid > .badge-showcase-item:nth-child(-n+4) .badge-showcase-tooltip::after {
+    top: -12px;
+    border-top-color: transparent;
+    border-bottom-color: var(--border);
+}
+
+.badge-showcase-grid > .badge-showcase-item:nth-child(-n+4):hover .badge-showcase-tooltip {
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Keep side-edge tooltips fully visible inside modal width. */
+.badge-showcase-grid > .badge-showcase-item:nth-child(4n+1) .badge-showcase-tooltip {
+    left: 0;
+    transform: translateX(0) translateY(6px);
+}
+
+.badge-showcase-grid > .badge-showcase-item:nth-child(4n+1):hover .badge-showcase-tooltip {
+    transform: translateX(0) translateY(0);
+}
+
+.badge-showcase-grid > .badge-showcase-item:nth-child(4n+1) .badge-showcase-tooltip::after {
+    left: 20%;
+    transform: translateX(-50%);
+}
+
+.badge-showcase-grid > .badge-showcase-item:nth-child(4n) .badge-showcase-tooltip {
+    left: auto;
+    right: 0;
+    transform: translateX(0) translateY(6px);
+}
+
+.badge-showcase-grid > .badge-showcase-item:nth-child(4n):hover .badge-showcase-tooltip {
+    transform: translateX(0) translateY(0);
+}
+
+.badge-showcase-grid > .badge-showcase-item:nth-child(4n) .badge-showcase-tooltip::after {
+    left: 80%;
+    transform: translateX(-50%);
+}
+
+.badge-showcase-tooltip strong {
+    display: block;
+    font-size: 0.8rem;
+    letter-spacing: 0.2px;
+    color: var(--text);
+    margin-bottom: 0.26rem;
+}
+
+.badge-showcase-tooltip p {
+    font-size: 0.7rem;
+    color: var(--muted-foreground);
+    line-height: 1.35;
+    margin: 0 0 0.36rem;
+}
+
+.badge-tooltip-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.64rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    padding: 0.16rem 0.42rem;
+    border-radius: 1rem;
+}
+
+.badge-tooltip-date.earned {
+    color: #4caf50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.badge-tooltip-date.not-earned {
+    color: var(--muted-foreground);
+    background: var(--key);
+}
+
+/* Profile actions wrap fix for new buttons */
+.profile-actions {
+    flex-wrap: wrap;
+}
+
+/* ===== Badge Showcase Responsive ===== */
+@media (max-width: 768px) {
+    .badge-showcase-grid {
+        grid-template-columns: repeat(3, 1fr);
+        column-gap: 0.14rem;
+        row-gap: 0.46rem;
+    }
+
+    .badge-showcase-modal {
+        padding: 1.06rem;
+        max-height: 90vh;
+        border-radius: 16px;
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(-n+3) .badge-showcase-tooltip {
+        top: calc(100% + 8px);
+        bottom: auto;
+        transform: translateX(-50%) translateY(-6px);
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(-n+3) .badge-showcase-tooltip::after {
+        top: -12px;
+        border-top-color: transparent;
+        border-bottom-color: var(--border);
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(3n+1) .badge-showcase-tooltip {
+        left: 0;
+        transform: translateX(0) translateY(6px);
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(3n+1):hover .badge-showcase-tooltip {
+        transform: translateX(0) translateY(0);
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(3n+1) .badge-showcase-tooltip::after {
+        left: 20%;
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(3n) .badge-showcase-tooltip {
+        left: auto;
+        right: 0;
+        transform: translateX(0) translateY(6px);
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(3n):hover .badge-showcase-tooltip {
+        transform: translateX(0) translateY(0);
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(3n) .badge-showcase-tooltip::after {
+        left: 80%;
+    }
+
+    .badge-img-wrapper {
+        width: 64px;
+        height: 64px;
+    }
+
+    .badge-showcase-tooltip {
+        min-width: 160px;
+        max-width: 184px;
+        padding: 0.56rem 0.68rem;
+    }
+
+    .badge-showcase-overlay {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .badge-showcase-grid {
+        grid-template-columns: repeat(2, 1fr);
+        column-gap: 0.12rem;
+    }
+
+    .badge-img-wrapper {
+        width: 56px;
+        height: 56px;
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(2n+1) .badge-showcase-tooltip {
+        left: 0;
+        transform: translateX(0) translateY(6px);
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(2n+1):hover .badge-showcase-tooltip {
+        transform: translateX(0) translateY(0);
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(2n+1) .badge-showcase-tooltip::after {
+        left: 18%;
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(2n) .badge-showcase-tooltip {
+        left: auto;
+        right: 0;
+        transform: translateX(0) translateY(6px);
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(2n):hover .badge-showcase-tooltip {
+        transform: translateX(0) translateY(0);
+    }
+
+    .badge-showcase-grid > .badge-showcase-item:nth-child(2n) .badge-showcase-tooltip::after {
+        left: 82%;
+    }
+}
+
+body.badge-modal-open {
+    overflow: hidden;
+}
+
+/* Light theme tuning for badge modal header and earned chip */
+[data-theme="light"] .badge-showcase-header h2 {
+    color: var(--text-alt);
+}
+
+[data-theme="light"] .badge-showcase-count {
+    color: var(--text-alt);
+    background: rgba(0, 170, 255, 0.12);
+    border: 1px solid rgba(0, 170, 255, 0.22);
+}
+
+/* Light theme: make tooltip readable on light backgrounds */
+[data-theme="light"] .badge-showcase-tooltip {
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: 0 8px 20px rgba(16, 20, 28, 0.06);
+    color: var(--text);
+}
+
+[data-theme="light"] .badge-showcase-tooltip::before {
+    background: linear-gradient(90deg, rgba(0, 170, 255, 0.12), rgba(39, 205, 255, 0.08));
+}
+
+[data-theme="light"] .badge-showcase-tooltip strong {
+    color: var(--text);
+}
+
+[data-theme="light"] .badge-showcase-tooltip p {
+    color: var(--muted-foreground);
+}
+
+[data-theme="light"] .badge-showcase-tooltip::after {
+    border-top-color: var(--border);
+}
+
+[data-theme="light"] .badge-showcase-header h2 {
+    color: var(--text);
 }

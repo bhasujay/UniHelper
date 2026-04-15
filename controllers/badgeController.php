@@ -5,6 +5,7 @@ namespace app\controllers;
 require_once dirname(__DIR__) . '/models/badge-user.php';
 
 use app\models\badgeUser;
+use app\core\Request;
 
 class badgeController
 {
@@ -17,7 +18,7 @@ class badgeController
 
     public function getBadgesForUser(Request $request)
     {
-        $userId = $request->session('user_id');
+        $userId = $request->get('user_id');
 
         if (!$userId) {
             http_response_code(400);
