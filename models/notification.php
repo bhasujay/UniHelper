@@ -10,6 +10,7 @@ require_once dirname(__DIR__) . '/models/base-model.php';
 class Notification extends BaseModel
 {
     protected $table = 'notifications';
+    private const ALLOWED_MODULES = ['qa', 'connection', 'session', 'other'];
 
     public function __construct()
     {
@@ -67,6 +68,86 @@ class Notification extends BaseModel
         $stmt->execute();
 
         return $stmt->rowCount();
+    }
+
+    public function findRecipientIdsByRoles(array $roles, int $excludeUserId = 0): array
+    {
+        $normalizedRoles = [];
+        foreach ($roles as $role) {
+            $value = trim((string) $role);
+            if ($value !== '') {
+                $normalizedRoles[$value] = true;
+            }
+        }
+
+        $normalizedRoles = array_keys($normalizedRoles);
+        if (empty($normalizedRoles)) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($normalizedRoles as $index => $role) {
+            $placeholder = ':role_' . $index;
+            $placeholders[] = $placeholder;
+            $params[$placeholder] = $role;
+        }
+
+        $sql = 'SELECT id FROM users WHERE role IN (' . implode(', ', $placeholders) . ')';
+        if ($excludeUserId > 0) {
+            $sql .= ' AND id <> :exclude_user_id';
+            $params[':exclude_user_id'] = $excludeUserId;
+        }
+
+        $stmt = $this->db->prepare($sql);
+        foreach ($params as $key => $value) {
+            if ($key === ':exclude_user_id') {
+                $stmt->bindValue($key, (int) $value, PDO::PARAM_INT);
+            } else {
+                $stmt->bindValue($key, (string) $value, PDO::PARAM_STR);
+            }
+        }
+
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        return array_map('intval', $rows ?: []);
+    }
+
+    public function createMany(array $userIds, string $message, string $module = 'other', ?string $link = null): int
+    {
+        $normalizedIds = [];
+        foreach ($userIds as $userId) {
+            $id = (int) $userId;
+            if ($id > 0) {
+                $normalizedIds[$id] = true;
+            }
+        }
+
+        $normalizedIds = array_keys($normalizedIds);
+        if (empty($normalizedIds)) {
+            return 0;
+        }
+
+        $safeModule = in_array($module, self::ALLOWED_MODULES, true) ? $module : 'other';
+        $sql = "INSERT INTO {$this->table} (subscriber_id, module, message, url, is_read) VALUES (:subscriber_id, :module, :message, :url, 0)";
+        $stmt = $this->db->prepare($sql);
+
+        $inserted = 0;
+        foreach ($normalizedIds as $userId) {
+            $ok = $stmt->execute([
+                'subscriber_id' => $userId,
+                'module' => $safeModule,
+                'message' => $message,
+                'url' => $link,
+            ]);
+
+            if ($ok) {
+                $inserted++;
+            }
+        }
+
+        return $inserted;
     }
 
     public function delete($notificationId)

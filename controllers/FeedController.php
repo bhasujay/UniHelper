@@ -5,11 +5,13 @@ namespace app\controllers;
 require_once dirname(__DIR__, 1) . '/models/FeedPost.php';
 require_once dirname(__DIR__, 1) . '/models/Session_model.php';
 require_once dirname(__DIR__, 1) . '/models/User.php';
+require_once dirname(__DIR__, 1) . '/models/notification.php';
 
 use app\core\Request;
 use app\models\FeedPost;
 use app\models\Session_model;
 use app\models\User;
+use app\models\Notification;
 
 class FeedController
 {
@@ -27,6 +29,7 @@ class FeedController
     private $feedPostModel;
     private $sessionModel;
     private $viewer;
+    private $notificationModel;
 
     public function __construct()
     {
@@ -46,6 +49,7 @@ class FeedController
 
         $this->feedPostModel = new FeedPost();
         $this->sessionModel = new Session_model();
+        $this->notificationModel = new Notification();
     }
 
     private function json(array $payload, int $status = 200): void
@@ -179,6 +183,19 @@ class FeedController
                 'audience_mode' => $audienceMode,
                 'audience_roles' => $audienceRoles,
             ]);
+
+            // --- Notification logic ---
+            try {
+                $targetRoles = ($audienceMode === 'all_roles') ? self::VALID_ROLES : $roles;
+                $recipientIds = $this->notificationModel->findRecipientIdsByRoles($targetRoles, (int)$this->viewer->id);
+                if (!empty($recipientIds)) {
+                    $notifMsg = 'New ' . ucfirst($postType) . ': ' . $title;
+                    $notifUrl = '/unihelper/announcements';
+                    $this->notificationModel->createMany($recipientIds, $notifMsg, 'other', $notifUrl);
+                }
+            } catch (\Throwable $notifyError) {
+                error_log('FeedController: Failed to send notifications for post ' . $newId . ': ' . $notifyError->getMessage());
+            }
 
             $this->json([
                 'success' => true,
