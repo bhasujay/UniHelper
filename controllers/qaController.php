@@ -473,4 +473,36 @@ class QaController
             ]);
         }
     }
+
+    public function getQuestionsByUser(Request $request)
+    {
+        $userId = $request->get('user_id');
+        header('Content-Type: application/json');
+        
+        try {
+            $questions = $this->model->getQuestionsByUserId($userId);
+            // Enrich each question with the same per-question fields that
+            // `getQuestions()` returns so the response shape matches.
+            foreach ($questions as &$question) {
+                $question['user_vote'] = $this->model->checkUserVoteStatus($question['q_id'], $request->session('user_id'));
+                $data = $this->userModel->getBasicInfo($question['user_id']);
+                $question['username'] = $data['first_name'] . ' ' . $data['last_name'];
+                $question['user_role'] = ucfirst(explode('-', $data['role'])[1]);
+                $question['moderator_status'] = $data['moderator'];
+                $question['user_avatar'] = $data['profile_picture'];
+            }
+
+            $username = $this->model->getUsersName($userId);
+            echo json_encode([
+                'success' => true,
+                'data' => empty($questions) ? null : $questions,
+                'username' => $username
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
 }

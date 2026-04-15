@@ -3,6 +3,150 @@ var questions_ids_temp = [];
 var hasMoreQuestions_temp = true;
 var FLAGGED_TOOLTIP_TEXT = 'This content may violate our community guidelines and is under review by moderators.';
 
+//////////////////////////////////////////////////////////////////////
+// Badge Hover Panel
+// One shared singleton panel; cleaned up and rebuilt on each trigger.
+
+var _badgePanel = null;          // the live DOM panel
+var _badgeHideTimer = null;      // 3-second grace-period timer
+var _badgeCache = {};            // userId -> badges array (in-memory cache)
+
+/**
+ * Attach badge-panel hover behaviour to a username element.
+ * @param {HTMLElement} el       The .qa-username span
+ * @param {string|number} userId The user whose badges to fetch
+ * @param {'above'|'below'} dir  Panel direction relative to the username
+ */
+function bindBadgeHoverPanel(el, userId, dir) {
+    el.addEventListener('mouseenter', function() {
+        _clearBadgeHideTimer();
+        _showBadgePanel(el, userId, dir);
+    });
+    el.addEventListener('mouseleave', function() {
+        _startBadgeHideTimer();
+    });
+}
+
+function _clearBadgeHideTimer() {
+    if (_badgeHideTimer) {
+        clearTimeout(_badgeHideTimer);
+        _badgeHideTimer = null;
+    }
+}
+
+function _startBadgeHideTimer() {
+    _clearBadgeHideTimer();
+    _badgeHideTimer = setTimeout(_hideBadgePanel, 100);
+}
+
+function _hideBadgePanel() {
+    if (_badgePanel) {
+        _badgePanel.remove();
+        _badgePanel = null;
+    }
+    _clearBadgeHideTimer();
+}
+
+function _showBadgePanel(anchorEl, userId, dir) {
+    // Remove any existing panel first
+    _hideBadgePanel();
+
+    const panel = document.createElement('div');
+    panel.className = 'qa-badge-panel' + (dir === 'above' ? ' panel-above' : ' panel-below');
+
+    // Keep the panel alive while the pointer is on it
+    panel.addEventListener('mouseenter', _clearBadgeHideTimer);
+    panel.addEventListener('mouseleave', _startBadgeHideTimer);
+
+    _badgePanel = panel;
+
+    // Position relative to the anchor element
+    _positionPanel(panel, anchorEl, dir);
+    document.body.appendChild(panel);
+
+    // Show skeleton (3 circles) while loading
+    for (let i = 0; i < 3; i++) {
+        const sk = document.createElement('div');
+        sk.className = 'qa-badge-skeleton';
+        panel.appendChild(sk);
+    }
+
+    // Animate in
+    requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+            if (panel === _badgePanel) panel.classList.add('visible');
+        });
+    });
+
+    // Fetch (or use cache)
+    _fetchBadges(userId).then(function(badges) {
+        // Panel may have been removed while we were fetching
+        if (panel !== _badgePanel) return;
+
+        panel.innerHTML = '';   // clear skeletons
+
+        if (!badges || badges.length === 0) {
+            _hideBadgePanel();
+            return;
+        }
+
+        // Cap at 12
+        badges.slice(0, 12).forEach(function(badge) {
+            const item = document.createElement('div');
+            item.className = 'qa-badge-item';
+            // Tooltip: first line = name, second line = description.
+            item.setAttribute('data-tooltip', badge.name + '\n' + badge.description);
+
+            const img = document.createElement('img');
+            // concat the /unihelper prefix for relative paths, but leave absolute URLs alone (for external badges)
+            img.src = badge.image_url.startsWith('/') ? '/unihelper' + badge.image_url : badge.image_url;
+            img.alt = badge.name;
+            img.width = 100;
+            img.height = 100;
+            item.appendChild(img);
+            panel.appendChild(item);
+        });
+
+        // Re-position after real content fills it (width may have changed)
+        _positionPanel(panel, anchorEl, dir);
+    });
+}
+
+function _positionPanel(panel, anchorEl, dir) {
+    const rect = anchorEl.getBoundingClientRect();
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
+
+    // Horizontal: left-align with the username
+    let left = rect.left + scrollX;
+    const panelW = panel.offsetWidth || 160; // estimate before paint
+    // Clamp to viewport
+    const maxLeft = window.innerWidth + scrollX - panelW - 8;
+    if (left > maxLeft) left = maxLeft;
+
+    panel.style.left = left + 'px';
+
+    if (dir === 'above') {
+        panel.style.top = (rect.top + scrollY - (panel.offsetHeight || 50) - 8) + 'px';
+    } else {
+        panel.style.top = (rect.bottom + scrollY + 8) + 'px';
+    }
+}
+
+function _fetchBadges(userId) {
+    if (_badgeCache[userId]) {
+        return Promise.resolve(_badgeCache[userId]);
+    }
+    return fetch('/unihelper/api?controller=badgeController&action=getBadgesForUser&user_id=' + encodeURIComponent(userId))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var result = (data.success && Array.isArray(data.badges)) ? data.badges : [];
+            _badgeCache[userId] = result;
+            return result;
+        })
+        .catch(function() { return []; });
+}
+
 function isFlaggedStatus(status) {
     return String(status || '').toLowerCase() === 'flagged';
 }
@@ -248,7 +392,7 @@ function answer(questionId) {
 function goBackFromQuestionView(questionId) {
     // show the main qa forum elements
     document.querySelector('.qa-question-view').style.display = 'none';
-    if (currentFilter === 'tag') {
+    if (currentFilter === 'tag' || currentFilter === 'user') {
         document.querySelector('.qa-tag-filter').style.display = 'block';
     } else if (currentFilter === 'search') {
         document.querySelector('.qa-search-results').style.display = 'block';
@@ -373,7 +517,7 @@ function goBackFromQuestionView(questionId) {
 // rendering the question view page
 async function viewQuestion(questionId) {
     // hide the main qa forum elements
-    if (currentFilter === 'tag') {
+    if (currentFilter === 'tag' || currentFilter === 'user') {
         document.querySelector('.qa-tag-filter').style.display = 'none';
     } else if (currentFilter === 'search') {
         document.querySelector('.qa-search-results').style.display = 'none';
@@ -409,6 +553,8 @@ async function viewQuestion(questionId) {
     viewUsernameEl.style.textDecorationColor = 'transparent';
     viewUsernameEl.onmouseenter = () => viewUsernameEl.style.textDecorationColor = 'currentColor';
     viewUsernameEl.onmouseleave = () => viewUsernameEl.style.textDecorationColor = 'transparent';
+    // Badge hover panel — question view opens below the name
+    bindBadgeHoverPanel(viewUsernameEl, question.user_id, 'below');
     
 
     const normalizeSqlDateTime = function(dateTimeValue) {
@@ -535,6 +681,8 @@ async function viewQuestion(questionId) {
             ansUsernameEl.style.textDecorationColor = 'transparent';
             ansUsernameEl.onmouseenter = () => ansUsernameEl.style.textDecorationColor = 'currentColor';
             ansUsernameEl.onmouseleave = () => ansUsernameEl.style.textDecorationColor = 'transparent';
+            // Badge hover panel — answer cards in question view open above
+            bindBadgeHoverPanel(ansUsernameEl, answer.user_id, 'above');
 
             const ansAddedTime = new Date(answer.added_time);
             card.querySelector('.qa-time').textContent = getRelativeTime(ansAddedTime);
@@ -597,6 +745,8 @@ function makeQuestionCard(data, position) {
     usernameEl.style.textDecorationColor = 'transparent';
     usernameEl.onmouseenter = () => usernameEl.style.textDecorationColor = 'currentColor';
     usernameEl.onmouseleave = () => usernameEl.style.textDecorationColor = 'transparent';
+    // Badge hover panel — feed view opens above the name
+    bindBadgeHoverPanel(usernameEl, data.userID, 'above');
     
     // Populate question content
     const styledTitle = data.questionTitle.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
@@ -677,7 +827,7 @@ function makeQuestionCard(data, position) {
         holder = document.querySelector('.qa-main');
     } else if (currentFilter === 'search') {
         holder = document.querySelector('.qa-search-results');
-    } else if (currentFilter === 'tag') {
+    } else if (currentFilter === 'tag' || currentFilter === 'user') {
         holder = document.querySelector('.qa-tag-filter');
     }
 
@@ -1629,4 +1779,105 @@ function search() {
     }
 
     fetchSearchResults(query);
+}
+
+//////////////////////////////////////////////////////////////////////
+// User filtering via deep link
+
+function activateUserTagInBar(username, questionsData) {
+    const tagsBar = document.querySelector('.qa-tags-bar');
+    
+    // Deactivate any currently active button first
+    const currentActive = tagsBar.querySelector('.tag-btn.active');
+    if (currentActive) {
+        currentActive.click(); // deactivate it
+    }
+
+    // Remove old temp tag if exists
+    const oldTemp = tagsBar.querySelector('.tag-btn[data-temp="true"]');
+    if (oldTemp) {
+        oldTemp.remove();
+    }
+
+    const tempBtn = document.createElement('button');
+    tempBtn.className = 'tag-btn active'; // Make it active instantly
+    tempBtn.textContent = username;
+    tempBtn.style.fontWeight = 'bold'; // The username tag font is bold
+    tempBtn.setAttribute('type', 'button');
+    tempBtn.setAttribute('aria-pressed', 'true');
+    tempBtn.dataset.temp = 'true';
+    
+    tempBtn.addEventListener('click', function() {
+        // Was active, now deactivating — remove temp button and go back to main
+        tagOffClick(true);
+    });
+
+    tagsBar.appendChild(tempBtn);
+
+    // Call the custom user tag onclick handler
+    userTagOnClick(username, questionsData);
+}
+
+function userTagOnClick(username, questionsData) {
+    // Update current filter
+    currentFilter = 'user'; 
+    current_question_pointer_temp = current_question_pointer;
+    current_question_pointer = 0;
+    questions_ids_temp = [...questions_ids];
+    questions_ids = [];
+    hasMoreQuestions_temp = hasMoreQuestions;
+    hasMoreQuestions = false; 
+
+    // hide the main question list and show the tag filter container
+    document.querySelector('.qa-main').style.display = 'none';
+    document.querySelector('.qa-tag-filter').style.display = 'block';
+    document.querySelector('.qa-sticky-btn').style.display = 'none';
+    
+    // Clean the tag filter bucket
+    const holder = document.querySelector('.qa-tag-filter');
+    holder.innerHTML = '';
+
+    if (questionsData && questionsData.length > 0) {
+        questionsData.forEach(function(question) {
+            if (questions_ids.includes(question.q_id)) return;
+            const addedTime = new Date(question.added_time);
+            const lastModified = new Date(question.last_modified);
+            let timestamp;
+            let modified;
+            if (addedTime.getTime() === lastModified.getTime()) {
+                timestamp = getRelativeTime(addedTime);
+                modified = false;
+            } else {
+                timestamp = getRelativeTime(lastModified);
+                modified = true;
+            }
+            const mappedData = {
+                userID: question.user_id,
+                username: question.username,
+                user_role: question.user_role,
+                moderator_status: question.moderator_status,
+                user_avatar: question.user_avatar,
+                questionId: question.q_id,
+                voteCount: question.vote_count,
+                voteStatus: question.user_vote,
+                answerCount: question.answer_count,
+                questionTitle: question.question,
+                questionText: question.text,
+                timestamp: timestamp,
+                imagecount: question.img_path ? question.img_path.split(',').length : 0,
+                firstImage: question.img_path ? question.img_path.split(',')[0] : '',
+                modified: modified,
+                status: question.status
+            };
+            makeQuestionCard(mappedData, -1);
+            questions_ids.push(question.q_id);
+        });
+    } else {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.textContent = 'This user has no questions.';
+        emptyMsg.style.textAlign = 'center';
+        emptyMsg.style.padding = '2rem';
+        emptyMsg.style.color = 'var(--muted-foreground)';
+        holder.appendChild(emptyMsg);
+    }
 }

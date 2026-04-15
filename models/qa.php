@@ -597,5 +597,26 @@ class Qna extends BaseModel
         return true;
     }
 
+    // get the questions that a user has posted
+    public function getQuestionsByUserId($userId)
+    {
+        $sql = "SELECT * FROM questions WHERE user_id = :userId AND status IN ('normal', 'flagged') ORDER BY added_time DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':userId', (int)$userId, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getUsersName($userId)
+    {
+        $sql = "SELECT first_name, last_name FROM users WHERE id = :userId";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':userId', (int)$userId, \PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        return $result ? $result['first_name'] . ' ' . $result['last_name'] : null;
+    }
 
 }
