@@ -698,6 +698,30 @@
 
     <script src="/unihelper/views/js/notification.js"></script>
 
+    <!-- Delete Confirmation Modal (from Peer Learning Component) -->
+    <div class="delete-modal" id="deleteModal">
+        <div class="delete-modal-content">
+            <h3 class="delete-modal-title">Delete Session?</h3>
+            <p class="delete-modal-text">Are you sure you want to delete this session? This action cannot be undone.</p>
+            <div class="delete-modal-actions">
+                <button class="delete-modal-btn delete-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="delete-modal-btn delete-modal-confirm" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscriber Management Modal (from Peer Learning Component) -->
+    <div class="subscriber-modal" id="subscriberModal">
+        <div class="subscriber-modal-content">
+            <div class="subscriber-modal-header">
+                <h3 class="subscriber-modal-title" id="subscriberModalTitle">Subscribe List</h3>
+                <button type="button" class="subscriber-modal-close" aria-label="Close"
+                    onclick="closeSubscriberModal()">✕</button>
+            </div>
+            <div class="subscriber-modal-body" id="subscriberModalBody"></div>
+        </div>
+    </div>
+
     <!-- Error Modal Script -->
     <?php if (isset($error) && !empty($error)): ?>
     <style>
