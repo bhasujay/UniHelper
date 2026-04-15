@@ -11,8 +11,8 @@ $isEditMode = isset($isEditMode)
     : ($editingSessionId > 0);
 $formAction = '/UniHelper/api?controller=SessionController&action=' . ($isEditMode ? 'update' : 'store');
 ?>
-    <link rel="stylesheet" href="/unihelper/views/css/style.css">
-    <link rel="stylesheet" href="/unihelper/views/css/dashboard.css">
+    <link rel="stylesheet" href="/UniHelper/views/css/style.css">
+    <link rel="stylesheet" href="/UniHelper/views/css/dashboard.css">
 <style>
     /* Create Session Form Styles */
     .create-session-container {
@@ -430,6 +430,16 @@ $formAction = '/UniHelper/api?controller=SessionController&action=' . ($isEditMo
                         <?= ($formData['audience'] ?? '') === 'all_universities' ? 'checked' : '' ?>
                     >
                     <label for="all-universities">All Universities</label>
+                </div>
+                <div class="radio-item">
+                    <input
+                        type="radio"
+                        id="private"
+                        name="audience"
+                        value="private"
+                        <?= ($formData['audience'] ?? '') === 'private' ? 'checked' : '' ?>
+                    >
+                    <label for="private">Private</label>
                 </div>
             </div>
             <?php if (isset($errors) && isset($errors['audience'])): ?>

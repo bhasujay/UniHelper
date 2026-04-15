@@ -10,27 +10,67 @@ use Exception;
 
 class Session_model extends BaseModel {
     protected $table = 'sessions';
+
+    private const SUB_STATUS_NONE = 'none';
+    private const SUB_STATUS_PENDING = 'pending';
+    private const SUB_STATUS_APPROVED = 'approved';
+    private const SUB_STATUS_REJECTED = 'rejected';
     
     /**
      * Get all sessions excluding soft-deleted and manually deleted ones
      */
-    public function findAll($conditions = [], $limit = null, $offset = null, $currentUserId = null) {
+    public function findAll($conditions = [], $limit = null, $offset = null, $currentUserId = null, $currentUserUniversity = null) {
         $currentUserIdValue = (int)$currentUserId;
+        $viewerUniversity = $this->normalizeUniversity($currentUserUniversity);
         $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+                COALESCE((
+                    SELECT sub.status
+                    FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :uid1 AND sub.Session_ID = s.id
+                    LIMIT 1
+                ), 'none') AS subscription_status,
                 CASE WHEN EXISTS (
                     SELECT 1 FROM subscribers sub
-                    WHERE sub.Subscriber_ID = :current_user_id AND sub.Session_ID = s.id
-                ) THEN 1 ELSE 0 END AS is_subscribed
+                    WHERE sub.Subscriber_ID = :uid2
+                      AND sub.Session_ID = s.id
+                      AND sub.status <> 'rejected'
+                ) THEN 1 ELSE 0 END AS is_subscribed,
+                CASE WHEN s.audience = 'private' THEN
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM subscribers sub
+                        WHERE sub.Subscriber_ID = :uid3
+                          AND sub.Session_ID = s.id
+                          AND sub.status = 'approved'
+                    ) THEN 1 ELSE 0 END
+                ELSE 1 END AS can_join
             FROM {$this->table} s 
             LEFT JOIN users u ON s.user_id = u.id 
             LEFT JOIN universities uni ON u.university = uni.id 
-                WHERE s.deleted_at IS NULL AND s.is_deleted = 0";
-        $params = ['current_user_id' => $currentUserIdValue];
+                WHERE s.deleted_at IS NULL
+                  AND s.is_deleted = 0
+                  AND (
+                        s.user_id = :uid4
+                        OR s.audience = 'all_universities'
+                        OR (
+                            :viewer_university1 IS NOT NULL
+                            AND s.university = :viewer_university2
+                            AND s.audience IN ('my_university', 'private')
+                        )
+                  )";
+        $params = [
+            'uid1' => $currentUserIdValue,
+            'uid2' => $currentUserIdValue,
+            'uid3' => $currentUserIdValue,
+            'uid4' => $currentUserIdValue,
+            'viewer_university1' => $viewerUniversity,
+            'viewer_university2' => $viewerUniversity
+        ];
         
         if (!empty($conditions)) {
             foreach ($conditions as $column => $value) {
-                $sql .= " AND s.{$column} = :{$column}";
-                $params[$column] = $value;
+                $paramKey = 'cond_' . $column;
+                $sql .= " AND s.{$column} = :{$paramKey}";
+                $params[$paramKey] = $value;
             }
         }
         
@@ -73,10 +113,26 @@ class Session_model extends BaseModel {
     public function findByUserId($userId, $limit = null, $offset = null, $currentUserId = null) {
         $currentUserIdValue = (int)$currentUserId;
         $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+                COALESCE((
+                    SELECT sub.status
+                    FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :uid1 AND sub.Session_ID = s.id
+                    LIMIT 1
+                ), 'none') AS subscription_status,
                 CASE WHEN EXISTS (
                     SELECT 1 FROM subscribers sub
-                    WHERE sub.Subscriber_ID = :current_user_id AND sub.Session_ID = s.id
-                ) THEN 1 ELSE 0 END AS is_subscribed
+                    WHERE sub.Subscriber_ID = :uid2
+                      AND sub.Session_ID = s.id
+                      AND sub.status <> 'rejected'
+                ) THEN 1 ELSE 0 END AS is_subscribed,
+                CASE WHEN s.audience = 'private' THEN
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM subscribers sub
+                        WHERE sub.Subscriber_ID = :uid3
+                          AND sub.Session_ID = s.id
+                          AND sub.status = 'approved'
+                    ) THEN 1 ELSE 0 END
+                ELSE 1 END AS can_join
             FROM {$this->table} s 
             LEFT JOIN users u ON s.user_id = u.id 
             LEFT JOIN universities uni ON u.university = uni.id 
@@ -94,7 +150,9 @@ class Session_model extends BaseModel {
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
                 'user_id' => $userId,
-                'current_user_id' => $currentUserIdValue
+                'uid1' => $currentUserIdValue,
+                'uid2' => $currentUserIdValue,
+                'uid3' => $currentUserIdValue
             ]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -108,14 +166,33 @@ class Session_model extends BaseModel {
     public function findByUniversity($university, $limit = null, $offset = null, $currentUserId = null) {
         $currentUserIdValue = (int)$currentUserId;
         $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+                COALESCE((
+                    SELECT sub.status
+                    FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :uid1 AND sub.Session_ID = s.id
+                    LIMIT 1
+                ), 'none') AS subscription_status,
                 CASE WHEN EXISTS (
                     SELECT 1 FROM subscribers sub
-                    WHERE sub.Subscriber_ID = :current_user_id AND sub.Session_ID = s.id
-                ) THEN 1 ELSE 0 END AS is_subscribed
+                    WHERE sub.Subscriber_ID = :uid2
+                      AND sub.Session_ID = s.id
+                      AND sub.status <> 'rejected'
+                ) THEN 1 ELSE 0 END AS is_subscribed,
+                CASE WHEN s.audience = 'private' THEN
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM subscribers sub
+                        WHERE sub.Subscriber_ID = :uid3
+                          AND sub.Session_ID = s.id
+                          AND sub.status = 'approved'
+                    ) THEN 1 ELSE 0 END
+                ELSE 1 END AS can_join
             FROM {$this->table} s 
             LEFT JOIN users u ON s.user_id = u.id 
             LEFT JOIN universities uni ON u.university = uni.id 
-                WHERE s.university = :university AND s.deleted_at IS NULL AND s.is_deleted = 0 
+                WHERE s.university = :university
+                  AND s.deleted_at IS NULL
+                  AND s.is_deleted = 0
+                  AND s.audience IN ('my_university', 'private')
                 ORDER BY s.date DESC, s.time DESC";
         
         if ($limit) {
@@ -129,7 +206,9 @@ class Session_model extends BaseModel {
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
                 'university' => $university,
-                'current_user_id' => $currentUserIdValue
+                'uid1' => $currentUserIdValue,
+                'uid2' => $currentUserIdValue,
+                'uid3' => $currentUserIdValue
             ]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -139,13 +218,13 @@ class Session_model extends BaseModel {
     
     /**
      * Get sessions by audience type (excludes expired and manually deleted)
-     * $audience can be 'my_university' or 'all_universities'
+     * $audience can be 'my_university', 'all_universities' or 'private'
      */
     public function findByAudience($audience, $userUniversity = null, $limit = null, $offset = null, $currentUserId = null) {
-        if ($audience === 'my_university' && $userUniversity) {
+        if (($audience === 'my_university' || $audience === 'private') && $userUniversity) {
             return $this->findByUniversity($userUniversity, $limit, $offset, $currentUserId);
         } elseif ($audience === 'all_universities') {
-            return $this->findAll([], $limit, $offset, $currentUserId);
+            return $this->findAll([], $limit, $offset, $currentUserId, $userUniversity);
         }
         return [];
     }
@@ -153,17 +232,45 @@ class Session_model extends BaseModel {
     /**
      * Get sessions by subject (excludes expired and manually deleted)
      */
-    public function findBySubject($subject, $limit = null, $offset = null, $currentUserId = null) {
+    public function findBySubject($subject, $limit = null, $offset = null, $currentUserId = null, $currentUserUniversity = null) {
         $currentUserIdValue = (int)$currentUserId;
+        $viewerUniversity = $this->normalizeUniversity($currentUserUniversity);
         $sql = "SELECT s.*, u.first_name as creator_name, uni.name as creator_university, 
+                COALESCE((
+                    SELECT sub.status
+                    FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :uid1 AND sub.Session_ID = s.id
+                    LIMIT 1
+                ), 'none') AS subscription_status,
                 CASE WHEN EXISTS (
                     SELECT 1 FROM subscribers sub
-                    WHERE sub.Subscriber_ID = :current_user_id AND sub.Session_ID = s.id
-                ) THEN 1 ELSE 0 END AS is_subscribed
+                    WHERE sub.Subscriber_ID = :uid2
+                      AND sub.Session_ID = s.id
+                      AND sub.status <> 'rejected'
+                ) THEN 1 ELSE 0 END AS is_subscribed,
+                CASE WHEN s.audience = 'private' THEN
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM subscribers sub
+                        WHERE sub.Subscriber_ID = :uid3
+                          AND sub.Session_ID = s.id
+                          AND sub.status = 'approved'
+                    ) THEN 1 ELSE 0 END
+                ELSE 1 END AS can_join
             FROM {$this->table} s 
             LEFT JOIN users u ON s.user_id = u.id 
             LEFT JOIN universities uni ON u.university = uni.id 
-                WHERE s.subject = :subject AND s.deleted_at IS NULL AND s.is_deleted = 0 
+                WHERE s.subject = :subject
+                  AND s.deleted_at IS NULL
+                  AND s.is_deleted = 0
+                  AND (
+                        s.user_id = :uid4
+                        OR s.audience = 'all_universities'
+                        OR (
+                            :viewer_university1 IS NOT NULL
+                            AND s.university = :viewer_university2
+                            AND s.audience IN ('my_university', 'private')
+                        )
+                  )
                 ORDER BY s.date DESC, s.time DESC";
         
         if ($limit) {
@@ -177,7 +284,12 @@ class Session_model extends BaseModel {
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
                 'subject' => $subject,
-                'current_user_id' => $currentUserIdValue
+                'uid1' => $currentUserIdValue,
+                'uid2' => $currentUserIdValue,
+                'uid3' => $currentUserIdValue,
+                'uid4' => $currentUserIdValue,
+                'viewer_university1' => $viewerUniversity,
+                'viewer_university2' => $viewerUniversity
             ]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -189,35 +301,119 @@ class Session_model extends BaseModel {
      * Subscribe a user to a session
      */
     public function subscribe($userId, $sessionId) {
-        $sql = "INSERT IGNORE INTO subscribers (Subscriber_ID, Session_ID)
-                VALUES (:subscriber_id, :session_id)";
-
         $pdo = $this->db->getConnection();
 
         try {
             $pdo->beginTransaction();
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([
+
+                        $sessionSql = "SELECT id, audience, university
+                           FROM {$this->table}
+                           WHERE id = :session_id
+                             AND is_deleted = 0
+                             AND deleted_at IS NULL
+                           LIMIT 1
+                           FOR UPDATE";
+            $sessionStmt = $this->db->prepare($sessionSql);
+            $sessionStmt->execute(['session_id' => $sessionId]);
+            $session = $sessionStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$session) {
+                throw new Exception("Session not found or unavailable.");
+            }
+
+            if (in_array($session['audience'], ['my_university', 'private'], true)) {
+                $subscriberUniversity = $this->getUserUniversity((int)$userId);
+                $sessionUniversity = isset($session['university']) ? (int)$session['university'] : null;
+
+                if ($subscriberUniversity === null || $sessionUniversity === null || $subscriberUniversity !== $sessionUniversity) {
+                    throw new Exception('You can only subscribe to sessions from your university.');
+                }
+            }
+
+            $targetStatus = ($session['audience'] === 'private')
+                ? self::SUB_STATUS_PENDING
+                : self::SUB_STATUS_APPROVED;
+
+            $existingSql = "SELECT status
+                            FROM subscribers
+                            WHERE Subscriber_ID = :subscriber_id
+                              AND Session_ID = :session_id
+                            LIMIT 1
+                            FOR UPDATE";
+            $existingStmt = $this->db->prepare($existingSql);
+            $existingStmt->execute([
                 'subscriber_id' => $userId,
                 'session_id' => $sessionId
             ]);
+            $existing = $existingStmt->fetch(PDO::FETCH_ASSOC);
 
-            // Increment count only when a new subscription row is inserted.
-            if ($stmt->rowCount() > 0) {
-                $updateSql = "UPDATE {$this->table}
-                              SET sub_count = COALESCE(sub_count, 0) + 1
-                              WHERE id = :session_id AND is_deleted = 0";
-                $updateStmt = $this->db->prepare($updateSql);
-                $updateStmt->execute(['session_id' => $sessionId]);
+            if ($existing) {
+                $currentStatus = $existing['status'] ?? self::SUB_STATUS_APPROVED;
+                if ($currentStatus !== $targetStatus) {
+                    if ($targetStatus === self::SUB_STATUS_PENDING) {
+                        $updateSql = "UPDATE subscribers
+                                      SET status = :status,
+                                          requested_at = NOW(),
+                                          approved_at = NULL,
+                                          rejected_at = NULL
+                                      WHERE Subscriber_ID = :subscriber_id
+                                        AND Session_ID = :session_id";
+                    } else {
+                        $updateSql = "UPDATE subscribers
+                                      SET status = :status,
+                                          approved_at = NOW(),
+                                          rejected_at = NULL
+                                      WHERE Subscriber_ID = :subscriber_id
+                                        AND Session_ID = :session_id";
+                    }
+                    $updateStmt = $this->db->prepare($updateSql);
+                    $updateStmt->execute([
+                        'status' => $targetStatus,
+                        'subscriber_id' => $userId,
+                        'session_id' => $sessionId
+                    ]);
+                }
+            } else {
+                $insertSql = "INSERT INTO subscribers (
+                                Subscriber_ID,
+                                Session_ID,
+                                status,
+                                requested_at,
+                                approved_at,
+                                rejected_at
+                              ) VALUES (
+                                :subscriber_id,
+                                :session_id,
+                                :status,
+                                NOW(),
+                                :approved_at,
+                                NULL
+                              )";
+                $insertStmt = $this->db->prepare($insertSql);
+                $insertStmt->execute([
+                    'subscriber_id' => $userId,
+                    'session_id' => $sessionId,
+                    'status' => $targetStatus,
+                    'approved_at' => $targetStatus === self::SUB_STATUS_APPROVED ? date('Y-m-d H:i:s') : null
+                ]);
             }
 
+            $this->syncSubCount($sessionId);
+            $state = $this->getSubscriptionState($userId, $sessionId, (string)$session['audience']);
+            $state['sub_count'] = $this->getSubCount($sessionId);
+
             $pdo->commit();
-            return true;
+            return $state;
         } catch (PDOException $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw new Exception("Failed to subscribe to session: " . $e->getMessage());
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
         }
     }
 
@@ -225,37 +421,219 @@ class Session_model extends BaseModel {
      * Unsubscribe a user from a session
      */
     public function unsubscribe($userId, $sessionId) {
-        $sql = "DELETE FROM subscribers
-                WHERE Subscriber_ID = :subscriber_id AND Session_ID = :session_id";
-
         $pdo = $this->db->getConnection();
 
         try {
             $pdo->beginTransaction();
+            $sessionSql = "SELECT id, audience
+                           FROM {$this->table}
+                           WHERE id = :session_id
+                             AND is_deleted = 0
+                           LIMIT 1
+                           FOR UPDATE";
+            $sessionStmt = $this->db->prepare($sessionSql);
+            $sessionStmt->execute(['session_id' => $sessionId]);
+            $session = $sessionStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$session) {
+                throw new Exception("Session not found.");
+            }
+
+            $sql = "DELETE FROM subscribers
+                    WHERE Subscriber_ID = :subscriber_id AND Session_ID = :session_id";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
                 'subscriber_id' => $userId,
                 'session_id' => $sessionId
             ]);
 
-            $deletedRows = $stmt->rowCount();
+            $this->syncSubCount($sessionId);
 
-            // Decrement count only when an existing subscription row is deleted.
-            if ($deletedRows > 0) {
-                $updateSql = "UPDATE {$this->table}
-                              SET sub_count = GREATEST(COALESCE(sub_count, 0) - 1, 0)
-                              WHERE id = :session_id AND is_deleted = 0";
-                $updateStmt = $this->db->prepare($updateSql);
-                $updateStmt->execute(['session_id' => $sessionId]);
-            }
+            $state = [
+                'subscription_status' => self::SUB_STATUS_NONE,
+                'is_subscribed' => 0,
+                'can_join' => ($session['audience'] === 'private') ? 0 : 1,
+                'sub_count' => $this->getSubCount($sessionId)
+            ];
 
             $pdo->commit();
-            return $deletedRows > 0;
+            return $state;
         } catch (PDOException $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw new Exception("Failed to unsubscribe from session: " . $e->getMessage());
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Get subscriber list for an owner-managed private session.
+     */
+    public function getSubscriberList($sessionId, $ownerId) {
+        $sql = "SELECT
+                    sub.Subscriber_ID AS subscriber_id,
+                    u.first_name,
+                    u.last_name,
+                    sub.status,
+                    sub.requested_at,
+                    sub.approved_at,
+                    sub.rejected_at
+                FROM subscribers sub
+                INNER JOIN users u ON u.id = sub.Subscriber_ID
+                INNER JOIN {$this->table} s ON s.id = sub.Session_ID
+                WHERE sub.Session_ID = :session_id
+                  AND s.user_id = :owner_id
+                  AND s.is_deleted = 0
+                  AND s.audience = 'private'
+                ORDER BY FIELD(sub.status, 'pending', 'approved', 'rejected'), u.first_name, u.last_name";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'session_id' => $sessionId,
+                'owner_id' => $ownerId
+            ]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to fetch subscriber list: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Approve or reject a subscriber for a private session owned by the requester.
+     */
+    public function updateSubscriberStatus($sessionId, $ownerId, $subscriberId, $status) {
+        if (!in_array($status, [self::SUB_STATUS_APPROVED, self::SUB_STATUS_REJECTED], true)) {
+            throw new Exception('Invalid subscriber status.');
+        }
+
+        $pdo = $this->db->getConnection();
+
+        try {
+            $pdo->beginTransaction();
+
+            $sessionSql = "SELECT id
+                           FROM {$this->table}
+                           WHERE id = :session_id
+                             AND user_id = :owner_id
+                             AND is_deleted = 0
+                             AND audience = 'private'
+                           LIMIT 1
+                           FOR UPDATE";
+            $sessionStmt = $this->db->prepare($sessionSql);
+            $sessionStmt->execute([
+                'session_id' => $sessionId,
+                'owner_id' => $ownerId
+            ]);
+
+            if (!$sessionStmt->fetch(PDO::FETCH_ASSOC)) {
+                $pdo->rollBack();
+                return false;
+            }
+
+            $subscriberSql = "SELECT status
+                              FROM subscribers
+                              WHERE Session_ID = :session_id
+                                AND Subscriber_ID = :subscriber_id
+                              LIMIT 1
+                              FOR UPDATE";
+            $subscriberStmt = $this->db->prepare($subscriberSql);
+            $subscriberStmt->execute([
+                'session_id' => $sessionId,
+                'subscriber_id' => $subscriberId
+            ]);
+            $existing = $subscriberStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$existing) {
+                $pdo->rollBack();
+                return false;
+            }
+
+            if ($status === self::SUB_STATUS_APPROVED) {
+                $updateSql = "UPDATE subscribers
+                              SET status = :status,
+                                  approved_at = NOW(),
+                                  rejected_at = NULL
+                              WHERE Session_ID = :session_id
+                                AND Subscriber_ID = :subscriber_id";
+            } else {
+                $updateSql = "UPDATE subscribers
+                              SET status = :status,
+                                  rejected_at = NOW(),
+                                  approved_at = NULL
+                              WHERE Session_ID = :session_id
+                                AND Subscriber_ID = :subscriber_id";
+            }
+
+            $updateStmt = $this->db->prepare($updateSql);
+            $updateStmt->execute([
+                'status' => $status,
+                'session_id' => $sessionId,
+                'subscriber_id' => $subscriberId
+            ]);
+
+            $this->syncSubCount($sessionId);
+            $subCount = $this->getSubCount($sessionId);
+
+            $pdo->commit();
+
+            return [
+                'status' => $status,
+                'sub_count' => $subCount
+            ];
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new Exception("Failed to update subscriber status: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get current subscriber count excluding rejected rows.
+     */
+    public function getSubCount($sessionId): int
+    {
+        $sql = "SELECT COUNT(*)
+                FROM subscribers
+                WHERE Session_ID = :session_id
+                  AND status <> 'rejected'";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute(['session_id' => $sessionId]);
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            throw new Exception("Failed to count subscribers: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Verify a session belongs to owner and is private.
+     */
+    public function isPrivateSessionOwnedBy($sessionId, $ownerId): bool
+    {
+        $sql = "SELECT COUNT(*)
+                FROM {$this->table}
+                WHERE id = :session_id
+                  AND user_id = :owner_id
+                  AND is_deleted = 0
+                  AND audience = 'private'";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'session_id' => $sessionId,
+                'owner_id' => $ownerId
+            ]);
+            return (int)$stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            throw new Exception("Failed to verify private session ownership: " . $e->getMessage());
         }
     }
     
@@ -375,5 +753,76 @@ class Session_model extends BaseModel {
         } catch (PDOException $e) {
             throw new Exception("Failed to check session existence: " . $e->getMessage());
         }
+    }
+
+    private function syncSubCount($sessionId): void
+    {
+        $sql = "UPDATE {$this->table} s
+                SET s.sub_count = (
+                    SELECT COUNT(*)
+                    FROM subscribers sub
+                    WHERE sub.Session_ID = s.id
+                      AND sub.status <> 'rejected'
+                )
+                WHERE s.id = :session_id
+                  AND s.is_deleted = 0";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['session_id' => $sessionId]);
+    }
+
+    private function getSubscriptionState($userId, $sessionId, string $audience): array
+    {
+        $sql = "SELECT status
+                FROM subscribers
+                WHERE Subscriber_ID = :subscriber_id
+                  AND Session_ID = :session_id
+                LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'subscriber_id' => $userId,
+            'session_id' => $sessionId
+        ]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $status = $row['status'] ?? self::SUB_STATUS_NONE;
+
+        if ($status === self::SUB_STATUS_REJECTED) {
+            $status = self::SUB_STATUS_NONE;
+        }
+
+        $isSubscribed = in_array($status, [self::SUB_STATUS_PENDING, self::SUB_STATUS_APPROVED], true) ? 1 : 0;
+        $canJoin = ($audience === 'private')
+            ? (($status === self::SUB_STATUS_APPROVED) ? 1 : 0)
+            : 1;
+
+        return [
+            'subscription_status' => $status,
+            'is_subscribed' => $isSubscribed,
+            'can_join' => $canJoin
+        ];
+    }
+
+    private function normalizeUniversity($university)
+    {
+        if ($university === null || $university === '') {
+            return null;
+        }
+
+        return (int)$university;
+    }
+
+    private function getUserUniversity(int $userId): ?int
+    {
+        $sql = "SELECT university FROM users WHERE id = :user_id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row || $row['university'] === null || $row['university'] === '') {
+            return null;
+        }
+
+        return (int)$row['university'];
     }
 }

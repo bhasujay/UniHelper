@@ -343,6 +343,25 @@
         background: #f56565;
     }
 
+    .session-subscribe-btn.pending {
+        border-color: #f6ad55;
+        color: #f6ad55;
+    }
+
+    .session-subscribe-btn.pending:hover {
+        background: rgba(246, 173, 85, 0.12);
+    }
+
+    .session-subscribe-list-btn {
+        background: transparent;
+        color: #f87171;
+        border: 1px solid #f87171;
+    }
+
+    .session-subscribe-list-btn:hover {
+        background: rgba(248, 113, 113, 0.14);
+    }
+
     .session-subscribe-btn:disabled {
         opacity: 0.65;
         cursor: not-allowed;
@@ -420,7 +439,9 @@
     }
 
     @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     /* Load More Button */
@@ -516,6 +537,165 @@
         background: #f56565;
     }
 
+    /* Subscriber Management Modal */
+    .subscriber-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.72);
+        z-index: 10001;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(12px);
+    }
+
+    .subscriber-modal.show {
+        display: flex;
+    }
+
+    .subscriber-modal-content {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        width: min(800px, 94vw);
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .subscriber-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.2rem;
+        border-bottom: 1px solid rgba(164, 109, 255, 0.2);
+    }
+
+    .subscriber-modal-title {
+        margin: 0;
+        font-size: 1.2rem;
+        color: var(--foreground);
+    }
+
+    .subscriber-modal-close {
+        border: none;
+        background: transparent;
+        color: var(--muted-foreground);
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0.15rem 0.4rem;
+        border-radius: 0.4rem;
+    }
+
+    .subscriber-modal-close:hover {
+        color: var(--foreground);
+        background: rgba(164, 109, 255, 0.16);
+    }
+
+    .subscriber-modal-body {
+        padding: 1rem 1.2rem 1.2rem;
+        overflow-y: auto;
+    }
+
+    .subscriber-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+    }
+
+    .subscriber-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        border: 1px solid rgba(164, 109, 255, 0.18);
+        border-radius: 0.75rem;
+        padding: 0.8rem 0.9rem;
+        background: rgba(8, 8, 8, 0.45);
+    }
+
+    .subscriber-name {
+        color: var(--foreground);
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .subscriber-row-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .subscriber-status {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        padding: 0.28rem 0.7rem;
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .subscriber-status.pending {
+        color: #f6ad55;
+        border-color: rgba(246, 173, 85, 0.6);
+        background: rgba(246, 173, 85, 0.14);
+    }
+
+    .subscriber-status.approved {
+        color: #48bb78;
+        border-color: rgba(72, 187, 120, 0.6);
+        background: rgba(72, 187, 120, 0.14);
+    }
+
+    .subscriber-status.rejected {
+        color: #fc8181;
+        border-color: rgba(252, 129, 129, 0.6);
+        background: rgba(252, 129, 129, 0.14);
+    }
+
+    .subscriber-decision-btn {
+        border: none;
+        border-radius: 0.45rem;
+        padding: 0.42rem 0.8rem;
+        color: #fff;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity 0.25s ease;
+    }
+
+    .subscriber-decision-btn:hover {
+        opacity: 0.9;
+    }
+
+    .subscriber-decision-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    .subscriber-approve-btn {
+        background: #2f855a;
+    }
+
+    .subscriber-reject-btn {
+        background: #9f0505;
+    }
+
+    .subscriber-modal-empty {
+        text-align: center;
+        color: var(--muted-foreground);
+        padding: 1.5rem 0.2rem;
+    }
+
     @media (max-width: 768px) {
         .sessions-grid {
             grid-template-columns: 1fr;
@@ -540,15 +720,27 @@
         .peer-create-session-label {
             display: none;
         }
+
+        .subscriber-row {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .subscriber-row-actions {
+            width: 100%;
+            justify-content: flex-start;
+        }
     }
 </style>
 
 <div class="peer-learning-container">
     <?php if (!isset($user) || $user->role !== 'role-applicant'): ?>
         <div class="peer-learning-toolbar">
-            <a href="/UniHelper/create-session" class="peer-create-session-btn" title="Create Session" aria-label="Create Session">
+            <a href="/UniHelper/create-session" class="peer-create-session-btn" title="Create Session"
+                aria-label="Create Session">
                 <span class="peer-create-session-label">Create New Session</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round" aria-hidden="true">
                     <path d="M12 5v14"></path>
                     <path d="M5 12h14"></path>
                 </svg>
@@ -593,29 +785,129 @@
     </div>
 </div>
 
+<!-- Subscriber Management Modal -->
+<div class="subscriber-modal" id="subscriberModal">
+    <div class="subscriber-modal-content">
+        <div class="subscriber-modal-header">
+            <h3 class="subscriber-modal-title" id="subscriberModalTitle">Subscribe List</h3>
+            <button type="button" class="subscriber-modal-close" aria-label="Close"
+                onclick="closeSubscriberModal()">✕</button>
+        </div>
+        <div class="subscriber-modal-body" id="subscriberModalBody"></div>
+    </div>
+</div>
+
 <script>
-    const BASE_URL = '/unihelper';
+    const BASE_URL = '/UniHelper';
     let currentTab = 'my-sessions';
     let mySessionsPage = 1;
     let allSessionsPage = 1;
     let sessionToDelete = null;
+    let sessionForSubscribersId = null;
 
-    // Initialize tabs
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttribute(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    function normalizeSubscriptionStatus(rawStatus) {
+        const status = String(rawStatus || '').toLowerCase();
+        if (status === 'approved' || status === 'pending') {
+            return status;
+        }
+        return 'none';
+    }
+
+    function normalizeSubscriberDecisionStatus(rawStatus) {
+        const status = String(rawStatus || '').toLowerCase();
+        if (status === 'approved' || status === 'pending' || status === 'rejected') {
+            return status;
+        }
+        return 'pending';
+    }
+
+    function getAudienceLabel(audience) {
+        if (audience === 'my_university') {
+            return 'My University';
+        }
+        if (audience === 'private') {
+            return 'Private';
+        }
+        return 'All Universities';
+    }
+
+    function getSubscribeButtonLabel(status) {
+        if (status === 'pending') {
+            return 'Pending';
+        }
+        if (status === 'approved') {
+            return 'Subscribed';
+        }
+        return 'Subscribe';
+    }
+
+    function formatDecisionStatus(status) {
+        if (status === 'approved') {
+            return 'Approved';
+        }
+        if (status === 'rejected') {
+            return 'Rejected';
+        }
+        return 'Pending';
+    }
+
+    function updateSubscribeButtonState(button, status) {
+        const normalizedStatus = normalizeSubscriptionStatus(status);
+        const subscribed = normalizedStatus !== 'none';
+
+        button.setAttribute('data-status', normalizedStatus);
+        button.setAttribute('data-subscribed', subscribed ? '1' : '0');
+        button.textContent = getSubscribeButtonLabel(normalizedStatus);
+
+        button.classList.remove('subscribed', 'pending');
+        if (normalizedStatus === 'approved') {
+            button.classList.add('subscribed');
+        }
+        if (normalizedStatus === 'pending') {
+            button.classList.add('pending');
+        }
+    }
+
+    function updateSubscriberCountForSession(sessionId, count) {
+        if (typeof count === 'undefined' || count === null) {
+            return;
+        }
+
+        const safeCount = Math.max(0, Number(count || 0));
+        document.querySelectorAll(`.subscriber-count[data-session-id="${sessionId}"]`).forEach(element => {
+            element.textContent = formatSubscriberCount(safeCount);
+        });
+    }
+
     document.querySelectorAll('.peer-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
+        tab.addEventListener('click', function () {
             switchTab(this.dataset.tab);
         });
     });
 
-    // Switch between tabs
     function switchTab(tabName) {
-        // Update active tab button
         document.querySelectorAll('.peer-tab').forEach(tab => {
             tab.classList.remove('active');
         });
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
-        // Update active content
         document.querySelectorAll('.peer-content').forEach(content => {
             content.classList.remove('active');
         });
@@ -623,7 +915,6 @@
 
         currentTab = tabName;
 
-        // Load sessions if empty
         if (tabName === 'my-sessions' && !document.getElementById('my-sessions-container').innerHTML) {
             loadMyessions(1);
         } else if (tabName === 'all-sessions' && !document.getElementById('all-sessions-container').innerHTML) {
@@ -631,7 +922,6 @@
         }
     }
 
-    // Load user's sessions
     function loadMyessions(page) {
         const container = document.getElementById('my-sessions-container');
         const loading = document.getElementById('my-sessions-loading');
@@ -659,7 +949,6 @@
                         container.innerHTML += createSessionCard(session, true);
                     });
 
-                    // Show load more button if more sessions available
                     if (data.count >= 10) {
                         loadMoreBtn.style.display = 'block';
                     } else {
@@ -680,7 +969,6 @@
             });
     }
 
-    // Load all sessions
     function loadAllSessions(page) {
         const container = document.getElementById('all-sessions-container');
         const loading = document.getElementById('all-sessions-loading');
@@ -708,7 +996,6 @@
                         container.innerHTML += createSessionCard(session, false);
                     });
 
-                    // Show load more button if more sessions available
                     if (data.count >= 10) {
                         loadMoreBtn.style.display = 'block';
                     } else {
@@ -729,26 +1016,39 @@
             });
     }
 
-    // Create session card HTML
     function createSessionCard(session, showEditDelete) {
         const isExpired = session.is_expired || (session.deleted_at && !session.is_deleted);
-        const audienceLabel = session.audience === 'my_university' ? 'My University' : 'All Universities';
+        const audienceLabel = getAudienceLabel(session.audience);
         const tags = session.tags ? session.tags.split(',').map(tag => `<span class="session-tag">${tag.trim()}</span>`).join('') : '';
-        const subscribed = Number(session.is_subscribed) === 1;
+        const subscriptionStatus = normalizeSubscriptionStatus(session.subscription_status || (Number(session.is_subscribed) === 1 ? 'approved' : 'none'));
+        const isSubscribed = subscriptionStatus !== 'none';
         const subscriberCount = Math.max(0, Number(session.sub_count || 0));
-        const subscribeBtnText = subscribed ? 'Subscribed' : 'Subscribe';
-        const subscribeBtnClass = subscribed ? 'session-subscribe-btn subscribed' : 'session-subscribe-btn';
-        
+        const subscribeBtnClass = subscriptionStatus === 'approved'
+            ? 'session-subscribe-btn subscribed'
+            : (subscriptionStatus === 'pending' ? 'session-subscribe-btn pending' : 'session-subscribe-btn');
+        const subscribeBtnText = getSubscribeButtonLabel(subscriptionStatus);
+        const canJoin = Number(session.can_join || 0) === 1;
+
         let actions = '';
         if (showEditDelete) {
+            const subscribeListButton = session.audience === 'private'
+                ? `<button
+                        type="button"
+                        class="session-action-btn session-subscribe-list-btn"
+                        data-session-id="${session.id}"
+                        data-session-title="${escapeAttribute(session.title || 'Private Session')}"
+                    >Subscribe List</button>`
+                : '';
+
             actions = `
                 <div class="session-actions">
                     <button class="session-action-btn session-edit-btn" onclick="editSession(${session.id})">Edit</button>
                     <button class="session-action-btn session-delete-btn" onclick="openDeleteModal(${session.id})">Delete</button>
+                    ${subscribeListButton}
                 </div>
             `;
         } else {
-            const joinButton = session.session_link
+            const joinButton = (session.session_link && canJoin)
                 ? `<a href="${session.session_link}" target="_blank" class="session-action-btn session-join-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Join Session</a>`
                 : '';
 
@@ -759,7 +1059,8 @@
                         type="button"
                         class="session-action-btn ${subscribeBtnClass}"
                         data-session-id="${session.id}"
-                        data-subscribed="${subscribed ? 1 : 0}"
+                        data-status="${subscriptionStatus}"
+                        data-subscribed="${isSubscribed ? 1 : 0}"
                     >${subscribeBtnText}</button>
                     <span class="subscriber-count" data-session-id="${session.id}">${formatSubscriberCount(subscriberCount)}</span>
                 </div>
@@ -767,7 +1068,7 @@
         }
 
         const subscriberCountMeta = showEditDelete
-            ? `<span class="subscriber-count">${formatSubscriberCount(subscriberCount)}</span>`
+            ? `<span class="subscriber-count" data-session-id="${session.id}">${formatSubscriberCount(subscriberCount)}</span>`
             : '';
 
         const expiredBadge = isExpired ? '<span class="session-expired-badge">Expired</span>' : '';
@@ -810,7 +1111,6 @@
         return `${safeCount} subscriber${safeCount === 1 ? '' : 's'}`;
     }
 
-    // Create empty state HTML
     function createEmptyState(title, text) {
         return `
             <div class="empty-state">
@@ -822,37 +1122,204 @@
         `;
     }
 
-    // Format date to readable format
     function formatDate(dateStr) {
         const date = new Date(dateStr + 'T00:00:00');
         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
     }
 
-    // Edit session (redirect to edit page - to be implemented)
     function editSession(sessionId) {
         window.location.href = `${BASE_URL}/create-session?session_id=${sessionId}`;
     }
 
-    // Open delete confirmation modal
     function openDeleteModal(sessionId) {
         sessionToDelete = sessionId;
         document.getElementById('deleteModal').classList.add('show');
     }
 
-    // Close delete modal
     function closeDeleteModal() {
         document.getElementById('deleteModal').classList.remove('show');
         sessionToDelete = null;
     }
 
-    // Confirm delete
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    function openSubscriberModal(buttonElement) {
+        const sessionId = Number(buttonElement.getAttribute('data-session-id') || 0);
+        if (!sessionId) {
+            alert('Invalid session ID.');
+            return;
+        }
+
+        sessionForSubscribersId = sessionId;
+        const sessionTitle = buttonElement.getAttribute('data-session-title') || 'Private Session';
+        document.getElementById('subscriberModalTitle').textContent = `Subscribe List - ${sessionTitle}`;
+        document.getElementById('subscriberModal').classList.add('show');
+        renderSubscriberModalLoading();
+        fetchSubscriberList(sessionId);
+    }
+
+    function closeSubscriberModal() {
+        document.getElementById('subscriberModal').classList.remove('show');
+        sessionForSubscribersId = null;
+        document.getElementById('subscriberModalBody').innerHTML = '';
+    }
+
+    function renderSubscriberModalLoading() {
+        document.getElementById('subscriberModalBody').innerHTML = `
+            <div class="loading-spinner" style="padding: 1.5rem 0;">
+                <div class="spinner"></div>
+            </div>
+        `;
+    }
+
+    function renderSubscriberList(list) {
+        const body = document.getElementById('subscriberModalBody');
+
+        if (!Array.isArray(list) || list.length === 0) {
+            body.innerHTML = '<div class="subscriber-modal-empty">No subscribers yet.</div>';
+            return;
+        }
+
+        const rows = list.map(item => {
+            const status = normalizeSubscriberDecisionStatus(item.status);
+            const fullName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'Unknown User';
+            const approveDisabled = status === 'approved' ? 'disabled' : '';
+            const rejectDisabled = status === 'rejected' ? 'disabled' : '';
+
+            return `
+                <div class="subscriber-row" data-subscriber-id="${item.subscriber_id}">
+                    <div class="subscriber-name">${escapeHtml(fullName)}</div>
+                    <div class="subscriber-row-actions">
+                        <span class="subscriber-status ${status}">${formatDecisionStatus(status)}</span>
+                        <button
+                            type="button"
+                            class="subscriber-decision-btn subscriber-approve-btn"
+                            data-action="approve"
+                            data-subscriber-id="${item.subscriber_id}"
+                            ${approveDisabled}
+                        >Approve</button>
+                        <button
+                            type="button"
+                            class="subscriber-decision-btn subscriber-reject-btn"
+                            data-action="reject"
+                            data-subscriber-id="${item.subscriber_id}"
+                            ${rejectDisabled}
+                        >Reject</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        body.innerHTML = `<div class="subscriber-list">${rows}</div>`;
+    }
+
+    function applySubscriberRowState(row, status) {
+        const normalizedStatus = normalizeSubscriberDecisionStatus(status);
+        const statusBadge = row.querySelector('.subscriber-status');
+        const approveButton = row.querySelector('.subscriber-approve-btn');
+        const rejectButton = row.querySelector('.subscriber-reject-btn');
+
+        if (statusBadge) {
+            statusBadge.classList.remove('pending', 'approved', 'rejected');
+            statusBadge.classList.add(normalizedStatus);
+            statusBadge.textContent = formatDecisionStatus(normalizedStatus);
+        }
+
+        if (approveButton) {
+            approveButton.disabled = normalizedStatus === 'approved';
+        }
+
+        if (rejectButton) {
+            rejectButton.disabled = normalizedStatus === 'rejected';
+        }
+    }
+
+    function fetchSubscriberList(sessionId) {
+        fetch(`${BASE_URL}/api?controller=SessionController&action=getSubscriberList&session_id=${sessionId}`, {
+            credentials: 'same-origin'
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (!result.success) {
+                    throw new Error(result.message || result.error || 'Failed to load subscriber list.');
+                }
+                renderSubscriberList(result.data || []);
+            })
+            .catch(error => {
+                console.error('Subscriber list error:', error);
+                document.getElementById('subscriberModalBody').innerHTML =
+                    `<div class="subscriber-modal-empty" style="color:#fc8181;">${escapeHtml(error.message || 'Failed to load subscriber list.')}</div>`;
+            });
+    }
+
+    function sendSubscriberDecision(button) {
+        if (!sessionForSubscribersId) {
+            return;
+        }
+
+        const actionType = button.getAttribute('data-action');
+        const subscriberId = Number(button.getAttribute('data-subscriber-id') || 0);
+        if (!subscriberId || (actionType !== 'approve' && actionType !== 'reject')) {
+            alert('Invalid subscriber action.');
+            return;
+        }
+
+        const row = button.closest('.subscriber-row');
+        if (!row) {
+            return;
+        }
+
+        const approveButton = row.querySelector('.subscriber-approve-btn');
+        const rejectButton = row.querySelector('.subscriber-reject-btn');
+        if (approveButton) {
+            approveButton.disabled = true;
+        }
+        if (rejectButton) {
+            rejectButton.disabled = true;
+        }
+
+        const formData = new FormData();
+        formData.append('session_id', String(sessionForSubscribersId));
+        formData.append('subscriber_id', String(subscriberId));
+
+        const endpointAction = actionType === 'approve'
+            ? 'approveSubscriberAction'
+            : 'rejectSubscriberAction';
+
+        fetch(`${BASE_URL}/api?controller=SessionController&action=${endpointAction}`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (!result.success) {
+                    throw new Error(result.message || result.error || 'Failed to update subscriber status.');
+                }
+
+                const nextStatus = (result.data && result.data.status) ? result.data.status : (actionType === 'approve' ? 'approved' : 'rejected');
+                applySubscriberRowState(row, nextStatus);
+
+                if (result.data && typeof result.data.sub_count !== 'undefined') {
+                    updateSubscriberCountForSession(sessionForSubscribersId, result.data.sub_count);
+                }
+            })
+            .catch(error => {
+                console.error('Subscriber decision error:', error);
+                alert(error.message || 'Failed to update subscriber status.');
+                if (approveButton) {
+                    approveButton.disabled = false;
+                }
+                if (rejectButton) {
+                    rejectButton.disabled = false;
+                }
+            });
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
         if (sessionToDelete) {
             deleteSession(sessionToDelete);
         }
     });
 
-    // Delete session via API
     function deleteSession(sessionId) {
         const confirmBtn = document.getElementById('confirmDeleteBtn');
         confirmBtn.disabled = true;
@@ -861,100 +1328,119 @@
         fetch(`${BASE_URL}/api?controller=SessionController&action=deleteSession`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: `id=${sessionId}`
         })
-        .then(response => response.json())
-        .then(data => {
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Delete';
+            .then(response => response.json())
+            .then(data => {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Delete';
 
-            if (!data.success) {
-                throw new Error(data.error || 'Failed to delete session');
-            }
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to delete session');
+                }
 
-            closeDeleteModal();
-            loadMyessions(1);
-        })
-        .catch(error => {
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Delete';
-            console.error('Error deleting session:', error);
-            alert(error.message || 'Failed to delete session. Please try again.');
-        });
+                closeDeleteModal();
+                loadMyessions(1);
+            })
+            .catch(error => {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Delete';
+                console.error('Error deleting session:', error);
+                alert(error.message || 'Failed to delete session. Please try again.');
+            });
     }
 
-    document.addEventListener('click', function(event) {
-        const button = event.target.closest('.session-subscribe-btn');
-        if (!button) {
+    document.addEventListener('click', function (event) {
+        const subscribeListButton = event.target.closest('.session-subscribe-list-btn');
+        if (subscribeListButton) {
+            openSubscriberModal(subscribeListButton);
             return;
         }
 
-        const sessionId = button.getAttribute('data-session-id');
-        const isSubscribed = Number(button.getAttribute('data-subscribed')) === 1;
-        const action = isSubscribed ? 'unsubscribeAction' : 'subscribeAction';
+        const decisionButton = event.target.closest('.subscriber-decision-btn');
+        if (decisionButton) {
+            sendSubscriberDecision(decisionButton);
+            return;
+        }
 
+        const subscribeButton = event.target.closest('.session-subscribe-btn');
+        if (!subscribeButton) {
+            return;
+        }
+
+        const sessionId = Number(subscribeButton.getAttribute('data-session-id') || 0);
         if (!sessionId) {
             alert('Invalid session ID.');
             return;
         }
 
-        button.disabled = true;
+        const currentStatus = normalizeSubscriptionStatus(subscribeButton.getAttribute('data-status'));
+        const isSubscribed = currentStatus !== 'none';
+        const action = isSubscribed ? 'unsubscribeAction' : 'subscribeAction';
+
+        subscribeButton.disabled = true;
 
         const formData = new FormData();
-        formData.append('session_id', sessionId);
+        formData.append('session_id', String(sessionId));
 
         fetch(`${BASE_URL}/api?controller=SessionController&action=${action}`, {
             method: 'POST',
             credentials: 'same-origin',
             body: formData
         })
-        .then(response => response.json())
-        .then(result => {
-            if (!result.success) {
-                throw new Error(result.message || result.error || 'Failed to update subscription.');
-            }
+            .then(response => response.json())
+            .then(result => {
+                if (!result.success) {
+                    throw new Error(result.message || result.error || 'Failed to update subscription.');
+                }
 
-            const nextSubscribed = !isSubscribed;
-            button.setAttribute('data-subscribed', nextSubscribed ? '1' : '0');
-            button.textContent = nextSubscribed ? 'Subscribed' : 'Subscribe';
-            button.classList.toggle('subscribed', nextSubscribed);
+                const state = result.data || {};
+                const nextStatus = normalizeSubscriptionStatus(state.subscription_status || (isSubscribed ? 'none' : 'approved'));
+                updateSubscribeButtonState(subscribeButton, nextStatus);
 
-            const countElement = button.parentElement.querySelector('.subscriber-count');
-            if (countElement) {
-                const currentCount = Number((countElement.textContent.match(/\d+/) || ['0'])[0]);
-                const nextCount = nextSubscribed ? currentCount + 1 : Math.max(0, currentCount - 1);
-                countElement.textContent = formatSubscriberCount(nextCount);
-            }
-        })
-        .catch(error => {
-            console.error('Subscription error:', error);
-            alert(error.message || 'Failed to update subscription. Please try again.');
-        })
-        .finally(() => {
-            button.disabled = false;
-        });
+                if (typeof state.sub_count !== 'undefined') {
+                    updateSubscriberCountForSession(sessionId, state.sub_count);
+                } else {
+                    const countElement = subscribeButton.parentElement.querySelector('.subscriber-count');
+                    if (countElement) {
+                        const currentCount = Number((countElement.textContent.match(/\d+/) || ['0'])[0]);
+                        const nextCount = isSubscribed ? Math.max(0, currentCount - 1) : currentCount + 1;
+                        updateSubscriberCountForSession(sessionId, nextCount);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Subscription error:', error);
+                alert(error.message || 'Failed to update subscription. Please try again.');
+            })
+            .finally(() => {
+                subscribeButton.disabled = false;
+            });
     });
 
-    // Load more buttons
-    document.getElementById('my-sessions-load-more').addEventListener('click', function() {
+    document.getElementById('my-sessions-load-more').addEventListener('click', function () {
         loadMyessions(mySessionsPage);
     });
 
-    document.getElementById('all-sessions-load-more').addEventListener('click', function() {
+    document.getElementById('all-sessions-load-more').addEventListener('click', function () {
         loadAllSessions(allSessionsPage);
     });
 
-    // Close modal when clicking outside
-    document.getElementById('deleteModal').addEventListener('click', function(e) {
+    document.getElementById('deleteModal').addEventListener('click', function (e) {
         if (e.target === this) {
             closeDeleteModal();
         }
     });
 
-    // Load initial data
-    window.addEventListener('load', function() {
+    document.getElementById('subscriberModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeSubscriberModal();
+        }
+    });
+
+    window.addEventListener('load', function () {
         loadMyessions(1);
     });
 </script>
