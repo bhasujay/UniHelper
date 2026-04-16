@@ -139,6 +139,54 @@ class SessionController
         }
     }
 
+    // GET /api?controller=SessionController&action=getSessionForView&session_id={id}
+    public function getSessionForView(Request $request)
+    {
+        header('Content-Type: application/json');
+
+        try {
+            $sessionId = filter_var($request->get('session_id'), FILTER_VALIDATE_INT);
+
+            if ($sessionId === false || $sessionId <= 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Valid session ID is required.'
+                ]);
+                return;
+            }
+
+            $session = $this->sessionModel->findVisibleById(
+                (int)$sessionId,
+                (int)$this->user->id,
+                $this->user->University ?? null
+            );
+
+            if (!$session) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Session not found or not accessible.'
+                ]);
+                return;
+            }
+
+            $sessionList = $this->addExpiredFlag([$session]);
+            $session = $sessionList[0] ?? $session;
+
+            echo json_encode([
+                'success' => true,
+                'data' => $session
+            ]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Failed to load session view.'
+            ]);
+        }
+    }
+
     // POST /api?controller=SessionController&action=update
     public function update(Request $request)
     {
