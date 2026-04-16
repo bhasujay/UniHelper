@@ -33,6 +33,71 @@
         min-height: 3rem;
     }
 
+    .peer-session-search {
+        margin-bottom: 1rem;
+    }
+
+    .peer-session-search-form {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        width: 100%;
+    }
+
+    .peer-session-search-input {
+        flex: 1;
+        min-width: 0;
+        border-radius: 0.6rem;
+        border: 1px solid rgba(164, 109, 255, 0.4);
+        background: rgba(8, 8, 8, 0.5);
+        color: var(--foreground);
+        padding: 0.7rem 0.9rem;
+        font-size: 0.95rem;
+    }
+
+    .peer-session-search-input::placeholder {
+        color: var(--muted-foreground);
+    }
+
+    .peer-session-search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(164, 109, 255, 0.2);
+    }
+
+    .peer-session-search-btn,
+    .peer-session-search-clear-btn {
+        border: 1px solid transparent;
+        border-radius: 0.55rem;
+        padding: 0.65rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        white-space: nowrap;
+    }
+
+    .peer-session-search-btn {
+        background: var(--gradient-primary);
+        color: rgb(0, 0, 0);
+    }
+
+    .peer-session-search-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--glow-primary);
+    }
+
+    .peer-session-search-clear-btn {
+        background: transparent;
+        border-color: rgba(164, 109, 255, 0.45);
+        color: var(--primary);
+        display: none;
+    }
+
+    .peer-session-search-clear-btn:hover {
+        background: rgba(164, 109, 255, 0.15);
+    }
+
     .peer-create-session-btn {
         width: 3rem;
         height: 3rem;
@@ -756,6 +821,16 @@
             display: none;
         }
 
+        .peer-session-search-form {
+            flex-wrap: wrap;
+        }
+
+        .peer-session-search-btn,
+        .peer-session-search-clear-btn {
+            flex: 1;
+            min-width: 130px;
+        }
+
         .session-main-modal {
             padding: 0.75rem;
         }
@@ -790,6 +865,21 @@
             </a>
         </div>
     <?php endif; ?>
+
+    <div class="peer-session-search">
+        <form id="peer-session-search-form" class="peer-session-search-form" role="search">
+            <input
+                id="peer-session-search-input"
+                class="peer-session-search-input"
+                type="text"
+                placeholder="Search sessions by title, subject, description, tags, or creator"
+                autocomplete="off"
+                aria-label="Search sessions"
+            />
+            <button type="submit" class="peer-session-search-btn">Search</button>
+            <button type="button" id="peer-session-search-clear" class="peer-session-search-clear-btn">Clear</button>
+        </form>
+    </div>
 
     <!-- Tabs -->
     <div class="peer-tabs">
@@ -837,9 +927,17 @@
     let activeSessionId = null;
     let sessionForSubscribersId = null;
 
+    const sessionSearchState = {
+        'my-sessions': { query: '', page: 1 },
+        'all-sessions': { query: '', page: 1 }
+    };
+
     const sessionCache = new Map();
     const pageParams = getPageParams();
     const sessionMainModalElement = document.getElementById('sessionMainModal');
+    const sessionSearchForm = document.getElementById('peer-session-search-form');
+    const sessionSearchInput = document.getElementById('peer-session-search-input');
+    const sessionSearchClearButton = document.getElementById('peer-session-search-clear');
 
     if (sessionMainModalElement && sessionMainModalElement.parentElement !== document.body) {
         document.body.appendChild(sessionMainModalElement);
@@ -857,6 +955,69 @@
             console.warn('Invalid page params for peer-learning:', error);
             return {};
         }
+    }
+
+    function normalizeSearchQuery(value) {
+        return String(value || '').trim();
+    }
+
+    function getTabSearchState(tabName) {
+        return tabName === 'all-sessions'
+            ? sessionSearchState['all-sessions']
+            : sessionSearchState['my-sessions'];
+    }
+
+    function isSearchMode(tabName) {
+        return getTabSearchState(tabName).query.length >= 2;
+    }
+
+    function getTabElements(tabName) {
+        if (tabName === 'all-sessions') {
+            return {
+                container: document.getElementById('all-sessions-container'),
+                loading: document.getElementById('all-sessions-loading'),
+                loadMoreBtn: document.getElementById('all-sessions-load-more')
+            };
+        }
+
+        return {
+            container: document.getElementById('my-sessions-container'),
+            loading: document.getElementById('my-sessions-loading'),
+            loadMoreBtn: document.getElementById('my-sessions-load-more')
+        };
+    }
+
+    function updateSearchControls() {
+        if (!sessionSearchInput || !sessionSearchClearButton) {
+            return;
+        }
+
+        sessionSearchClearButton.style.display = sessionSearchInput.value.trim() !== '' ? 'inline-flex' : 'none';
+    }
+
+    function syncSearchUiToCurrentTab() {
+        if (!sessionSearchInput) {
+            return;
+        }
+
+        sessionSearchInput.value = getTabSearchState(currentTab).query;
+        updateSearchControls();
+    }
+
+    function createSearchEmptyState(tabName, query) {
+        const normalizedQuery = normalizeSearchQuery(query);
+
+        if (tabName === 'all-sessions') {
+            return createEmptyState(
+                'No matching sessions',
+                `No sessions in All Sessions matched "${normalizedQuery}".`
+            );
+        }
+
+        return createEmptyState(
+            'No matching sessions',
+            `No sessions in My Sessions matched "${normalizedQuery}".`
+        );
     }
 
     function escapeHtml(value) {
@@ -1310,13 +1471,17 @@
         }
 
         currentTab = normalizedTab;
+        syncSearchUiToCurrentTab();
 
-        if (normalizedTab === 'my-sessions' && !document.getElementById('my-sessions-container').innerHTML) {
-            return loadMySessions(1);
+        const targetContainer = normalizedTab === 'all-sessions'
+            ? document.getElementById('all-sessions-container')
+            : document.getElementById('my-sessions-container');
+        const expectedMode = isSearchMode(normalizedTab) ? 'search' : 'default';
+
+        if (!targetContainer || !targetContainer.innerHTML || targetContainer.dataset.mode !== expectedMode) {
+            return loadTabData(normalizedTab, 1);
         }
-        if (normalizedTab === 'all-sessions' && !document.getElementById('all-sessions-container').innerHTML) {
-            return loadAllSessions(1);
-        }
+
         return Promise.resolve();
     }
 
@@ -1341,6 +1506,7 @@
                 if (data.data && data.data.length > 0) {
                     if (page === 1) {
                         container.innerHTML = '';
+                        container.dataset.mode = 'default';
                     }
 
                     data.data.forEach(session => {
@@ -1352,6 +1518,7 @@
                     mySessionsPage = page + 1;
                 } else if (page === 1) {
                     container.innerHTML = createEmptyState('No sessions yet', 'Create your first study session to get started!');
+                    container.dataset.mode = 'default';
                     loadMoreBtn.style.display = 'none';
                 }
             })
@@ -1361,6 +1528,7 @@
                 alert(error.message || 'Failed to load your sessions. Please try again.');
                 if (page === 1) {
                     container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
+                    container.dataset.mode = 'default';
                 }
             });
     }
@@ -1386,6 +1554,7 @@
                 if (data.data && data.data.length > 0) {
                     if (page === 1) {
                         container.innerHTML = '';
+                        container.dataset.mode = 'default';
                     }
 
                     data.data.forEach(session => {
@@ -1397,6 +1566,7 @@
                     allSessionsPage = page + 1;
                 } else if (page === 1) {
                     container.innerHTML = createEmptyState('No sessions available', 'Create a new session to get started!');
+                    container.dataset.mode = 'default';
                     loadMoreBtn.style.display = 'none';
                 }
             })
@@ -1406,8 +1576,131 @@
                 alert(error.message || 'Failed to load sessions. Please try again.');
                 if (page === 1) {
                     container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
+                    container.dataset.mode = 'default';
                 }
             });
+    }
+
+    function searchSessions(tabName, page) {
+        const normalizedTab = tabName === 'all-sessions' ? 'all-sessions' : 'my-sessions';
+        const searchState = getTabSearchState(normalizedTab);
+        const query = normalizeSearchQuery(searchState.query);
+
+        if (query.length < 2) {
+            return Promise.resolve();
+        }
+
+        const { container, loading, loadMoreBtn } = getTabElements(normalizedTab);
+        if (!container || !loading || !loadMoreBtn) {
+            return Promise.resolve();
+        }
+
+        if (page === 1) {
+            loading.style.display = 'flex';
+        }
+
+        const encodedQuery = encodeURIComponent(query);
+        const encodedTab = encodeURIComponent(normalizedTab);
+
+        return fetch(`${BASE_URL}/api?controller=SessionController&action=searchSessions&query=${encodedQuery}&tab=${encodedTab}&page=${page}`)
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to search sessions');
+                }
+
+                if (data.data && data.data.length > 0) {
+                    if (page === 1) {
+                        container.innerHTML = '';
+                        container.dataset.mode = 'search';
+                    }
+
+                    data.data.forEach(session => {
+                        upsertSessionCache(session);
+                        container.insertAdjacentHTML('beforeend', createSessionCard(session));
+                    });
+
+                    loadMoreBtn.style.display = data.count >= 10 ? 'block' : 'none';
+                    searchState.page = page + 1;
+                } else {
+                    if (page === 1) {
+                        container.innerHTML = createSearchEmptyState(normalizedTab, query);
+                        container.dataset.mode = 'search';
+                    }
+                    loadMoreBtn.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                console.error('Error searching sessions:', error);
+                alert(error.message || 'Failed to search sessions. Please try again.');
+                if (page === 1) {
+                    container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to search sessions</p>';
+                    container.dataset.mode = 'search';
+                }
+            });
+    }
+
+    function loadTabData(tabName, page) {
+        if (isSearchMode(tabName)) {
+            return searchSessions(tabName, page);
+        }
+
+        if (tabName === 'all-sessions') {
+            return loadAllSessions(page);
+        }
+
+        return loadMySessions(page);
+    }
+
+    function getNextPageForTab(tabName) {
+        if (isSearchMode(tabName)) {
+            return getTabSearchState(tabName).page;
+        }
+
+        return tabName === 'all-sessions' ? allSessionsPage : mySessionsPage;
+    }
+
+    function clearSearchForTab(tabName, reload = false) {
+        const normalizedTab = tabName === 'all-sessions' ? 'all-sessions' : 'my-sessions';
+        const state = getTabSearchState(normalizedTab);
+        state.query = '';
+        state.page = 1;
+
+        if (normalizedTab === currentTab) {
+            syncSearchUiToCurrentTab();
+        }
+
+        if (!reload) {
+            return Promise.resolve();
+        }
+
+        return loadTabData(normalizedTab, 1);
+    }
+
+    function submitSearchForCurrentTab() {
+        if (!sessionSearchInput) {
+            return Promise.resolve();
+        }
+
+        const query = normalizeSearchQuery(sessionSearchInput.value);
+        if (query === '') {
+            return clearSearchForTab(currentTab, true);
+        }
+
+        if (query.length < 2) {
+            alert('Please enter at least 2 characters to search.');
+            return Promise.resolve();
+        }
+
+        const state = getTabSearchState(currentTab);
+        state.query = query;
+        state.page = 1;
+        syncSearchUiToCurrentTab();
+
+        return searchSessions(currentTab, 1);
     }
 
     function editSession(sessionId) {
@@ -1607,10 +1900,10 @@
 
                 sessionCache.delete(normalizedSessionId);
                 closeSessionModal();
-                loadMySessions(1);
+                loadTabData('my-sessions', 1);
 
                 if (document.getElementById('all-sessions-container').innerHTML) {
-                    loadAllSessions(1);
+                    loadTabData('all-sessions', 1);
                 }
             })
             .catch(error => {
@@ -1693,12 +1986,35 @@
         });
     });
 
+    if (sessionSearchForm) {
+        sessionSearchForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            submitSearchForCurrentTab();
+        });
+    }
+
+    if (sessionSearchInput) {
+        sessionSearchInput.addEventListener('input', function () {
+            updateSearchControls();
+        });
+    }
+
+    if (sessionSearchClearButton) {
+        sessionSearchClearButton.addEventListener('click', function () {
+            if (sessionSearchInput) {
+                sessionSearchInput.value = '';
+            }
+            updateSearchControls();
+            clearSearchForTab(currentTab, true);
+        });
+    }
+
     document.getElementById('my-sessions-load-more').addEventListener('click', function () {
-        loadMySessions(mySessionsPage);
+        loadTabData('my-sessions', getNextPageForTab('my-sessions'));
     });
 
     document.getElementById('all-sessions-load-more').addEventListener('click', function () {
-        loadAllSessions(allSessionsPage);
+        loadTabData('all-sessions', getNextPageForTab('all-sessions'));
     });
 
     document.addEventListener('click', function (event) {
@@ -1784,6 +2100,7 @@
     });
 
     window.addEventListener('load', function () {
+        syncSearchUiToCurrentTab();
         const initialTab = pageParams.tab === 'all-sessions' ? 'all-sessions' : 'my-sessions';
         switchTab(initialTab);
 

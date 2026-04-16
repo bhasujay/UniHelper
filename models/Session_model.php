@@ -369,6 +369,217 @@ class Session_model extends BaseModel {
     }
 
     /**
+     * Search sessions created by the owner (My Sessions tab) while hiding expired entries.
+     */
+    public function searchMySessions($query, $ownerId, $limit = 10, $offset = 0, $currentUserId = null) {
+        $queryValue = trim((string)$query);
+        if ($queryValue === '') {
+            return [];
+        }
+
+        $currentUserIdValue = (int)$currentUserId;
+        $safeLimit = max(1, (int)$limit);
+        $safeOffset = max(0, (int)$offset);
+
+        // Each named placeholder must appear exactly once (ATTR_EMULATE_PREPARES = false).
+        $sql = "SELECT s.*, u.first_name as creator_first_name, u.last_name as creator_last_name,
+            u.profile_picture as creator_profile_picture, uni.name as creator_university,
+                COALESCE((
+                    SELECT sub.status
+                    FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :uid1 AND sub.Session_ID = s.id
+                    LIMIT 1
+                ), 'none') AS subscription_status,
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :uid2
+                      AND sub.Session_ID = s.id
+                      AND sub.status <> 'rejected'
+                ) THEN 1 ELSE 0 END AS is_subscribed,
+                CASE WHEN s.audience = 'private' THEN
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM subscribers sub
+                        WHERE sub.Subscriber_ID = :uid3
+                          AND sub.Session_ID = s.id
+                          AND sub.status = 'approved'
+                    ) THEN 1 ELSE 0 END
+                ELSE 1 END AS can_join
+            FROM {$this->table} s
+            LEFT JOIN users u ON s.user_id = u.id
+            LEFT JOIN universities uni ON u.university = uni.id
+            WHERE s.user_id = :owner_id
+              AND s.is_deleted = 0
+              AND s.deleted_at IS NULL
+              AND TIMESTAMP(s.date, s.time) >= NOW()
+              AND (
+                    LOWER(s.title) LIKE LOWER(:lq1)
+                    OR LOWER(s.subject) LIKE LOWER(:lq2)
+                    OR LOWER(s.description) LIKE LOWER(:lq3)
+                    OR LOWER(COALESCE(s.tags, '')) LIKE LOWER(:lq4)
+                    OR LOWER(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) LIKE LOWER(:lq5)
+              )
+            ORDER BY
+                CASE
+                    WHEN LOWER(s.title) = LOWER(:eq1) THEN 0
+                    WHEN LOWER(s.title) LIKE LOWER(:pq1) THEN 1
+                    WHEN LOWER(s.title) LIKE LOWER(:lq6) THEN 2
+                    WHEN LOWER(s.subject) = LOWER(:eq2) THEN 3
+                    WHEN LOWER(s.subject) LIKE LOWER(:pq2) THEN 4
+                    WHEN LOWER(s.subject) LIKE LOWER(:lq7) THEN 5
+                    WHEN LOWER(s.description) LIKE LOWER(:lq8) THEN 6
+                    WHEN LOWER(COALESCE(s.tags, '')) LIKE LOWER(:lq9) THEN 7
+                    WHEN LOWER(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) LIKE LOWER(:lq10) THEN 8
+                    ELSE 9
+                END,
+                s.date ASC,
+                s.time ASC
+            LIMIT {$safeLimit} OFFSET {$safeOffset}";
+
+        $likeVal   = '%' . $queryValue . '%';
+        $prefixVal = $queryValue . '%';
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'uid1'     => $currentUserIdValue,
+                'uid2'     => $currentUserIdValue,
+                'uid3'     => $currentUserIdValue,
+                'owner_id' => (int)$ownerId,
+                // WHERE clause
+                'lq1'  => $likeVal,
+                'lq2'  => $likeVal,
+                'lq3'  => $likeVal,
+                'lq4'  => $likeVal,
+                'lq5'  => $likeVal,
+                // ORDER BY clause
+                'eq1'  => $queryValue,
+                'pq1'  => $prefixVal,
+                'lq6'  => $likeVal,
+                'eq2'  => $queryValue,
+                'pq2'  => $prefixVal,
+                'lq7'  => $likeVal,
+                'lq8'  => $likeVal,
+                'lq9'  => $likeVal,
+                'lq10' => $likeVal,
+            ]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to search your sessions: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Search visible sessions for the viewer (All Sessions tab) while hiding expired entries.
+     */
+    public function searchVisibleSessions($query, $currentUserId, $currentUserUniversity = null, $limit = 10, $offset = 0) {
+        $queryValue = trim((string)$query);
+        if ($queryValue === '') {
+            return [];
+        }
+
+        $currentUserIdValue = (int)$currentUserId;
+        $viewerUniversity = $this->normalizeUniversity($currentUserUniversity);
+        $safeLimit = max(1, (int)$limit);
+        $safeOffset = max(0, (int)$offset);
+
+        // Each named placeholder must appear exactly once (ATTR_EMULATE_PREPARES = false).
+        $sql = "SELECT s.*, u.first_name as creator_first_name, u.last_name as creator_last_name,
+            u.profile_picture as creator_profile_picture, uni.name as creator_university,
+                COALESCE((
+                    SELECT sub.status
+                    FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :uid1 AND sub.Session_ID = s.id
+                    LIMIT 1
+                ), 'none') AS subscription_status,
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :uid2
+                      AND sub.Session_ID = s.id
+                      AND sub.status <> 'rejected'
+                ) THEN 1 ELSE 0 END AS is_subscribed,
+                CASE WHEN s.audience = 'private' THEN
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM subscribers sub
+                        WHERE sub.Subscriber_ID = :uid3
+                          AND sub.Session_ID = s.id
+                          AND sub.status = 'approved'
+                    ) THEN 1 ELSE 0 END
+                ELSE 1 END AS can_join
+            FROM {$this->table} s
+            LEFT JOIN users u ON s.user_id = u.id
+            LEFT JOIN universities uni ON u.university = uni.id
+            WHERE s.deleted_at IS NULL
+              AND s.is_deleted = 0
+              AND TIMESTAMP(s.date, s.time) >= NOW()
+              AND (
+                    s.user_id = :uid4
+                    OR s.audience = 'all_universities'
+                    OR (
+                        :viewer_university1 IS NOT NULL
+                        AND s.university = :viewer_university2
+                        AND s.audience IN ('my_university', 'private')
+                    )
+              )
+              AND (
+                    LOWER(s.title) LIKE LOWER(:lq1)
+                    OR LOWER(s.subject) LIKE LOWER(:lq2)
+                    OR LOWER(s.description) LIKE LOWER(:lq3)
+                    OR LOWER(COALESCE(s.tags, '')) LIKE LOWER(:lq4)
+                    OR LOWER(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) LIKE LOWER(:lq5)
+              )
+            ORDER BY
+                CASE
+                    WHEN LOWER(s.title) = LOWER(:eq1) THEN 0
+                    WHEN LOWER(s.title) LIKE LOWER(:pq1) THEN 1
+                    WHEN LOWER(s.title) LIKE LOWER(:lq6) THEN 2
+                    WHEN LOWER(s.subject) = LOWER(:eq2) THEN 3
+                    WHEN LOWER(s.subject) LIKE LOWER(:pq2) THEN 4
+                    WHEN LOWER(s.subject) LIKE LOWER(:lq7) THEN 5
+                    WHEN LOWER(s.description) LIKE LOWER(:lq8) THEN 6
+                    WHEN LOWER(COALESCE(s.tags, '')) LIKE LOWER(:lq9) THEN 7
+                    WHEN LOWER(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) LIKE LOWER(:lq10) THEN 8
+                    ELSE 9
+                END,
+                s.date ASC,
+                s.time ASC
+            LIMIT {$safeLimit} OFFSET {$safeOffset}";
+
+        $likeVal   = '%' . $queryValue . '%';
+        $prefixVal = $queryValue . '%';
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'uid1'              => $currentUserIdValue,
+                'uid2'              => $currentUserIdValue,
+                'uid3'              => $currentUserIdValue,
+                'uid4'              => $currentUserIdValue,
+                'viewer_university1' => $viewerUniversity,
+                'viewer_university2' => $viewerUniversity,
+                // WHERE clause
+                'lq1'  => $likeVal,
+                'lq2'  => $likeVal,
+                'lq3'  => $likeVal,
+                'lq4'  => $likeVal,
+                'lq5'  => $likeVal,
+                // ORDER BY clause
+                'eq1'  => $queryValue,
+                'pq1'  => $prefixVal,
+                'lq6'  => $likeVal,
+                'eq2'  => $queryValue,
+                'pq2'  => $prefixVal,
+                'lq7'  => $likeVal,
+                'lq8'  => $likeVal,
+                'lq9'  => $likeVal,
+                'lq10' => $likeVal,
+            ]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to search sessions: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Subscribe a user to a session
      */
     public function subscribe($userId, $sessionId) {

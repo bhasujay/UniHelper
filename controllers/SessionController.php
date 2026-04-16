@@ -305,6 +305,74 @@ class SessionController
         }
     }
 
+    // GET /api?controller=SessionController&action=searchSessions&query=...&tab=my-sessions|all-sessions&page=1
+    public function searchSessions(Request $request)
+    {
+        header('Content-Type: application/json');
+
+        try {
+            $query = trim((string)($request->get('query') ?? ''));
+            $tab = trim((string)($request->get('tab') ?? 'my-sessions'));
+            $page = max(1, (int)($request->get('page') ?? 1));
+            $limit = 10;
+            $offset = ($page - 1) * $limit;
+
+            if (strlen($query) < 2) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Search query must be at least 2 characters long.'
+                ]);
+                return;
+            }
+
+            if (!in_array($tab, ['my-sessions', 'all-sessions'], true)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Invalid tab selection.'
+                ]);
+                return;
+            }
+
+            if ($tab === 'my-sessions') {
+                $sessions = $this->sessionModel->searchMySessions(
+                    $query,
+                    (int)$this->user->id,
+                    $limit,
+                    $offset,
+                    (int)$this->user->id
+                );
+            } else {
+                $sessions = $this->sessionModel->searchVisibleSessions(
+                    $query,
+                    (int)$this->user->id,
+                    $this->user->University ?? null,
+                    $limit,
+                    $offset
+                );
+            }
+
+            foreach ($sessions as &$session) {
+                $session['is_expired'] = 0;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $sessions,
+                'count' => count($sessions),
+                'page' => $page,
+                'limit' => $limit
+            ]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Failed to search sessions.'
+            ]);
+        }
+    }
+
     // POST /api?controller=SessionController&action=subscribeAction
     public function subscribeAction(Request $request)
     {
