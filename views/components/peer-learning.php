@@ -5,19 +5,19 @@
 ?>
 
 <style>
-    body.peer-session-modal-open {
+    body.peer-modal-open {
         overflow: hidden;
     }
 
-    body.peer-session-modal-open .nav,
-    body.peer-session-modal-open .sidebar,
-    body.peer-session-modal-open #dashboardMain {
+    body.peer-modal-open > :not(.session-main-modal) {
         filter: blur(6px);
         transition: filter 0.2s ease;
+        pointer-events: none;
     }
 
-    body.peer-session-modal-open #sessionMainModal {
+    body.peer-modal-open > .session-main-modal {
         filter: none;
+        pointer-events: auto;
     }
 
     /* Peer Learning Component Styles */
@@ -796,6 +796,257 @@
         padding: 1.5rem 0.2rem;
     }
 
+    /* Create/Edit Session Modal */
+    .create-session-modal {
+        z-index: 10003;
+    }
+
+    .create-session-modal .session-main-modal-content {
+        width: min(920px, 96vw);
+    }
+
+    .create-session-modal .session-main-modal-body {
+        padding: 0.85rem 1rem 1rem;
+    }
+
+    .create-session-modal .create-session-container {
+        max-width: 100%;
+        margin: 0;
+        background: transparent;
+        backdrop-filter: none;
+        border: none;
+        border-radius: 0;
+        padding: 0.4rem 0.2rem 0.2rem;
+        box-shadow: none;
+    }
+
+    .create-session-modal .session-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .create-session-modal .session-form-header {
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .create-session-modal .session-form-title {
+        font-size: 1.65rem;
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.45rem;
+    }
+
+    .create-session-modal .session-form-subtitle {
+        color: var(--muted-foreground);
+        font-size: 0.95rem;
+    }
+
+    .create-session-modal .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .create-session-modal .form-label {
+        font-weight: 500;
+        color: var(--foreground);
+        font-size: 0.95rem;
+    }
+
+    .create-session-modal .form-label.required::after {
+        content: ' *';
+        color: var(--primary);
+    }
+
+    .create-session-modal .form-input,
+    .create-session-modal .form-textarea,
+    .create-session-modal .form-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(0, 170, 255, 0.25);
+        border-radius: 0.5rem;
+        background: var(--key);
+        color: var(--text);
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        color-scheme: dark;
+    }
+
+    .create-session-modal .form-input:focus,
+    .create-session-modal .form-textarea:focus,
+    .create-session-modal .form-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 10px rgba(0, 170, 255, 0.3);
+    }
+
+    .create-session-modal input[type="date"],
+    .create-session-modal input[type="time"],
+    .create-session-modal input[type="number"] {
+        color-scheme: dark;
+    }
+
+    .create-session-modal input[type="date"]::-webkit-calendar-picker-indicator,
+    .create-session-modal input[type="time"]::-webkit-calendar-picker-indicator {
+        filter: invert(1) brightness(1.8) sepia(1) saturate(4) hue-rotate(175deg);
+        cursor: pointer;
+        opacity: 1;
+    }
+
+    .create-session-modal input[type="number"]::-webkit-inner-spin-button,
+    .create-session-modal input[type="number"]::-webkit-outer-spin-button {
+        opacity: 1;
+        filter: invert(1) brightness(1.8) sepia(1) saturate(4) hue-rotate(175deg);
+    }
+
+    .create-session-modal .form-textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .create-session-modal .form-select-group {
+        position: relative;
+    }
+
+    .create-session-modal .form-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        width: 100%;
+        cursor: pointer;
+        padding-right: 2.5rem;
+    }
+
+    .create-session-modal .form-select-arrow {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: var(--primary);
+        font-size: 1rem;
+    }
+
+    .create-session-modal .form-row-three {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .create-session-modal .radio-group {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+        margin-top: 0.5rem;
+    }
+
+    .create-session-modal .radio-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .create-session-modal .radio-item input[type="radio"] {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+        accent-color: var(--primary);
+    }
+
+    .create-session-modal .radio-item label {
+        cursor: pointer;
+        color: var(--foreground);
+        font-size: 0.95rem;
+        user-select: none;
+    }
+
+    .create-session-modal .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1.75rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .create-session-modal .btn {
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+    .create-session-modal .btn-create {
+        background: var(--gradient-primary);
+        color: rgb(0, 0, 0);
+        flex: 1;
+        max-width: 250px;
+    }
+
+    .create-session-modal .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--glow-primary);
+    }
+
+    .create-session-modal .btn-create:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .create-session-modal .btn-cancel {
+        background: transparent;
+        color: var(--foreground);
+        border: 1px solid var(--border);
+        flex: 1;
+        max-width: 250px;
+    }
+
+    .create-session-modal .btn-cancel:hover {
+        background: rgba(164, 109, 255, 0.1);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .create-session-modal .helper-text {
+        font-size: 0.85rem;
+        color: var(--muted-foreground);
+        margin-top: 0.25rem;
+    }
+
+    .create-session-modal .form-error {
+        color: #fc8181;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+        display: none;
+    }
+
+    .create-session-modal .form-error.show {
+        display: block;
+    }
+
+    .create-session-modal .form-input.error,
+    .create-session-modal .form-textarea.error,
+    .create-session-modal .form-select.error {
+        border-color: #fc8181;
+        box-shadow: 0 0 10px rgba(252, 129, 129, 0.2);
+    }
+
+    .create-session-modal-error {
+        text-align: center;
+        color: #fc8181;
+        padding: 1.25rem 0.5rem;
+    }
+
     @media (max-width: 768px) {
         .sessions-grid {
             grid-template-columns: 1fr;
@@ -835,6 +1086,29 @@
             padding: 0.75rem;
         }
 
+        .create-session-modal .create-session-container {
+            padding: 0.1rem;
+        }
+
+        .create-session-modal .form-row-three {
+            grid-template-columns: 1fr;
+        }
+
+        .create-session-modal .radio-group {
+            gap: 1rem;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .create-session-modal .form-actions {
+            flex-direction: column;
+        }
+
+        .create-session-modal .btn-create,
+        .create-session-modal .btn-cancel {
+            max-width: 100%;
+        }
+
         .session-main-actions {
             grid-template-columns: 1fr;
         }
@@ -855,7 +1129,7 @@
     <?php if (!isset($user) || $user->role !== 'role-applicant'): ?>
         <div class="peer-learning-toolbar">
             <a href="/UniHelper/create-session" class="peer-create-session-btn" title="Create Session"
-                aria-label="Create Session">
+                aria-label="Create Session" data-action="open-create-session-modal" data-session-id="0">
                 <span class="peer-create-session-label">Create New Session</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                     stroke-linejoin="round" aria-hidden="true">
@@ -917,6 +1191,17 @@
     </div>
 </div>
 
+<div class="session-main-modal create-session-modal" id="createSessionModal" aria-hidden="true">
+    <div class="session-main-modal-content" role="dialog" aria-modal="true" aria-labelledby="createSessionModalTitle">
+        <div class="session-main-modal-header">
+            <h3 class="session-main-modal-title" id="createSessionModalTitle">Create Study Session</h3>
+            <button type="button" class="session-main-modal-close" data-action="close-create-session-modal"
+                aria-label="Close create session form">&times;</button>
+        </div>
+        <div class="session-main-modal-body" id="createSessionModalBody"></div>
+    </div>
+</div>
+
 <script>
     const BASE_URL = '/UniHelper';
     const CURRENT_USER_ID = <?= (int)($user->id ?? 0) ?>;
@@ -926,6 +1211,8 @@
     let allSessionsPage = 1;
     let activeSessionId = null;
     let sessionForSubscribersId = null;
+    let activeCreateSessionId = 0;
+    let createSessionSubmitInFlight = false;
 
     const sessionSearchState = {
         'my-sessions': { query: '', page: 1 },
@@ -935,12 +1222,24 @@
     const sessionCache = new Map();
     const pageParams = getPageParams();
     const sessionMainModalElement = document.getElementById('sessionMainModal');
+    const createSessionModalElement = document.getElementById('createSessionModal');
+    const createSessionModalTitleElement = document.getElementById('createSessionModalTitle');
+    const createSessionModalBodyElement = document.getElementById('createSessionModalBody');
     const sessionSearchForm = document.getElementById('peer-session-search-form');
     const sessionSearchInput = document.getElementById('peer-session-search-input');
     const sessionSearchClearButton = document.getElementById('peer-session-search-clear');
 
     if (sessionMainModalElement && sessionMainModalElement.parentElement !== document.body) {
         document.body.appendChild(sessionMainModalElement);
+    }
+
+    if (createSessionModalElement && createSessionModalElement.parentElement !== document.body) {
+        document.body.appendChild(createSessionModalElement);
+    }
+
+    function updateBodyModalState() {
+        const hasVisibleModal = document.querySelector('.session-main-modal.show') !== null;
+        document.body.classList.toggle('peer-modal-open', hasVisibleModal);
     }
 
     function getPageParams() {
@@ -1131,7 +1430,7 @@
                 <div class="empty-state-icon">📚</div>
                 <h3 class="empty-state-title">${escapeHtml(title)}</h3>
                 <p class="empty-state-text">${escapeHtml(text)}</p>
-                <a href="${BASE_URL}/create-session" class="empty-state-btn">Create Session</a>
+                <a href="${BASE_URL}/create-session" class="empty-state-btn" data-action="open-create-session-modal" data-session-id="0">Create Session</a>
             </div>
         `;
     }
@@ -1403,7 +1702,7 @@
         const modal = document.getElementById('sessionMainModal');
         modal.classList.add('show');
         modal.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('peer-session-modal-open');
+        updateBodyModalState();
 
         if (isOwnerSession(safeSession) && String(safeSession.audience || '') === 'private') {
             sessionForSubscribersId = sessionId;
@@ -1415,9 +1714,173 @@
         const modal = document.getElementById('sessionMainModal');
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('peer-session-modal-open');
         activeSessionId = null;
         sessionForSubscribersId = null;
+        updateBodyModalState();
+    }
+
+    function showCreateSessionModalLoading() {
+        if (!createSessionModalBodyElement) {
+            return;
+        }
+
+        createSessionModalBodyElement.innerHTML = `
+            <div class="loading-spinner" style="padding: 1.8rem 0;">
+                <div class="spinner"></div>
+            </div>
+        `;
+    }
+
+    function renderCreateSessionModalError(message) {
+        if (!createSessionModalBodyElement) {
+            return;
+        }
+
+        createSessionModalBodyElement.innerHTML = `
+            <div class="create-session-modal-error">${escapeHtml(message || 'Failed to load the session form.')}</div>
+        `;
+    }
+
+    function openCreateSessionModal(sessionId = 0) {
+        const normalizedSessionId = Math.max(0, Number(sessionId || 0));
+        activeCreateSessionId = normalizedSessionId;
+
+        if (!createSessionModalElement || !createSessionModalBodyElement) {
+            return;
+        }
+
+        showCreateSessionModalLoading();
+        if (createSessionModalTitleElement) {
+            createSessionModalTitleElement.textContent = normalizedSessionId > 0 ? 'Edit Study Session' : 'Create Study Session';
+        }
+        createSessionModalElement.classList.add('show');
+        createSessionModalElement.setAttribute('aria-hidden', 'false');
+        updateBodyModalState();
+
+        const query = normalizedSessionId > 0 ? `&session_id=${normalizedSessionId}` : '';
+        fetch(`${BASE_URL}/api?controller=SessionController&action=getSessionFormModal${query}`, {
+            credentials: 'same-origin'
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (!result.success || !result.data || !result.data.html) {
+                    throw new Error(result.message || result.error || 'Failed to load the session form.');
+                }
+
+                if (createSessionModalTitleElement) {
+                    createSessionModalTitleElement.textContent = result.data.title || (normalizedSessionId > 0 ? 'Edit Study Session' : 'Create Study Session');
+                }
+                createSessionModalBodyElement.innerHTML = result.data.html;
+            })
+            .catch(error => {
+                console.error('Create-session modal load error:', error);
+                renderCreateSessionModalError(error.message || 'Failed to load the session form.');
+            });
+    }
+
+    function closeCreateSessionModal() {
+        if (!createSessionModalElement) {
+            return;
+        }
+
+        createSessionModalElement.classList.remove('show');
+        createSessionModalElement.setAttribute('aria-hidden', 'true');
+        if (createSessionModalBodyElement) {
+            createSessionModalBodyElement.innerHTML = '';
+        }
+
+        createSessionSubmitInFlight = false;
+        activeCreateSessionId = 0;
+        updateBodyModalState();
+    }
+
+    function submitCreateSessionModalForm(formElement) {
+        if (!formElement || createSessionSubmitInFlight) {
+            return;
+        }
+
+        createSessionSubmitInFlight = true;
+        const submitButton = formElement.querySelector('.btn-create');
+        const previousSubmitText = submitButton ? submitButton.textContent : '';
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Saving...';
+        }
+
+        const formData = new FormData(formElement);
+
+        fetch(`${BASE_URL}/api?controller=SessionController&action=submitSessionModal`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (!result.success) {
+                    if (result.validation && result.data && result.data.html && createSessionModalBodyElement) {
+                        createSessionModalBodyElement.innerHTML = result.data.html;
+                        return;
+                    }
+
+                    if (result.data && result.data.html && createSessionModalBodyElement) {
+                        createSessionModalBodyElement.innerHTML = result.data.html;
+                    }
+
+                    throw new Error(result.message || result.error || 'Failed to save session.');
+                }
+
+                const payload = result.data || {};
+                const returnedSession = payload.session ? upsertSessionCache(payload.session) : null;
+                const updatedSessionId = Number(payload.session_id || (returnedSession && returnedSession.id) || 0);
+
+                closeCreateSessionModal();
+                loadTabData('my-sessions', 1);
+
+                const allSessionsContainer = document.getElementById('all-sessions-container');
+                if (allSessionsContainer && allSessionsContainer.innerHTML) {
+                    loadTabData('all-sessions', 1);
+                }
+
+                if (updatedSessionId && activeSessionId === updatedSessionId && sessionMainModalElement && sessionMainModalElement.classList.contains('show')) {
+                    if (returnedSession) {
+                        renderMainSessionModal(returnedSession);
+                        if (isOwnerSession(returnedSession) && String(returnedSession.audience || '') === 'private') {
+                            sessionForSubscribersId = updatedSessionId;
+                            fetchSubscriberList(updatedSessionId);
+                        }
+                    } else {
+                        fetchSessionForView(updatedSessionId)
+                            .then(session => {
+                                renderMainSessionModal(session);
+                                if (isOwnerSession(session) && String(session.audience || '') === 'private') {
+                                    sessionForSubscribersId = updatedSessionId;
+                                    fetchSubscriberList(updatedSessionId);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Failed to refresh updated session:', error);
+                            });
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Create-session modal submit error:', error);
+                alert(error.message || 'Failed to save session. Please try again.');
+            })
+            .finally(() => {
+                createSessionSubmitInFlight = false;
+
+                if (!createSessionModalBodyElement) {
+                    return;
+                }
+
+                const nextSubmitButton = createSessionModalBodyElement.querySelector('.btn-create');
+                if (nextSubmitButton) {
+                    nextSubmitButton.disabled = false;
+                    nextSubmitButton.textContent = previousSubmitText || nextSubmitButton.textContent;
+                }
+            });
     }
 
     function fetchSessionForView(sessionId) {
@@ -1704,7 +2167,13 @@
     }
 
     function editSession(sessionId) {
-        window.location.href = `${BASE_URL}/create-session?session_id=${sessionId}`;
+        const normalizedSessionId = Number(sessionId || 0);
+        if (!normalizedSessionId) {
+            alert('Invalid session ID.');
+            return;
+        }
+
+        openCreateSessionModal(normalizedSessionId);
     }
 
     function renderSubscriberListLoading() {
@@ -2017,11 +2486,41 @@
         loadTabData('all-sessions', getNextPageForTab('all-sessions'));
     });
 
-    document.addEventListener('click', function (event) {
-        const modal = document.getElementById('sessionMainModal');
+    document.addEventListener('submit', function (event) {
+        const modalForm = event.target.closest('.js-modal-create-session-form');
+        if (!modalForm) {
+            return;
+        }
 
-        if (event.target === modal) {
+        event.preventDefault();
+        submitCreateSessionModalForm(modalForm);
+    });
+
+    document.addEventListener('click', function (event) {
+        const sessionModal = document.getElementById('sessionMainModal');
+        const createModal = document.getElementById('createSessionModal');
+
+        if (event.target === createModal) {
+            closeCreateSessionModal();
+            return;
+        }
+
+        if (event.target === sessionModal) {
             closeSessionModal();
+            return;
+        }
+
+        const createModalCloseButton = event.target.closest('[data-action="close-create-session-modal"]');
+        if (createModalCloseButton) {
+            closeCreateSessionModal();
+            return;
+        }
+
+        const createModalOpenTrigger = event.target.closest('[data-action="open-create-session-modal"]');
+        if (createModalOpenTrigger) {
+            event.preventDefault();
+            const sessionId = Number(createModalOpenTrigger.getAttribute('data-session-id') || 0);
+            openCreateSessionModal(sessionId);
             return;
         }
 
@@ -2078,7 +2577,14 @@
 
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
-            closeSessionModal();
+            if (createSessionModalElement && createSessionModalElement.classList.contains('show')) {
+                closeCreateSessionModal();
+                return;
+            }
+
+            if (sessionMainModalElement && sessionMainModalElement.classList.contains('show')) {
+                closeSessionModal();
+            }
             return;
         }
 

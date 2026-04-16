@@ -237,6 +237,165 @@ class SessionController
         }
     }
 
+    // GET /api?controller=SessionController&action=getSessionFormModal&session_id={id?}
+    public function getSessionFormModal(Request $request)
+    {
+        header('Content-Type: application/json');
+
+        $rawSessionId = $request->get('session_id');
+        $sessionId = filter_var($rawSessionId, FILTER_VALIDATE_INT);
+        $editingSessionId = ($sessionId !== false && (int)$sessionId > 0) ? (int)$sessionId : 0;
+        $isEditMode = $editingSessionId > 0;
+
+        $formData = [];
+        $errors = [];
+
+        if ($isEditMode) {
+            try {
+                $session = $this->sessionModel->find($editingSessionId);
+                if (!$session) {
+                    http_response_code(404);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Session not found.'
+                    ]);
+                    return;
+                }
+
+                if ((int)$session['user_id'] !== (int)$this->user->id) {
+                    http_response_code(403);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'You are not authorized to edit this session.'
+                    ]);
+                    return;
+                }
+
+                $formData = $this->mapSessionToFormData($session, $editingSessionId);
+            } catch (\Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to load the session form.'
+                ]);
+                return;
+            }
+        }
+
+        $html = $this->renderSessionFormHtml($formData, $errors, $isEditMode, $editingSessionId, true);
+
+        echo json_encode([
+            'success' => true,
+            'data' => [
+                'title' => $isEditMode ? 'Edit Study Session' : 'Create Study Session',
+                'html' => $html,
+                'is_edit_mode' => $isEditMode,
+                'session_id' => $editingSessionId
+            ]
+        ]);
+    }
+
+    // POST /api?controller=SessionController&action=submitSessionModal
+    public function submitSessionModal(Request $request)
+    {
+        header('Content-Type: application/json');
+
+        $rawSessionId = $request->get('session_id');
+        $sessionId = filter_var($rawSessionId, FILTER_VALIDATE_INT);
+        $editingSessionId = ($sessionId !== false && (int)$sessionId > 0) ? (int)$sessionId : 0;
+        $isEditMode = $editingSessionId > 0;
+
+        if ($isEditMode) {
+            $existingSession = $this->sessionModel->find($editingSessionId);
+
+            if (!$existingSession) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Session not found.'
+                ]);
+                return;
+            }
+
+            if ((int)$existingSession['user_id'] !== (int)$this->user->id) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You are not authorized to edit this session.'
+                ]);
+                return;
+            }
+        }
+
+        [$errors, $formData, $sessionData] = $this->validateSessionPayload(
+            $request,
+            $isEditMode ? $editingSessionId : null
+        );
+
+        if (!empty($errors)) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'validation' => true,
+                'message' => 'Please fix the highlighted fields.',
+                'data' => [
+                    'html' => $this->renderSessionFormHtml($formData, $errors, $isEditMode, $editingSessionId, true)
+                ]
+            ]);
+            return;
+        }
+
+        try {
+            $resultSessionId = $editingSessionId;
+
+            if ($isEditMode) {
+                $this->sessionModel->updateByOwner($editingSessionId, (int)$this->user->id, $sessionData);
+            } else {
+                $resultSessionId = (int)$this->sessionModel->create($sessionData);
+            }
+
+            $sessionView = $this->sessionModel->findVisibleById(
+                (int)$resultSessionId,
+                (int)$this->user->id,
+                $this->user->University ?? null
+            );
+
+            if ($sessionView) {
+                $sessionList = $this->addExpiredFlag([$sessionView]);
+                $sessionView = $sessionList[0] ?? $sessionView;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => $isEditMode ? 'Session updated successfully.' : 'Session created successfully.',
+                'data' => [
+                    'operation' => $isEditMode ? 'update' : 'create',
+                    'session_id' => (int)$resultSessionId,
+                    'session' => $sessionView
+                ]
+            ]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => $isEditMode
+                    ? 'An error occurred while updating the session. Please try again.'
+                    : 'An error occurred while creating the session. Please try again.',
+                'data' => [
+                    'html' => $this->renderSessionFormHtml(
+                        $formData,
+                        ['form' => $isEditMode
+                            ? 'An error occurred while updating the session. Please try again.'
+                            : 'An error occurred while creating the session. Please try again.'],
+                        $isEditMode,
+                        $editingSessionId,
+                        true
+                    )
+                ]
+            ]);
+        }
+    }
+
     // GET /api/sessions - Fetch all sessions with pagination (JSON)
     public function getAllSessions(Request $request)
     {
@@ -694,6 +853,40 @@ class SessionController
         ];
 
         return [$errors, $formData, $sessionData];
+    }
+
+    private function mapSessionToFormData(array $session, int $sessionId): array
+    {
+        return [
+            'title' => (string)($session['title'] ?? ''),
+            'subject' => (string)($session['subject'] ?? ''),
+            'description' => (string)($session['description'] ?? ''),
+            'date' => (string)($session['date'] ?? ''),
+            'time' => (string)($session['time'] ?? ''),
+            'duration' => (string)($session['duration'] ?? ''),
+            'sessionLink' => (string)($session['session_link'] ?? ''),
+            'audience' => (string)($session['audience'] ?? ''),
+            'tags' => (string)($session['tags'] ?? ''),
+            'session_id' => $sessionId
+        ];
+    }
+
+    private function renderSessionFormHtml(
+        array $formData = [],
+        array $errors = [],
+        bool $isEditMode = false,
+        int $editingSessionId = 0,
+        bool $isModalContext = false
+    ): string {
+        $formAction = '/UniHelper/api?controller=SessionController&action=' . (
+            $isModalContext
+                ? 'submitSessionModal'
+                : ($isEditMode ? 'update' : 'store')
+        );
+
+        ob_start();
+        include Application::$ROOT_DIR . '/views/components/session-form.php';
+        return ob_get_clean();
     }
 
     private function handleSubscriberDecision(Request $request, string $status): void
