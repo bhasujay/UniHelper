@@ -2,25 +2,235 @@
 
 namespace app\controllers;
 
+require_once dirname(__DIR__) . '/controllers/DashboardController.php';
 require_once dirname(__DIR__) . '/models/base-model.php';
 require_once dirname(__DIR__) . '/models/ProgramModel.php';
+require_once dirname(__DIR__) . '/models/DegreeProgram.php';
+require_once dirname(__DIR__) . '/models/University.php';
+require_once dirname(__DIR__) . '/models/Major.php';
 
-use app\models\ProgramModel;
 use app\core\Request;
+use app\models\DegreeProgram;
+use app\models\Major;
+use app\models\ProgramModel;
+use app\models\University;
 
 /**
  * Controller for Degree Program operations
  * Handles searching, filtering, and retrieving degree programs
  */
-class ProgramController
+class ProgramController extends DashboardController
 {
     private $programModel;
     
     public function __construct() {
+        parent::__construct();
         $this->programModel = new ProgramModel();
     }
-    
+
+    private function ensureAdminAccess(bool $asJson = false): void
+    {
+        if (($this->user->role ?? '') !== 'role-admin') {
+            http_response_code(403);
+
+            if ($asJson) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Access denied.'
+                ]);
+            } else {
+                echo "<div class='error'>Access denied</div>";
+            }
+
+            exit;
+        }
+    }
+
+    private function redirectToManagement(): void
+    {
+        header('Location: /unihelper/degree-programs-management');
+        exit;
+    }
+
+    private function isAjaxRequest(): bool
+    {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH'])
+            && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    }
+
+    private function buildDegreePayloadFromPost(): array
+    {
+        return [
+            'name' => trim((string)($_POST['degreeName'] ?? '')),
+            'university_id' => $_POST['university'] ?? null,
+            'stream' => trim((string)($_POST['stream'] ?? '')),
+            'unicode' => trim((string)($_POST['unicode'] ?? '')),
+            'major_id' => $_POST['major'] ?? null,
+            'descriptions' => trim((string)($_POST['description'] ?? '')),
+            'duration' => trim((string)($_POST['duration'] ?? '')),
+            'path_description' => trim((string)($_POST['pathDescription'] ?? 'Default Entry Path')),
+            'subject_requirements' => (string)($_POST['subjectRequirements'] ?? '')
+        ];
+    }
+
+    private function resolveProgramId($input, ?Request $request = null): int
+    {
+        if ($input instanceof Request) {
+            return (int)($input->get('id') ?? 0);
+        }
+
+        if (is_array($input)) {
+            return (int)($input['id'] ?? 0);
+        }
+
+        if ($request instanceof Request) {
+            $idFromRequest = $request->get('id');
+            if ($idFromRequest !== null && $idFromRequest !== '') {
+                return (int)$idFromRequest;
+            }
+        }
+
+        return (int)$input;
+    }
+
     /**
+     * Render admin degree management SSR page
+     * GET /degree-programs-management
+     */
+    public function degreeProgramsManagement()
+    {
+        $this->ensureAdminAccess();
+
+        $this->activeComponent = 'degree-programs-management';
+
+        $majorModel = new Major();
+        $universityModel = new University();
+        $degreeModel = new DegreeProgram();
+
+        $content = $this->loadComponent('degree-programs-management', [
+            'universities' => $universityModel->getAll(),
+            'majors' => $majorModel->getAll(),
+            'degrees' => $degreeModel->getAllDegrees()
+        ]);
+
+        return $this->renderDashboard($content, $this->role_data[$this->user->role]);
+    }
+
+    /**
+     * Add new degree program from admin panel
+     * POST /dashboard/admin/degreemanage/add
+     */
+    public function addDegreeProgram(Request $request)
+    {
+        $this->ensureAdminAccess();
+        unset($request);
+
+        $degreeModel = new DegreeProgram();
+        $programId = $degreeModel->addDegree($this->buildDegreePayloadFromPost());
+
+        if ($this->isAjaxRequest()) {
+            if ($programId === false) {
+                $this->sendJsonResponse(false, 'Failed to add degree program.', null, 500);
+            }
+
+            $this->sendJsonResponse(true, 'Degree program added successfully.', [
+                'program_id' => (int)$programId
+            ]);
+        }
+
+        $this->redirectToManagement();
+    }
+
+    /**
+     * Remove a degree program
+     * /dashboard/admin/degreemanage/remove/:id
+     */
+    public function removeDegreeProgram($params)
+    {
+        $this->ensureAdminAccess();
+
+        $programId = $this->resolveProgramId($params);
+        if ($programId <= 0) {
+            if ($this->isAjaxRequest()) {
+                $this->sendJsonResponse(false, 'Invalid degree program ID.', null, 400);
+            }
+
+            $this->redirectToManagement();
+        }
+
+        $degreeModel = new DegreeProgram();
+        $deleted = $degreeModel->deleteDegree($programId);
+
+        if ($this->isAjaxRequest()) {
+            if (!$deleted) {
+                $this->sendJsonResponse(false, 'Failed to delete degree program.', null, 500);
+            }
+
+            $this->sendJsonResponse(true, 'Degree program deleted successfully.');
+        }
+
+        $this->redirectToManagement();
+    }
+
+    /**
+     * Update an existing degree program
+     * /dashboard/admin/degreemanage/update/:id
+     */
+    public function updateDegreeProgramForm($id, $request = null)
+    {
+        $this->ensureAdminAccess();
+
+        $requestContext = null;
+        if ($id instanceof Request) {
+            $requestContext = $id;
+        } elseif ($request instanceof Request) {
+            $requestContext = $request;
+        }
+
+        $programId = $this->resolveProgramId($id, $requestContext);
+        if ($programId <= 0) {
+            if ($this->isAjaxRequest()) {
+                $this->sendJsonResponse(false, 'Invalid degree program ID.', null, 400);
+            }
+
+            $this->redirectToManagement();
+        }
+
+        $degreeModel = new DegreeProgram();
+        $updated = $degreeModel->updateDegree($programId, $this->buildDegreePayloadFromPost());
+
+        if ($this->isAjaxRequest()) {
+            if (!$updated) {
+                $this->sendJsonResponse(false, 'Failed to update degree program.', null, 500);
+            }
+
+            $this->sendJsonResponse(true, 'Degree program updated successfully.', [
+                'program_id' => $programId
+            ]);
+        }
+
+        $this->redirectToManagement();
+    }
+
+    /**
+     * Get one degree program for edit mode
+     * /dashboard/admin/degreemanage/get/:id
+     */
+    public function getDegreeProgramData($id)
+    {
+        $this->ensureAdminAccess(true);
+
+        $programId = $this->resolveProgramId($id);
+
+        $degreeModel = new DegreeProgram();
+        $degreeData = $degreeModel->getDegreeById($programId);
+
+        header('Content-Type: application/json');
+        echo json_encode($degreeData);
+        exit;
+    }
+        /**
      * Search degree programs
      * GET /api?controller=ProgramController&action=searchPrograms
      */

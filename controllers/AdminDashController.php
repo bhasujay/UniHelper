@@ -2,10 +2,15 @@
 
 namespace app\controllers;
 
+require_once dirname(__DIR__, 1) . '/controllers/DashboardController.php';
 require_once dirname(__DIR__, 1) . '/models/DegreeProgram.php';
+require_once dirname(__DIR__, 1) . '/models/University.php';
+require_once dirname(__DIR__, 1) . '/models/Major.php';
 
 use app\core\Request;
 use app\models\DegreeProgram;
+use app\models\Major;
+use app\models\University;
 
 
 // Controller for the admin dashboard
@@ -20,44 +25,77 @@ class AdminDashController extends DashboardController
     protected $dashboardTemplate = 'dashboard_adm.php';
     protected $defaultComponent = 'degree-programs-management';
     protected $requiredRole = 'role-admin';
+
+    private function ensureAdminAccess(): void
+    {
+        if (($this->user->role ?? '') !== $this->requiredRole) {
+            http_response_code(403);
+            echo "<div class='error'>Access denied</div>";
+            exit;
+        }
+    }
+
+    private function redirectToManagement(): void
+    {
+        header('Location: /unihelper/degree-programs-management');
+        exit;
+    }
+
+    private function buildDegreePayloadFromPost(): array
+    {
+        return [
+            'name' => trim((string)($_POST['degreeName'] ?? '')),
+            'university_id' => $_POST['university'] ?? null,
+            'stream' => trim((string)($_POST['stream'] ?? '')),
+            'unicode' => trim((string)($_POST['unicode'] ?? '')),
+            'major_id' => $_POST['major'] ?? null,
+            'descriptions' => trim((string)($_POST['description'] ?? '')),
+            'duration' => trim((string)($_POST['duration'] ?? '')),
+            'path_description' => trim((string)($_POST['pathDescription'] ?? 'Default Entry Path')),
+            'subject_requirements' => (string)($_POST['subjectRequirements'] ?? '')
+        ];
+    }
+
+    public function degreeProgramsManagement()
+    {
+        $this->ensureAdminAccess();
+
+        $this->activeComponent = 'degree-programs-management';
+
+        $majorModel = new Major();
+        $universityModel = new University();
+        $degreeModel = new DegreeProgram();
+
+        $content = $this->loadComponent('degree-programs-management', [
+            'universities' => $universityModel->getAll(),
+            'majors' => $majorModel->getAll(),
+            'degrees' => $degreeModel->getAllDegrees()
+        ]);
+
+        return $this->renderDashboard($content, $this->role_data[$this->user->role]);
+    }
     
     // Add a new degree program
     public function addDegreeProgram(Request $request)
     {
-        // Get form data
-        $university_id = $request->get('university');
-        $major_id = $request->get('major');
-        $name = $request->get('degreeName');
-        $stream = $request->get('stream');
-        $unicode = $request->get('unicode');
-        $duration = $request->get('duration');
-        $descriptions = $request->get('description');
-        
-        // Create data array for the model
-        $data = [
-            'name' => $name,
-            'university_id' => $university_id,
-            'stream' => $stream,
-            'unicode' => $unicode,
-            'major_id' => $major_id,
-            'descriptions' => $descriptions,
-            'duration' => $duration
-        ];
+        $this->ensureAdminAccess();
+        unset($request);
         
         // Create instance of DegreeProgram model
         $degreeModel = new DegreeProgram();
         
         // Add the degree
-        $degreeModel->addDegree($data);
+        $degreeModel->addDegree($this->buildDegreePayloadFromPost());
         
         // Redirect to degree programs management page
-        header('Location: /unihelper/dashboard/admin/degree-programs-management');
-        exit;
+        $this->redirectToManagement();
     }
     
     // Remove a degree program
     public function removeDegreeProgram($params)
     {
+        $this->ensureAdminAccess();
+
         // Create instance of DegreeProgram model
         $degreeModel = new DegreeProgram();
         
@@ -68,55 +106,40 @@ class AdminDashController extends DashboardController
         
         // Delete the degree
         $result = $degreeModel->deleteDegree($programId);
+        unset($result);
         
         // Redirect to degree programs management page
-        header('Location: /unihelper/dashboard/admin/degree-programs-management');
-        exit;
+        $this->redirectToManagement();
     }
     
     // Update a degree program
     public function updateDegreeProgramForm($id, $request = null)
     {
+        $this->ensureAdminAccess();
+
         // Ensure $id is a number
         $programId = is_array($id) ? $id['id'] : intval($id);
-        
-        // Always use $_POST directly since the Request object appears to be empty
-        $university_id = $_POST['university'] ?? null;
-        $major_id = $_POST['major'] ?? null;
-        $name = $_POST['degreeName'] ?? null;
-        $stream = $_POST['stream'] ?? null;
-        $unicode = $_POST['unicode'] ?? null;
-        $duration = $_POST['duration'] ?? null;
-        $descriptions = $_POST['description'] ?? null;
+        unset($request);
         
         error_log("Updating degree program ID: " . $programId);
         error_log("POST data: " . print_r($_POST, true));
-
-        // Create data array for the model
-        $data = [
-            'name' => $name,
-            'university_id' => $university_id,
-            'stream' => $stream,
-            'unicode' => $unicode,
-            'major_id' => $major_id,
-            'descriptions' => $descriptions,
-            'duration' => $duration
-        ];
         
         // Create instance of DegreeProgram model
         $degreeModel = new DegreeProgram();
         
         // Update the degree
-        $result = $degreeModel->updateDegree($programId, $data);
+        $result = $degreeModel->updateDegree($programId, $this->buildDegreePayloadFromPost());
+        unset($result);
         
         // Redirect to degree programs management page
-        header('Location: /unihelper/dashboard/admin/degree-programs-management');
-        exit;
+        $this->redirectToManagement();
     }
     
     // Get degree program data for editing
     public function getDegreeProgramData($id)
     {
+        $this->ensureAdminAccess();
+
         // Ensure $id is a number
         $programId = is_array($id) ? $id['id'] : intval($id);
         

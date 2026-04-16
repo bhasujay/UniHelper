@@ -1,14 +1,9 @@
 <?php
 
-// Initialize models
-$majorModel = new \app\models\Major();
-$universityModel = new \app\models\University();
-$degreeModel = new \app\models\DegreeProgram();
-
-// Fetch all universities and majors
-$universities = $universityModel->getAll();
-$majors = $majorModel->getAll();
-$degrees = $degreeModel->getAllDegrees();
+// This component is view-only. Data is expected from the controller layer.
+$universities = (isset($universities) && is_iterable($universities)) ? $universities : [];
+$majors = (isset($majors) && is_iterable($majors)) ? $majors : [];
+$degrees = (isset($degrees) && is_iterable($degrees)) ? $degrees : [];
 ?>
 
 <div class="admin-content-grid">
@@ -19,7 +14,7 @@ $degrees = $degreeModel->getAllDegrees();
         </div>
         
         <!-- Replace or update the existing form tag with this one -->
-        <form id="addDegreeForm" action="/unihelper/dashboard/admin/degreemanage/add" method="POST">
+        <form id="addDegreeForm" action="/unihelper/api?controller=ProgramController&action=addDegreeProgram" method="POST">
             <div class="admin-form-group">
                 <label for="university" class="admin-form-label">University</label>
                 <select id="university" name="university" class="admin-form-select" required>
@@ -74,6 +69,29 @@ $degrees = $degreeModel->getAllDegrees();
             <div class="admin-form-group">
                 <label for="description" class="admin-form-label">Description</label>
                 <textarea id="description" name="description" class="admin-form-textarea" placeholder="Brief description of the degree program..." required></textarea>
+            </div>
+
+            <div class="admin-form-group">
+                <label for="pathDescription" class="admin-form-label">Entry Path Description</label>
+                <input
+                    type="text"
+                    id="pathDescription"
+                    name="pathDescription"
+                    class="admin-form-input"
+                    value="Default Entry Path"
+                    placeholder="e.g., Physical Science Standard Path"
+                >
+            </div>
+
+            <div class="admin-form-group">
+                <label for="subjectRequirements" class="admin-form-label">Subject Requirements</label>
+                <textarea
+                    id="subjectRequirements"
+                    name="subjectRequirements"
+                    class="admin-form-textarea"
+                    placeholder="One subject per line. Use Subject|Grade (e.g., Combined Mathematics|S)"
+                ></textarea>
+                <small class="admin-form-help">Format: one subject per line as Subject|MinimumGrade. Example: Physics|C</small>
             </div>
             
             <button type="submit" class="admin-form-button">
@@ -145,6 +163,21 @@ $degrees = $degreeModel->getAllDegrees();
                         <div class="degree-card-description">
                             <?= htmlspecialchars($degree->description) ?>
                         </div>
+
+                        <?php if (!empty($degree->subject_requirements)): ?>
+                            <div class="degree-card-requirements">
+                                <span class="degree-card-item-label">Subject Requirements</span>
+                                <ul class="degree-card-requirements-list">
+                                    <?php foreach ($degree->subject_requirements as $requirement): ?>
+                                        <li>
+                                            <?= htmlspecialchars($requirement['subject_name']) ?>
+                                            <span>(Min: <?= htmlspecialchars($requirement['min_grade']) ?>)</span>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        <?php endif; ?>
+
                         <div class="degree-card-actions">
                             <button class="degree-card-button" title="Edit" data-degree-id="<?= $degree->id ?>">
                                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -173,183 +206,4 @@ $degrees = $degreeModel->getAllDegrees();
     </div>
 </div>
 
-<!-- Add this script at the end of your file, before the closing </div> tag -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Get the search input element
-    const searchInput = document.querySelector('.admin-search-input');
-    
-    // Get all degree cards
-    const degreeCards = document.querySelectorAll('.degree-card');
-    
-    // Get search index radio buttons
-    const searchOptions = document.querySelectorAll('input[name="searchIndex"]');
-    
-    // Get empty state element or create one if it doesn't exist
-    const emptyState = document.querySelector('.empty-state') || createEmptyState();
-    
-    // Add event listener for input changes
-    searchInput.addEventListener('input', filterCards);
-    
-    // Add event listeners for radio button changes
-    searchOptions.forEach(option => {
-        option.addEventListener('change', filterCards);
-    });
-    
-    // Filter function that handles the actual search
-    function filterCards() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-        const searchIndex = document.querySelector('input[name="searchIndex"]:checked').value;
-        let matchFound = false;
-        
-        // Loop through all degree cards
-        degreeCards.forEach(card => {
-            // Get the searchable content based on selected index
-            let contentToSearch;
-            
-            if (searchIndex === 'name') {
-                contentToSearch = card.querySelector('.degree-card-title').textContent.toLowerCase();
-            } else if (searchIndex === 'unicode') {
-                contentToSearch = card.querySelector('.degree-card-code').textContent.toLowerCase();
-            }
-            
-            // Check if the search term is in the selected field
-            if (contentToSearch.includes(searchTerm)) {
-                card.style.display = 'block';
-                matchFound = true;
-            } else {
-                card.style.display = 'none';
-            }
-        });
-        
-        // Show/hide empty state message
-        if (!matchFound && degreeCards.length > 0) {
-            if (searchTerm === '') {
-                emptyState.style.display = 'none'; // Show all cards if search is empty
-                degreeCards.forEach(card => card.style.display = 'block');
-            } else {
-                emptyState.querySelector('.empty-state-message').textContent = 'No matching degree programs found.';
-                document.querySelector('.admin-list-content').appendChild(emptyState);
-                emptyState.style.display = 'flex';
-            }
-        } else {
-            emptyState.style.display = 'none';
-        }
-    }
-    
-    // Helper function to create empty state if it doesn't exist
-    function createEmptyState() {
-        const emptyState = document.createElement('div');
-        emptyState.className = 'empty-state';
-        emptyState.innerHTML = `
-            <div class="empty-state-icon">🔍</div>
-            <p class="empty-state-message">No matching degree programs found.</p>
-        `;
-        return emptyState;
-    }
-    
-    // Add delete functionality to delete buttons
-    document.querySelectorAll('.delete-button').forEach(button => {
-        button.addEventListener('click', async function(e) {
-            e.preventDefault();
-            const degreeId = this.getAttribute('data-degree-id');
-            const degreeName = this.closest('.degree-card').querySelector('.degree-card-title').textContent;
-            
-            // Show confirmation dialog
-            if (await confirm(`Are you sure you want to delete the degree program "${degreeName}"? This action cannot be undone.`)) {
-                // Send request to delete endpoint
-                window.location.href = `/unihelper/dashboard/admin/degreemanage/remove/${degreeId}`;
-            }
-        });
-    });
-    
-    // Add edit functionality to edit buttons
-    document.querySelectorAll('.degree-card-button:not(.delete-button)').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const degreeId = this.getAttribute('data-degree-id');
-            const degreeCard = this.closest('.degree-card');
-            
-            // Hide all other cards
-            document.querySelectorAll('.degree-card').forEach(card => {
-                if (card !== degreeCard) {
-                    card.style.display = 'none';
-                }
-            });
-            
-            // Get degree data from the card to fill the form
-            const degreeName = degreeCard.querySelector('.degree-card-title').textContent.trim();
-            const unicode = degreeCard.querySelector('.degree-card-code').textContent.trim();
-            const university = degreeCard.querySelector('.degree-card-item:nth-child(1) .degree-card-item-value').textContent.trim();
-            const stream = degreeCard.querySelector('.degree-card-item:nth-child(2) .degree-card-item-value').textContent.trim();
-            const duration = degreeCard.querySelector('.degree-card-item:nth-child(3) .degree-card-item-value').textContent.trim().replace(' Years', '');
-            const description = degreeCard.querySelector('.degree-card-description').textContent.trim();
-            
-            // Fetch the complete degree data to get IDs
-            fetch(`/unihelper/dashboard/admin/degreemanage/get/${degreeId}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Fill form with degree data
-                    document.getElementById('degreeName').value = degreeName;
-                    document.getElementById('unicode').value = unicode;
-                    document.getElementById('duration').value = duration;
-                    document.getElementById('description').value = description;
-                    
-                    // Set dropdowns
-                    document.getElementById('university').value = data.university_id;
-                    document.getElementById('major').value = data.major_id;
-                    
-                    // REPLACE THIS SECTION - Directly set the stream value from the card
-                    document.getElementById('stream').value = stream;
-                    
-                    // Change form action and button text
-                    const form = document.getElementById('addDegreeForm');
-                    form.action = `/unihelper/dashboard/admin/degreemanage/update/${degreeId}`;
-                    
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    submitBtn.innerHTML = `
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                            <polyline points="7 3 7 8 15 8"></polyline>
-                        </svg>
-                        Edit Degree Program
-                    `;
-                    
-                    // Add a cancel button
-                    if (!document.querySelector('.cancel-edit')) {
-                        const cancelBtn = document.createElement('button');
-                        cancelBtn.type = 'button';
-                        cancelBtn.className = 'admin-form-button cancel-edit';
-                        cancelBtn.style.marginRight = '10px';
-                        cancelBtn.innerHTML = 'Cancel';
-                        cancelBtn.onclick = function() {
-                            // Reset form
-                            form.reset();
-                            form.action = '/unihelper/dashboard/admin/degreemanage/add';
-                            submitBtn.innerHTML = `
-                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                                    <polyline points="7 3 7 8 15 8"></polyline>
-                                </svg>
-                                Publish Degree Program
-                            `;
-                            
-                            // Show all cards again
-                            document.querySelectorAll('.degree-card').forEach(card => {
-                                card.style.display = 'block';
-                            });
-                            
-                            // Remove cancel button
-                            cancelBtn.remove();
-                        };
-                        
-                        submitBtn.before(cancelBtn);
-                    }
-                })
-                .catch(error => console.error('Error fetching degree data:', error));
-        });
-    });
-});
-</script>
+<script src="views/js/degree-programs-management.js"></script>
