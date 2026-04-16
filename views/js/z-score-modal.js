@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const startBtn = document.getElementById('startZScoreBtn');
     const modal = document.getElementById('zScoreModal');
-    const closeBtn = document.getElementById('closeModal');
+    const closeBtn = document.getElementById('closeModal'); // now a <button>
     const cancelBtn = document.getElementById('cancelBtn');
     const form = document.getElementById('zScoreForm');
     const streamSelect = document.getElementById('stream');
@@ -147,6 +147,9 @@ document.addEventListener('DOMContentLoaded', function () {
 // Store the submitted data globally so buttons can access it
 let submittedZScoreData = null;
 let listenersInitialized = false; // Flag to prevent multiple listener additions
+let eligibleProgramsSource = [];
+let eligibleProgramsFiltered = [];
+let eligibleFilterListenersBound = false;
 
 // Function to update Z-Score card after submission
 function updateZScoreCard(formData) {
@@ -173,6 +176,7 @@ function updateZScoreCard(formData) {
     document.querySelector('.z-score-value').textContent = submittedZScoreData.zScore;
     document.querySelector('.stream-value').textContent = submittedZScoreData.stream;
     document.querySelector('.district-value').textContent = submittedZScoreData.district;
+    // subject tags are <span> elements in the new UI
     document.querySelector('.subject1-value').textContent = submittedZScoreData.subject1;
     document.querySelector('.subject2-value').textContent = submittedZScoreData.subject2;
     document.querySelector('.subject3-value').textContent = submittedZScoreData.subject3;
@@ -237,6 +241,7 @@ function addButtonEventListeners() {
                     if (data.length > 0) {
                         displayEligiblePrograms(data);
                     } else {
+                        displayEligiblePrograms([]);
                         alert(`No eligible programs found for your Z-Score of ${submittedZScoreData.zScore}.\n\nTry exploring other streams or check back later for updates.`);
                     }
                 } else {
@@ -271,7 +276,7 @@ function addButtonEventListeners() {
                     document.getElementById('subject1').value = submittedZScoreData.subject1;
                     document.getElementById('subject2').value = submittedZScoreData.subject2;
                     document.getElementById('subject3').value = submittedZScoreData.subject3;
-                    document.getElementById('zScore').value = submittedZScoreData.z_score;
+                    document.getElementById('zScore').value = submittedZScoreData.zScore || submittedZScoreData.z_score || '';
                 }
             }
         });
@@ -379,6 +384,7 @@ async function loadZScoreFromAPI() {
             document.querySelector('.z-score-value').textContent = result.data.z_score;
             document.querySelector('.stream-value').textContent = result.data.stream;
             document.querySelector('.district-value').textContent = result.data.district;
+            // subject tags are <span> elements in the new UI
             document.querySelector('.subject1-value').textContent = result.data.subject1;
             document.querySelector('.subject2-value').textContent = result.data.subject2;
             document.querySelector('.subject3-value').textContent = result.data.subject3;
@@ -428,107 +434,314 @@ async function deleteZScoreFromAPI() {
 
 // Function to display eligible programs in a modal or section
 function displayEligiblePrograms(programs) {
-    // 2. Get programs container
+    eligibleProgramsSource = Array.isArray(programs) ? [...programs].sort(compareEligiblePrograms) : [];
+
+    initializeEligibleFilterControls();
+    populateEligibleUniversityFilter(eligibleProgramsSource);
+
+    const filtersContainer = document.getElementById('eligibleFilters');
+    if (filtersContainer) {
+        filtersContainer.hidden = eligibleProgramsSource.length === 0;
+    }
+
+    applyEligibleProgramFilters({ scrollToSection: true });
+}
+
+function initializeEligibleFilterControls() {
+    if (eligibleFilterListenersBound) {
+        return;
+    }
+
+    const searchInput = document.getElementById('eligibleFilterSearch');
+    const universitySelect = document.getElementById('eligibleFilterUniversity');
+    const eligibilitySelect = document.getElementById('eligibleFilterEligibility');
+    const minCutoffInput = document.getElementById('eligibleFilterMinCutoff');
+    const maxCutoffInput = document.getElementById('eligibleFilterMaxCutoff');
+    const resetButton = document.getElementById('eligibleFilterReset');
+
+    if (!searchInput || !universitySelect || !eligibilitySelect || !minCutoffInput || !maxCutoffInput || !resetButton) {
+        return;
+    }
+
+    const applyFilters = function () {
+        applyEligibleProgramFilters();
+    };
+
+    searchInput.addEventListener('input', applyFilters);
+    universitySelect.addEventListener('change', applyFilters);
+    eligibilitySelect.addEventListener('change', applyFilters);
+    minCutoffInput.addEventListener('input', applyFilters);
+    maxCutoffInput.addEventListener('input', applyFilters);
+
+    resetButton.addEventListener('click', function () {
+        searchInput.value = '';
+        universitySelect.value = '';
+        eligibilitySelect.value = '';
+        minCutoffInput.value = '';
+        maxCutoffInput.value = '';
+        applyEligibleProgramFilters();
+    });
+
+    eligibleFilterListenersBound = true;
+}
+
+function populateEligibleUniversityFilter(programs) {
+    const universitySelect = document.getElementById('eligibleFilterUniversity');
+    if (!universitySelect) {
+        return;
+    }
+
+    const previousValue = universitySelect.value;
+    const universities = Array.from(new Set(
+        (programs || [])
+            .map(function (program) {
+                return String(program.university || '').trim();
+            })
+            .filter(Boolean)
+    )).sort(function (a, b) {
+        return a.localeCompare(b);
+    });
+
+    universitySelect.innerHTML = '';
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'All Universities';
+    universitySelect.appendChild(defaultOption);
+
+    universities.forEach(function (university) {
+        const option = document.createElement('option');
+        option.value = university;
+        option.textContent = university;
+        universitySelect.appendChild(option);
+    });
+
+    if (previousValue && universities.indexOf(previousValue) !== -1) {
+        universitySelect.value = previousValue;
+    }
+}
+
+function applyEligibleProgramFilters(options) {
     const programsList = document.getElementById('programsList');
     const noResults = document.getElementById('noResultsMessage');
+    const noResultsTitle = document.getElementById('noResultsTitle');
+    const noResultsText = document.getElementById('noResultsText');
+    const section = document.getElementById('eligibleProgramsSection');
 
-    // Clear previous results
-    programsList.innerHTML = '';
+    if (!programsList || !noResults || !section) {
+        return;
+    }
 
-    if (programs.length === 0) {
+    const searchQuery = String((document.getElementById('eligibleFilterSearch') || {}).value || '')
+        .trim()
+        .toLowerCase();
+    const selectedUniversity = String((document.getElementById('eligibleFilterUniversity') || {}).value || '').trim();
+    const selectedEligibility = String((document.getElementById('eligibleFilterEligibility') || {}).value || '').trim().toLowerCase();
+
+    let minCutoff = parseFloat((document.getElementById('eligibleFilterMinCutoff') || {}).value);
+    let maxCutoff = parseFloat((document.getElementById('eligibleFilterMaxCutoff') || {}).value);
+
+    minCutoff = Number.isFinite(minCutoff) ? minCutoff : null;
+    maxCutoff = Number.isFinite(maxCutoff) ? maxCutoff : null;
+
+    if (minCutoff !== null && maxCutoff !== null && minCutoff > maxCutoff) {
+        const temporary = minCutoff;
+        minCutoff = maxCutoff;
+        maxCutoff = temporary;
+    }
+
+    eligibleProgramsFiltered = eligibleProgramsSource.filter(function (program) {
+        const programName = String(program.name || '').toLowerCase();
+        const university = String(program.university || '').trim();
+        const universityLower = university.toLowerCase();
+        const eligibility = String(program.eligibility || 'noc').toLowerCase();
+
+        if (searchQuery && !programName.includes(searchQuery) && !universityLower.includes(searchQuery)) {
+            return false;
+        }
+
+        if (selectedUniversity && university !== selectedUniversity) {
+            return false;
+        }
+
+        if (selectedEligibility && eligibility !== selectedEligibility) {
+            return false;
+        }
+
+        const cutoffValue = getProgramFilterCutoff(program);
+
+        if (minCutoff !== null && (cutoffValue === null || cutoffValue < minCutoff)) {
+            return false;
+        }
+
+        if (maxCutoff !== null && (cutoffValue === null || cutoffValue > maxCutoff)) {
+            return false;
+        }
+
+        return true;
+    });
+
+    renderEligibleProgramCards(eligibleProgramsFiltered, programsList);
+
+    if (eligibleProgramsFiltered.length === 0) {
         programsList.style.display = 'none';
         noResults.style.display = 'block';
-    } else {
-        programsList.style.display = 'flex';
-        noResults.style.display = 'none';
 
-        // Badge settings mapping
-        const badgeConfig = {
-            'very_likely': { label: 'Very Likely', color: '#22c55e', bg: '#f0fdf4' },  // Green
-            'likely':      { label: 'Likely',      color: '#3b82f6', bg: '#eff6ff' },  // Blue
-            'possible':    { label: 'Possible',    color: '#f59e0b', bg: '#fffbeb' },  // Amber
-            'unlikely':    { label: 'Low Chance',  color: '#ef4444', bg: '#fef2f2' },  // Red
-            'noc':         { label: 'Open Entry',  color: '#8b5cf6', bg: '#f5f3ff' }   // Purple
-        };
-
-        // Create program cards using the same structure as degree programs search
-        programs.forEach(program => {
-            const badge = badgeConfig[program.eligibility] || badgeConfig['noc'];
-            
-            // Format cutoff predictions nicely
-            let cutoffDisplay = 'No matching history';
-            if (program.eligibility !== 'noc') {
-                cutoffDisplay = program.predicted 
-                    ? `Predicted: <strong style="color: #007bff;">${program.predicted.toFixed(4)}</strong>` 
-                    : `Lowest: <strong style="color: #007bff;">${(program.min_cutoff || 0).toFixed(4)}</strong>`;
+        if (eligibleProgramsSource.length === 0) {
+            if (noResultsTitle) {
+                noResultsTitle.textContent = 'No Eligible Programs Found';
             }
-
-            const card = document.createElement('div');
-            card.className = 'degree-program-card';
-            card.setAttribute('data-program-id', program.program_id);
-
-            // Format probability percentage display
-            const probDisplay = program.probability_percent ? `${program.probability_percent}% - ` : '';
-
-            card.innerHTML = `
-                <div class="card-header">
-                    <h3>${program.name}</h3>
-                    <p>${program.university}</p>
-                </div>
-                
-                <div class="card-body">
-                    <p class="faculty-name">${submittedZScoreData.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
-                    
-                    <div class="degree-metrics" style="flex-direction: column; align-items: flex-start; gap: 12px;">
-                        <div class="cutoff-info" style="width: 100%;">${cutoffDisplay}</div>
-                        <!-- UI Probability Progress Bar -->
-                        <div class="probability-container" style="width: 100%;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <span style="font-size: 0.85rem; font-weight: 700; color: ${badge.color}; text-transform: uppercase; letter-spacing: 0.5px;">${badge.label}</span>
-                                <span style="font-size: 0.9rem; font-weight: 800; color: #374151;">${program.probability_percent ? program.probability_percent + '%' : 'N/A'}</span>
-                            </div>
-                            <div style="width: 100%; height: 8px; background-color: ${badge.bg}; border-radius: 6px; overflow: hidden; border: 1px solid ${badge.color}20;">
-                                <div style="height: 100%; width: ${program.probability_percent || 100}%; background: linear-gradient(90deg, ${badge.color}dd, ${badge.color}); border-radius: 6px; box-shadow: 0 0 10px ${badge.color}40; transition: width 1.5s cubic-bezier(0.1, 0.7, 0.1, 1);"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="degree-tags">
-                        <span class="tag">${submittedZScoreData.stream.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} Stream</span>
-                    </div>
-                </div>
-                
-                <div class="card-footer">
-                    <div class="footer-details">
-                        <span>Min: <strong>${program.min_cutoff ? program.min_cutoff.toFixed(4) : 'N/A'}</strong></span>
-                        <span>Max: <strong>${program.max_cutoff ? program.max_cutoff.toFixed(4) : 'N/A'}</strong></span>
-                    </div>
-                    <div class="card-actions">
-                        <button class="icon-btn wishlist-btn" onclick="if(typeof toggleWishlist === 'function') toggleWishlist(${program.program_id})" aria-label="Add to Wishlist">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                        </button>
-                        <button class="icon-btn" aria-label="View Details">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            programsList.appendChild(card);
-        });
+            if (noResultsText) {
+                noResultsText.textContent = 'No programs match your Z-Score and criteria. Try adjusting your details.';
+            }
+        } else {
+            if (noResultsTitle) {
+                noResultsTitle.textContent = 'No Programs Match Filters';
+            }
+            if (noResultsText) {
+                noResultsText.textContent = 'Try widening the cutoff range or selecting a different university.';
+            }
+        }
+    } else {
+        noResults.style.display = 'none';
+        programsList.style.display = 'grid';
     }
 
-    // Show section (not modal)
-    const section = document.getElementById('eligibleProgramsSection');
+    updateEligibleProgramCount(eligibleProgramsFiltered.length, eligibleProgramsSource.length);
+
     section.style.display = 'block';
 
-    // Scroll to results
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    
-    // Check if the wishlist check exists to set proper heart icons
-    if (typeof initializeWishlistStatus === 'function') {
+    if (options && options.scrollToSection) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    if (eligibleProgramsFiltered.length > 0 && typeof initializeWishlistStatus === 'function') {
         initializeWishlistStatus();
     }
+}
+
+function renderEligibleProgramCards(programs, programsList) {
+    programsList.innerHTML = '';
+    programsList.classList.add('zscore-programs-grid');
+
+    const streamLabel = formatStreamName(submittedZScoreData && submittedZScoreData.stream);
+    const wishlistEnabled = typeof window.toggleWishlist === 'function';
+
+    programs.forEach(function (program, index) {
+        const eligibility = String(program.eligibility || 'noc').toLowerCase();
+        const badge = getEligibilityBadge(eligibility);
+        const probabilityValue = getProbabilityValue(program.probability_percent, eligibility);
+        const probabilityText = Number.isFinite(Number(program.probability_percent))
+            ? zScoreClamp(Number(program.probability_percent), 0, 100).toFixed(1) + '%'
+            : (eligibility === 'noc' ? 'Open Entry' : 'N/A');
+
+        const predictedCutoff = formatCutoffValue(program.predicted);
+        const minCutoff = formatCutoffValue(program.min_cutoff);
+        const maxCutoff = formatCutoffValue(program.max_cutoff);
+        const cutoffInsight = eligibility === 'noc'
+            ? 'No cutoff required for this intake'
+            : (predictedCutoff !== 'N/A'
+                ? 'Predicted cutoff for your district: ' + predictedCutoff
+                : 'Lowest known cutoff for your district: ' + minCutoff);
+
+        const card = document.createElement('div');
+        card.className = 'degree-program-card';
+        card.setAttribute('data-program-id', String(program.program_id));
+
+        const wishlistAction = wishlistEnabled
+            ? `<button class="zscore-program-action wishlist-btn" onclick="toggleWishlist(${Number(program.program_id)})" aria-label="Add to wishlist">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+               </button>`
+            : `<button class="zscore-program-action" disabled aria-label="Wishlist unavailable">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+               </button>`;
+
+        card.innerHTML = `
+            <div class="zscore-program-headline-row">
+                <span class="zscore-rank-pill">#${index + 1}</span>
+                <span class="zscore-eligibility-badge ${badge.className}">${badge.label}</span>
+            </div>
+
+            <div class="card-header">
+                <h3>${zScoreEscapeHtml(program.name)}</h3>
+                <p>${zScoreEscapeHtml(program.university || 'Unknown University')}</p>
+            </div>
+
+            <p class="zscore-cutoff-insight">${zScoreEscapeHtml(cutoffInsight)}</p>
+
+            <div class="zscore-probability-wrap">
+                <div class="zscore-probability-meta">
+                    <span>Admission Probability</span>
+                    <strong>${zScoreEscapeHtml(probabilityText)}</strong>
+                </div>
+                <div class="zscore-probability-track">
+                    <div class="zscore-probability-fill ${badge.className}" style="width: ${probabilityValue}%"></div>
+                </div>
+            </div>
+
+            <div class="zscore-stat-grid">
+                <div class="zscore-stat-chip">
+                    <span class="zscore-stat-label">Predicted</span>
+                    <strong class="zscore-stat-value">${zScoreEscapeHtml(predictedCutoff)}</strong>
+                </div>
+                <div class="zscore-stat-chip">
+                    <span class="zscore-stat-label">Minimum</span>
+                    <strong class="zscore-stat-value">${zScoreEscapeHtml(minCutoff)}</strong>
+                </div>
+                <div class="zscore-stat-chip">
+                    <span class="zscore-stat-label">Maximum</span>
+                    <strong class="zscore-stat-value">${zScoreEscapeHtml(maxCutoff)}</strong>
+                </div>
+            </div>
+
+            <div class="degree-tags">
+                <span class="tag">${zScoreEscapeHtml(streamLabel)} Stream</span>
+            </div>
+
+            <div class="card-footer">
+                <div class="footer-details">
+                    <span>Program match for your profile</span>
+                </div>
+                <div class="card-actions">${wishlistAction}</div>
+            </div>
+        `;
+
+        programsList.appendChild(card);
+    });
+}
+
+function getProgramFilterCutoff(program) {
+    const predicted = Number(program.predicted);
+    if (Number.isFinite(predicted)) {
+        return predicted;
+    }
+
+    const minimum = Number(program.min_cutoff);
+    if (Number.isFinite(minimum)) {
+        return minimum;
+    }
+
+    const maximum = Number(program.max_cutoff);
+    return Number.isFinite(maximum) ? maximum : null;
+}
+
+function updateEligibleProgramCount(filteredCount, totalCount) {
+    const countBadge = document.getElementById('programsCount');
+    if (!countBadge) {
+        return;
+    }
+
+    if (totalCount === 0) {
+        countBadge.textContent = '0 programs found';
+        return;
+    }
+
+    if (filteredCount === totalCount) {
+        countBadge.textContent = totalCount + ' program' + (totalCount !== 1 ? 's' : '') + ' found';
+        return;
+    }
+
+    countBadge.textContent = filteredCount + ' of ' + totalCount + ' programs';
 }
 
 // Function to close eligible programs section
@@ -537,4 +750,73 @@ function closeEligibleProgramsModal() {
     if (section) {
         section.style.display = 'none';
     }
+}
+
+function compareEligiblePrograms(a, b) {
+    const probabilityDiff = getProbabilityValue(b.probability_percent, b.eligibility) - getProbabilityValue(a.probability_percent, a.eligibility);
+    if (probabilityDiff !== 0) {
+        return probabilityDiff;
+    }
+
+    const minCutoffDiff = Number(b.min_cutoff || 0) - Number(a.min_cutoff || 0);
+    if (minCutoffDiff !== 0) {
+        return minCutoffDiff;
+    }
+
+    return String(a.name || '').localeCompare(String(b.name || ''));
+}
+
+function getEligibilityBadge(eligibilityKey) {
+    const badgeMap = {
+        very_likely: { label: 'Very Likely', className: 'is-very-likely' },
+        likely: { label: 'Likely', className: 'is-likely' },
+        possible: { label: 'Possible', className: 'is-possible' },
+        unlikely: { label: 'Low Chance', className: 'is-unlikely' },
+        noc: { label: 'Open Entry', className: 'is-noc' }
+    };
+
+    return badgeMap[eligibilityKey] || badgeMap.noc;
+}
+
+function getProbabilityValue(value, eligibilityKey) {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) {
+        return zScoreClamp(numeric, 0, 100);
+    }
+
+    if (String(eligibilityKey || '').toLowerCase() === 'noc') {
+        return 100;
+    }
+
+    return 0;
+}
+
+function formatCutoffValue(value) {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric.toFixed(4) : 'N/A';
+}
+
+function formatStreamName(streamValue) {
+    if (!streamValue) {
+        return 'General';
+    }
+
+    return String(streamValue)
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, function (letter) {
+            return letter.toUpperCase();
+        });
+}
+
+function zScoreClamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
+function zScoreEscapeHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }

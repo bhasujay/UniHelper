@@ -268,9 +268,9 @@ document.addEventListener('DOMContentLoaded', function() {
     loginBtn.disabled = true;
     loginBtn.querySelector('.btn-text').innerText = 'Sending OTP...';
     loadingIcon.style.display = 'inline-block';
-
-    generateOtp();
-    showOtpModal();
+    submitFormWithHashedPassword();
+    // generateOtp();
+    // showOtpModal();
   });
 
   // Hide error on input

@@ -214,41 +214,41 @@
     .floating-search-overlay {
         padding: 10px;
     }
-    
+
     .floating-search-container {
         max-width: 100%;
         margin: 0;
     }
-    
+
     .floating-search-bar {
         padding: 16px;
     }
-    
+
     .global-search-input {
         font-size: 14px;
         padding: 12px 16px;
     }
-    
+
     .global-search-btn {
         padding: 12px 16px;
     }
-    
+
     .quick-filters {
         gap: 6px;
     }
-    
+
     .filter-chip {
         padding: 4px 8px;
         font-size: 11px;
     }
-    
+
     .search-toggle-btn {
         bottom: 20px;
         right: 20px;
         width: 48px;
         height: 48px;
     }
-    
+
     .search-results-dropdown {
         max-height: 300px;
     }
@@ -326,8 +326,13 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Disabled state for search input */
@@ -625,8 +630,13 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Search Results */
@@ -707,25 +717,25 @@
     .degree-programs-container {
         padding: 16px;
     }
-    
+
     .search-section {
         padding: 16px;
     }
-    
+
     .filter-row {
         grid-template-columns: 1fr;
     }
-    
+
     .search-controls {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .toggle-btn,
     .clear-btn {
         justify-content: center;
     }
-    
+
     .search-results {
         grid-template-columns: 1fr;
     }
@@ -735,11 +745,11 @@
     .search-header h2 {
         font-size: 20px;
     }
-    
+
     .search-input {
         font-size: 14px;
     }
-    
+
     .search-btn {
         padding: 10px 12px;
     }
@@ -824,6 +834,7 @@
         transform: translateX(100%);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
@@ -839,6 +850,7 @@
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
@@ -874,11 +886,11 @@
         width: 98vw !important;
         max-width: 98vw !important;
     }
-    
+
     #eligibleProgramsModal .search-results {
         grid-template-columns: 1fr;
     }
-    
+
     #eligibleProgramsModal .modal-body {
         padding: 20px !important;
     }
