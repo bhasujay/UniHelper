@@ -200,7 +200,6 @@
             cancelButton = document.createElement('button');
             cancelButton.type = 'button';
             cancelButton.className = 'admin-form-button cancel-edit';
-            cancelButton.style.marginRight = '10px';
             cancelButton.textContent = 'Cancel';
             cancelButton.addEventListener('click', function () {
                 resetFormState(true);

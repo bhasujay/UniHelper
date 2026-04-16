@@ -5,6 +5,7 @@
   grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.25fr);
   gap: 1.25rem;
   align-items: stretch;
+  height: calc(100vh - 180px);
   min-height: calc(100vh - 180px);
 }
 
@@ -15,6 +16,19 @@
   border-radius: 1rem;
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.16);
   overflow: hidden;
+}
+
+/* Make the form column behave like the list so the form can scroll when content collapses */
+.admin-form-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* allow children to shrink for proper scrolling */
+}
+
+.admin-list-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .admin-form-header,
@@ -34,6 +48,9 @@
 
 #addDegreeForm {
   padding: 1.1rem;
+  flex: 1 1 auto;
+  min-height: 0; /* enable overflow to work inside flex */
+  overflow-y: auto;
 }
 
 .admin-form-group {
@@ -104,6 +121,29 @@
   transition: transform 0.18s ease, filter 0.18s ease;
 }
 
+.admin-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.2rem;
+}
+
+.admin-form-actions .admin-form-button {
+  min-height: 42px;
+}
+
+.admin-form-button.cancel-edit {
+  background: var(--key);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+.admin-form-button.cancel-edit:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  filter: none;
+}
+
 .admin-form-button:hover {
   transform: translateY(-1px);
   filter: brightness(1.05);
@@ -144,8 +184,12 @@
 
 .admin-list-content {
   padding: 0.95rem;
-  max-height: calc(100vh - 280px);
-  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .degree-card {
@@ -313,6 +357,7 @@
 
 @media (max-width: 1120px) {
   .admin-content-grid {
+    height: auto;
     grid-template-columns: 1fr;
     min-height: unset;
   }
