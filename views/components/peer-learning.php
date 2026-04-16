@@ -5,6 +5,21 @@
 ?>
 
 <style>
+    body.peer-session-modal-open {
+        overflow: hidden;
+    }
+
+    body.peer-session-modal-open .nav,
+    body.peer-session-modal-open .sidebar,
+    body.peer-session-modal-open #dashboardMain {
+        filter: blur(6px);
+        transition: filter 0.2s ease;
+    }
+
+    body.peer-session-modal-open #sessionMainModal {
+        filter: none;
+    }
+
     /* Peer Learning Component Styles */
     .peer-learning-container {
         width: 100%;
@@ -266,10 +281,45 @@
     }
 
     .session-creator {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
         font-size: 0.85rem;
         color: var(--muted-foreground);
         padding-top: 0.5rem;
         border-top: 1px solid rgba(164, 109, 255, 0.1);
+    }
+
+    .session-creator-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(164, 109, 255, 0.4);
+        flex-shrink: 0;
+        background: rgba(164, 109, 255, 0.1);
+    }
+
+    .session-creator-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .session-creator-link,
+    .session-creator-name {
+        color: var(--foreground);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .session-creator-link:hover {
+        text-decoration: underline;
+    }
+
+    .session-creator-university {
+        color: var(--muted-foreground);
+        font-size: 0.8rem;
     }
 
     .session-actions {
@@ -462,87 +512,30 @@
         background: rgba(164, 109, 255, 0.1);
     }
 
-    /* Delete Confirmation Modal */
-    .delete-modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        z-index: 10000;
-        justify-content: center;
-        align-items: center;
-        backdrop-filter: blur(12px);
-    }
-
-    .delete-modal.show {
-        display: flex;
-    }
-
-    .delete-modal-content {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 1rem;
-        padding: 2rem;
-        max-width: 400px;
-        width: 90%;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    }
-
-    .delete-modal-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--foreground);
-        margin-bottom: 1rem;
-    }
-
-    .delete-modal-text {
-        color: var(--muted-foreground);
-        margin-bottom: 1.5rem;
-        line-height: 1.6;
-    }
-
-    .delete-modal-actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: flex-end;
-    }
-
-    .delete-modal-btn {
-        padding: 0.65rem 1.5rem;
-        border: none;
-        border-radius: 0.5rem;
-        font-weight: 600;
+    .session-card {
         cursor: pointer;
-        transition: all 0.3s ease;
     }
 
-    .delete-modal-cancel {
-        background: var(--border);
-        color: var(--foreground);
+    .session-open-hint {
+        margin-top: auto;
+        font-size: 0.8rem;
+        color: var(--muted-foreground);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        border-top: 1px dashed rgba(164, 109, 255, 0.2);
+        padding-top: 0.75rem;
     }
 
-    .delete-modal-cancel:hover {
-        background: rgba(164, 109, 255, 0.1);
-    }
-
-    .delete-modal-confirm {
-        background: #fc8181;
-        color: white;
-    }
-
-    .delete-modal-confirm:hover {
-        background: #f56565;
-    }
-
-    /* Subscriber Management Modal */
-    .subscriber-modal {
+    /* Main Session View Modal */
+    .session-main-modal {
         display: none;
         position: fixed;
         top: 0;
         left: 0;
+        right: 0;
+        bottom: 0;
+        inset: 0;
         width: 100%;
         height: 100%;
         background: rgba(0, 0, 0, 0.72);
@@ -550,24 +543,27 @@
         justify-content: center;
         align-items: center;
         backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 1rem;
     }
 
-    .subscriber-modal.show {
+    .session-main-modal.show {
         display: flex;
     }
 
-    .subscriber-modal-content {
+    .session-main-modal-content {
         background: var(--card);
         border: 1px solid var(--border);
         border-radius: 1rem;
-        width: min(800px, 94vw);
-        max-height: 80vh;
+        width: min(860px, 96vw);
+        max-height: 88vh;
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        box-shadow: 0 22px 64px rgba(0, 0, 0, 0.6);
     }
 
-    .subscriber-modal-header {
+    .session-main-modal-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -575,13 +571,13 @@
         border-bottom: 1px solid rgba(164, 109, 255, 0.2);
     }
 
-    .subscriber-modal-title {
+    .session-main-modal-title {
         margin: 0;
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         color: var(--foreground);
     }
 
-    .subscriber-modal-close {
+    .session-main-modal-close {
         border: none;
         background: transparent;
         color: var(--muted-foreground);
@@ -591,14 +587,53 @@
         border-radius: 0.4rem;
     }
 
-    .subscriber-modal-close:hover {
+    .session-main-modal-close:hover {
         color: var(--foreground);
         background: rgba(164, 109, 255, 0.16);
     }
 
-    .subscriber-modal-body {
+    .session-main-modal-body {
         padding: 1rem 1.2rem 1.2rem;
         overflow-y: auto;
+    }
+
+    .session-main-details {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .session-main-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .session-main-action-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+    .session-main-divider {
+        border: 0;
+        border-top: 1px solid rgba(164, 109, 255, 0.18);
+        margin: 0.25rem 0;
+    }
+
+    .session-main-subscriber-section-title {
+        margin: 0;
+        color: var(--foreground);
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .session-main-subscriber-summary {
+        color: var(--muted-foreground);
+        font-size: 0.86rem;
+        margin-top: -0.35rem;
+        margin-bottom: 0.2rem;
     }
 
     .subscriber-list {
@@ -690,7 +725,7 @@
         background: #9f0505;
     }
 
-    .subscriber-modal-empty {
+    .session-main-subscriber-empty {
         text-align: center;
         color: var(--muted-foreground);
         padding: 1.5rem 0.2rem;
@@ -719,6 +754,14 @@
 
         .peer-create-session-label {
             display: none;
+        }
+
+        .session-main-modal {
+            padding: 0.75rem;
+        }
+
+        .session-main-actions {
+            grid-template-columns: 1fr;
         }
 
         .subscriber-row {
@@ -773,37 +816,48 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="delete-modal" id="deleteModal">
-    <div class="delete-modal-content">
-        <h3 class="delete-modal-title">Delete Session?</h3>
-        <p class="delete-modal-text">Are you sure you want to delete this session? This action cannot be undone.</p>
-        <div class="delete-modal-actions">
-            <button class="delete-modal-btn delete-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
-            <button class="delete-modal-btn delete-modal-confirm" id="confirmDeleteBtn">Delete</button>
+<div class="session-main-modal" id="sessionMainModal" aria-hidden="true">
+    <div class="session-main-modal-content" role="dialog" aria-modal="true" aria-labelledby="sessionMainModalTitle">
+        <div class="session-main-modal-header">
+            <h3 class="session-main-modal-title" id="sessionMainModalTitle">Session Details</h3>
+            <button type="button" class="session-main-modal-close" data-modal-action="close-session-modal"
+                aria-label="Close session view">&times;</button>
         </div>
-    </div>
-</div>
-
-<!-- Subscriber Management Modal -->
-<div class="subscriber-modal" id="subscriberModal">
-    <div class="subscriber-modal-content">
-        <div class="subscriber-modal-header">
-            <h3 class="subscriber-modal-title" id="subscriberModalTitle">Subscribe List</h3>
-            <button type="button" class="subscriber-modal-close" aria-label="Close"
-                onclick="closeSubscriberModal()">✕</button>
-        </div>
-        <div class="subscriber-modal-body" id="subscriberModalBody"></div>
+        <div class="session-main-modal-body" id="sessionMainModalBody"></div>
     </div>
 </div>
 
 <script>
     const BASE_URL = '/UniHelper';
+    const CURRENT_USER_ID = <?= (int)($user->id ?? 0) ?>;
+
     let currentTab = 'my-sessions';
     let mySessionsPage = 1;
     let allSessionsPage = 1;
-    let sessionToDelete = null;
+    let activeSessionId = null;
     let sessionForSubscribersId = null;
+
+    const sessionCache = new Map();
+    const pageParams = getPageParams();
+    const sessionMainModalElement = document.getElementById('sessionMainModal');
+
+    if (sessionMainModalElement && sessionMainModalElement.parentElement !== document.body) {
+        document.body.appendChild(sessionMainModalElement);
+    }
+
+    function getPageParams() {
+        const main = document.getElementById('dashboardMain');
+        if (!main) {
+            return {};
+        }
+
+        try {
+            return JSON.parse(main.dataset.pageParams || '{}') || {};
+        } catch (error) {
+            console.warn('Invalid page params for peer-learning:', error);
+            return {};
+        }
+    }
 
     function escapeHtml(value) {
         return String(value || '')
@@ -868,6 +922,90 @@
         return 'Pending';
     }
 
+    function getAuthorFullName(session) {
+        const firstName = String(session.creator_first_name || '').trim();
+        const lastName = String(session.creator_last_name || '').trim();
+        const fullName = `${firstName} ${lastName}`.trim();
+        return fullName || 'Unknown User';
+    }
+
+    function getProfileImageUrl(profilePicturePath) {
+        const rawPath = String(profilePicturePath || '').trim();
+        if (!rawPath) {
+            return `${BASE_URL}/views/assets/default-pfp.png`;
+        }
+
+        if (/^https?:\/\//i.test(rawPath)) {
+            return rawPath;
+        }
+
+        if (rawPath.startsWith('/')) {
+            return `${BASE_URL}${rawPath}`;
+        }
+
+        return `${BASE_URL}/${rawPath}`;
+    }
+
+    function formatSubscriberCount(count) {
+        const safeCount = Math.max(0, Number(count || 0));
+        return `${safeCount} subscriber${safeCount === 1 ? '' : 's'}`;
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) {
+            return '-';
+        }
+
+        const date = new Date(`${dateStr}T00:00:00`);
+        if (Number.isNaN(date.getTime())) {
+            return '-';
+        }
+
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function createEmptyState(title, text) {
+        return `
+            <div class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <h3 class="empty-state-title">${escapeHtml(title)}</h3>
+                <p class="empty-state-text">${escapeHtml(text)}</p>
+                <a href="${BASE_URL}/create-session" class="empty-state-btn">Create Session</a>
+            </div>
+        `;
+    }
+
+    function isOwnerSession(session) {
+        return Number(session.user_id || 0) === Number(CURRENT_USER_ID || 0);
+    }
+
+    function canCurrentUserJoin(session) {
+        if (!session || !session.session_link) {
+            return false;
+        }
+        return Number(session.can_join || 0) === 1 || isOwnerSession(session);
+    }
+
+    function upsertSessionCache(session) {
+        const sessionId = Number(session && session.id ? session.id : 0);
+        if (!sessionId) {
+            return null;
+        }
+
+        const previous = sessionCache.get(sessionId) || {};
+        const merged = { ...previous, ...session, id: sessionId };
+        sessionCache.set(sessionId, merged);
+        return merged;
+    }
+
+    function getSessionFromCache(sessionId) {
+        const normalizedSessionId = Number(sessionId || 0);
+        if (!normalizedSessionId) {
+            return null;
+        }
+        return sessionCache.get(normalizedSessionId) || null;
+    }
+
     function updateSubscribeButtonState(button, status) {
         const normalizedStatus = normalizeSubscriptionStatus(status);
         const subscribed = normalizedStatus !== 'none';
@@ -890,39 +1028,299 @@
             return;
         }
 
+        const normalizedSessionId = Number(sessionId || 0);
         const safeCount = Math.max(0, Number(count || 0));
-        document.querySelectorAll(`.subscriber-count[data-session-id="${sessionId}"]`).forEach(element => {
+        document.querySelectorAll(`.subscriber-count[data-session-id="${normalizedSessionId}"]`).forEach(element => {
             element.textContent = formatSubscriberCount(safeCount);
+        });
+
+        const cachedSession = getSessionFromCache(normalizedSessionId);
+        if (cachedSession) {
+            cachedSession.sub_count = safeCount;
+            upsertSessionCache(cachedSession);
+        }
+    }
+
+    function createSessionCard(session) {
+        const safeSession = upsertSessionCache(session) || session;
+        const isExpired = Number(safeSession.is_expired || 0) === 1 || (safeSession.deleted_at && !safeSession.is_deleted);
+        const audienceLabel = getAudienceLabel(safeSession.audience);
+        const tags = String(safeSession.tags || '')
+            .split(',')
+            .map(tag => tag.trim())
+            .filter(Boolean)
+            .map(tag => `<span class="session-tag">${escapeHtml(tag)}</span>`)
+            .join('');
+        const subscriberCount = Math.max(0, Number(safeSession.sub_count || 0));
+        const authorName = getAuthorFullName(safeSession);
+        const authorNameHtml = escapeHtml(authorName);
+        const authorId = Number(safeSession.user_id || 0);
+        const authorLink = authorId ? `${BASE_URL}/view/profile/${authorId}` : '';
+        const authorLinkHtml = authorLink
+            ? `<a class="session-creator-link" href="${authorLink}" target="_blank" rel="noopener">${authorNameHtml}</a>`
+            : `<span class="session-creator-name">${authorNameHtml}</span>`;
+        const authorUniversity = escapeHtml(safeSession.creator_university || safeSession.university || 'Unknown University');
+        const authorAvatarUrl = escapeAttribute(getProfileImageUrl(safeSession.creator_profile_picture));
+        const expiredBadge = isExpired ? '<span class="session-expired-badge">Expired</span>' : '';
+        const sessionId = Number(safeSession.id || 0);
+
+        return `
+            <div class="session-card ${isExpired ? 'expired' : ''}" data-session-id="${sessionId}" role="button" tabindex="0"
+                 aria-label="Open session details">
+                <div class="session-header">
+                    <div>
+                        <span class="session-audience">${escapeHtml(audienceLabel)}</span>
+                        <div style="margin-top: 0.5rem;">
+                            <span class="session-subject">${escapeHtml(safeSession.subject || 'General')}</span>
+                        </div>
+                    </div>
+                    <div class="session-status-badges">${expiredBadge}</div>
+                </div>
+                <h3 class="session-title">${escapeHtml(safeSession.title || 'Untitled Session')}</h3>
+                <p class="session-description">${escapeHtml(safeSession.description || 'No description available.')}</p>
+                <div class="session-meta">
+                    <div class="session-meta-item">
+                        <span class="session-meta-label">Date:</span>
+                        <span class="session-meta-value">${formatDate(safeSession.date)}</span>
+                    </div>
+                    <div class="session-meta-item">
+                        <span class="session-meta-label">Time:</span>
+                        <span class="session-meta-value">${escapeHtml(safeSession.time || '-')} <span class="session-duration">[${escapeHtml(String(safeSession.duration || '-'))}h]</span></span>
+                    </div>
+                </div>
+                ${tags ? `<div class="session-tags">${tags}</div>` : ''}
+                <div class="session-creator">
+                    <img class="session-creator-avatar" src="${authorAvatarUrl}" alt="${escapeAttribute(authorName)}" loading="lazy" />
+                    <div class="session-creator-details">
+                        ${authorLinkHtml}
+                        <span class="session-creator-university">${authorUniversity}</span>
+                    </div>
+                </div>
+                <span class="subscriber-count" data-session-id="${sessionId}">${formatSubscriberCount(subscriberCount)}</span>
+                <div class="session-open-hint">Click to open full session view</div>
+            </div>
+        `;
+    }
+
+    function renderMainSessionModal(session) {
+        const sessionId = Number(session.id || 0);
+        if (!sessionId) {
+            return;
+        }
+
+        const isOwner = isOwnerSession(session);
+        const showPrivateSubscriberList = isOwner && String(session.audience || '') === 'private';
+        const canJoin = canCurrentUserJoin(session);
+        const audienceLabel = getAudienceLabel(session.audience);
+        const authorName = getAuthorFullName(session);
+        const authorId = Number(session.user_id || 0);
+        const authorLink = authorId ? `${BASE_URL}/view/profile/${authorId}` : '';
+        const authorLinkHtml = authorLink
+            ? `<a class="session-creator-link" href="${authorLink}" target="_blank" rel="noopener">${escapeHtml(authorName)}</a>`
+            : `<span class="session-creator-name">${escapeHtml(authorName)}</span>`;
+        const authorUniversity = escapeHtml(session.creator_university || session.university || 'Unknown University');
+        const authorAvatarUrl = escapeAttribute(getProfileImageUrl(session.creator_profile_picture));
+        const subscriberCount = Math.max(0, Number(session.sub_count || 0));
+        const subscriptionStatus = normalizeSubscriptionStatus(session.subscription_status || (Number(session.is_subscribed) === 1 ? 'approved' : 'none'));
+        const subscribeBtnClass = subscriptionStatus === 'approved'
+            ? 'session-subscribe-btn subscribed'
+            : (subscriptionStatus === 'pending' ? 'session-subscribe-btn pending' : 'session-subscribe-btn');
+        const tags = String(session.tags || '')
+            .split(',')
+            .map(tag => tag.trim())
+            .filter(Boolean)
+            .map(tag => `<span class="session-tag">${escapeHtml(tag)}</span>`)
+            .join('');
+        const isExpired = Number(session.is_expired || 0) === 1 || (session.deleted_at && !session.is_deleted);
+
+        const actionButtons = [];
+        if (isOwner) {
+            actionButtons.push(`
+                <button type="button" class="session-action-btn session-edit-btn" data-modal-action="edit-session"
+                        data-session-id="${sessionId}">Edit</button>
+            `);
+            actionButtons.push(`
+                <button type="button" class="session-action-btn session-delete-btn" data-modal-action="delete-session"
+                        data-session-id="${sessionId}">Delete</button>
+            `);
+            if (showPrivateSubscriberList) {
+                actionButtons.push(`
+                    <button type="button" class="session-action-btn session-subscribe-list-btn"
+                            data-modal-action="refresh-subscriber-list" data-session-id="${sessionId}">Subscribe List</button>
+                `);
+            }
+        }
+
+        if (canJoin) {
+            actionButtons.push(`
+                <a href="${escapeAttribute(session.session_link)}" target="_blank" rel="noopener"
+                   class="session-action-btn session-join-btn session-main-action-link">Join Session</a>
+            `);
+        }
+
+        if (!isOwner) {
+            actionButtons.push(`
+                <button
+                    type="button"
+                    class="session-action-btn ${subscribeBtnClass}"
+                    data-session-id="${sessionId}"
+                    data-status="${subscriptionStatus}"
+                    data-subscribed="${subscriptionStatus !== 'none' ? 1 : 0}"
+                >${getSubscribeButtonLabel(subscriptionStatus)}</button>
+            `);
+        }
+
+        document.getElementById('sessionMainModalTitle').textContent = session.title || 'Session Details';
+        document.getElementById('sessionMainModalBody').innerHTML = `
+            <div class="session-main-details">
+                <div class="session-header">
+                    <div>
+                        <span class="session-audience">${escapeHtml(audienceLabel)}</span>
+                        <div style="margin-top: 0.5rem;">
+                            <span class="session-subject">${escapeHtml(session.subject || 'General')}</span>
+                        </div>
+                    </div>
+                    <div class="session-status-badges">
+                        ${isExpired ? '<span class="session-expired-badge">Expired</span>' : ''}
+                    </div>
+                </div>
+
+                <h3 class="session-title">${escapeHtml(session.title || 'Untitled Session')}</h3>
+                <p class="session-description" style="max-height:none;-webkit-line-clamp:unset;">${escapeHtml(session.description || 'No description available.')}</p>
+
+                <div class="session-meta">
+                    <div class="session-meta-item">
+                        <span class="session-meta-label">Date:</span>
+                        <span class="session-meta-value">${formatDate(session.date)}</span>
+                    </div>
+                    <div class="session-meta-item">
+                        <span class="session-meta-label">Time:</span>
+                        <span class="session-meta-value">${escapeHtml(session.time || '-')} <span class="session-duration">[${escapeHtml(String(session.duration || '-'))}h]</span></span>
+                    </div>
+                </div>
+
+                ${tags ? `<div class="session-tags">${tags}</div>` : ''}
+
+                <div class="session-creator">
+                    <img class="session-creator-avatar" src="${authorAvatarUrl}" alt="${escapeAttribute(authorName)}" loading="lazy" />
+                    <div class="session-creator-details">
+                        ${authorLinkHtml}
+                        <span class="session-creator-university">${authorUniversity}</span>
+                    </div>
+                </div>
+
+                <span class="subscriber-count" data-session-id="${sessionId}">${formatSubscriberCount(subscriberCount)}</span>
+
+                ${actionButtons.length > 0 ? `<div class="session-main-actions">${actionButtons.join('')}</div>` : ''}
+
+                ${showPrivateSubscriberList ? `
+                    <hr class="session-main-divider" />
+                    <h4 class="session-main-subscriber-section-title">Subscribe List</h4>
+                    <p class="session-main-subscriber-summary">Manage pending and existing private-session subscribers.</p>
+                    <div id="sessionMainSubscriberBody"></div>
+                ` : ''}
+            </div>
+        `;
+
+        if (showPrivateSubscriberList) {
+            renderSubscriberListLoading();
+        }
+    }
+
+    function openSessionModal(session) {
+        const safeSession = upsertSessionCache(session) || session;
+        const sessionId = Number(safeSession.id || 0);
+        if (!sessionId) {
+            alert('Invalid session ID.');
+            return;
+        }
+
+        activeSessionId = sessionId;
+        sessionForSubscribersId = null;
+        renderMainSessionModal(safeSession);
+
+        const modal = document.getElementById('sessionMainModal');
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('peer-session-modal-open');
+
+        if (isOwnerSession(safeSession) && String(safeSession.audience || '') === 'private') {
+            sessionForSubscribersId = sessionId;
+            fetchSubscriberList(sessionId);
+        }
+    }
+
+    function closeSessionModal() {
+        const modal = document.getElementById('sessionMainModal');
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('peer-session-modal-open');
+        activeSessionId = null;
+        sessionForSubscribersId = null;
+    }
+
+    function fetchSessionForView(sessionId) {
+        return fetch(`${BASE_URL}/api?controller=SessionController&action=getSessionForView&session_id=${sessionId}`, {
+            credentials: 'same-origin'
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (!result.success || !result.data) {
+                    throw new Error(result.message || result.error || 'Failed to load session details.');
+                }
+                return upsertSessionCache(result.data);
+            });
+    }
+
+    function openSessionModalById(sessionId) {
+        const normalizedId = Number(sessionId || 0);
+        if (!normalizedId) {
+            return Promise.reject(new Error('Invalid session ID.'));
+        }
+
+        const cached = getSessionFromCache(normalizedId);
+        if (cached) {
+            openSessionModal(cached);
+            return Promise.resolve(cached);
+        }
+
+        return fetchSessionForView(normalizedId).then(session => {
+            openSessionModal(session);
+            return session;
         });
     }
 
-    document.querySelectorAll('.peer-tab').forEach(tab => {
-        tab.addEventListener('click', function () {
-            switchTab(this.dataset.tab);
-        });
-    });
-
     function switchTab(tabName) {
+        const normalizedTab = tabName === 'all-sessions' ? 'all-sessions' : 'my-sessions';
+
         document.querySelectorAll('.peer-tab').forEach(tab => {
             tab.classList.remove('active');
         });
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        const targetTabButton = document.querySelector(`[data-tab="${normalizedTab}"]`);
+        if (targetTabButton) {
+            targetTabButton.classList.add('active');
+        }
 
         document.querySelectorAll('.peer-content').forEach(content => {
             content.classList.remove('active');
         });
-        document.getElementById(tabName).classList.add('active');
-
-        currentTab = tabName;
-
-        if (tabName === 'my-sessions' && !document.getElementById('my-sessions-container').innerHTML) {
-            loadMyessions(1);
-        } else if (tabName === 'all-sessions' && !document.getElementById('all-sessions-container').innerHTML) {
-            loadAllSessions(1);
+        const targetTabContent = document.getElementById(normalizedTab);
+        if (targetTabContent) {
+            targetTabContent.classList.add('active');
         }
+
+        currentTab = normalizedTab;
+
+        if (normalizedTab === 'my-sessions' && !document.getElementById('my-sessions-container').innerHTML) {
+            return loadMySessions(1);
+        }
+        if (normalizedTab === 'all-sessions' && !document.getElementById('all-sessions-container').innerHTML) {
+            return loadAllSessions(1);
+        }
+        return Promise.resolve();
     }
 
-    function loadMyessions(page) {
+    function loadMySessions(page) {
         const container = document.getElementById('my-sessions-container');
         const loading = document.getElementById('my-sessions-loading');
         const loadMoreBtn = document.getElementById('my-sessions-load-more');
@@ -931,7 +1329,7 @@
             loading.style.display = 'flex';
         }
 
-        fetch(`${BASE_URL}/api?controller=SessionController&action=getMyessions&page=${page}`)
+        return fetch(`${BASE_URL}/api?controller=SessionController&action=getMyessions&page=${page}`)
             .then(response => response.json())
             .then(data => {
                 loading.style.display = 'none';
@@ -946,15 +1344,11 @@
                     }
 
                     data.data.forEach(session => {
-                        container.innerHTML += createSessionCard(session, true);
+                        upsertSessionCache(session);
+                        container.insertAdjacentHTML('beforeend', createSessionCard(session));
                     });
 
-                    if (data.count >= 10) {
-                        loadMoreBtn.style.display = 'block';
-                    } else {
-                        loadMoreBtn.style.display = 'none';
-                    }
-
+                    loadMoreBtn.style.display = data.count >= 10 ? 'block' : 'none';
                     mySessionsPage = page + 1;
                 } else if (page === 1) {
                     container.innerHTML = createEmptyState('No sessions yet', 'Create your first study session to get started!');
@@ -965,7 +1359,9 @@
                 loading.style.display = 'none';
                 console.error('Error loading sessions:', error);
                 alert(error.message || 'Failed to load your sessions. Please try again.');
-                container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
+                if (page === 1) {
+                    container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
+                }
             });
     }
 
@@ -978,7 +1374,7 @@
             loading.style.display = 'flex';
         }
 
-        fetch(`${BASE_URL}/api?controller=SessionController&action=getAllSessions&page=${page}`)
+        return fetch(`${BASE_URL}/api?controller=SessionController&action=getAllSessions&page=${page}`)
             .then(response => response.json())
             .then(data => {
                 loading.style.display = 'none';
@@ -993,15 +1389,11 @@
                     }
 
                     data.data.forEach(session => {
-                        container.innerHTML += createSessionCard(session, false);
+                        upsertSessionCache(session);
+                        container.insertAdjacentHTML('beforeend', createSessionCard(session));
                     });
 
-                    if (data.count >= 10) {
-                        loadMoreBtn.style.display = 'block';
-                    } else {
-                        loadMoreBtn.style.display = 'none';
-                    }
-
+                    loadMoreBtn.style.display = data.count >= 10 ? 'block' : 'none';
                     allSessionsPage = page + 1;
                 } else if (page === 1) {
                     container.innerHTML = createEmptyState('No sessions available', 'Create a new session to get started!');
@@ -1012,158 +1404,23 @@
                 loading.style.display = 'none';
                 console.error('Error loading sessions:', error);
                 alert(error.message || 'Failed to load sessions. Please try again.');
-                container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
+                if (page === 1) {
+                    container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
+                }
             });
-    }
-
-    function createSessionCard(session, showEditDelete) {
-        const isExpired = session.is_expired || (session.deleted_at && !session.is_deleted);
-        const audienceLabel = getAudienceLabel(session.audience);
-        const tags = session.tags ? session.tags.split(',').map(tag => `<span class="session-tag">${tag.trim()}</span>`).join('') : '';
-        const subscriptionStatus = normalizeSubscriptionStatus(session.subscription_status || (Number(session.is_subscribed) === 1 ? 'approved' : 'none'));
-        const isSubscribed = subscriptionStatus !== 'none';
-        const subscriberCount = Math.max(0, Number(session.sub_count || 0));
-        const subscribeBtnClass = subscriptionStatus === 'approved'
-            ? 'session-subscribe-btn subscribed'
-            : (subscriptionStatus === 'pending' ? 'session-subscribe-btn pending' : 'session-subscribe-btn');
-        const subscribeBtnText = getSubscribeButtonLabel(subscriptionStatus);
-        const canJoin = Number(session.can_join || 0) === 1;
-
-        let actions = '';
-        if (showEditDelete) {
-            const subscribeListButton = session.audience === 'private'
-                ? `<button
-                        type="button"
-                        class="session-action-btn session-subscribe-list-btn"
-                        data-session-id="${session.id}"
-                        data-session-title="${escapeAttribute(session.title || 'Private Session')}"
-                    >Subscribe List</button>`
-                : '';
-
-            actions = `
-                <div class="session-actions">
-                    <button class="session-action-btn session-edit-btn" onclick="editSession(${session.id})">Edit</button>
-                    <button class="session-action-btn session-delete-btn" onclick="openDeleteModal(${session.id})">Delete</button>
-                    ${subscribeListButton}
-                </div>
-            `;
-        } else {
-            const joinButton = (session.session_link && canJoin)
-                ? `<a href="${session.session_link}" target="_blank" class="session-action-btn session-join-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Join Session</a>`
-                : '';
-
-            actions = `
-                <div class="session-actions session-actions-all">
-                    ${joinButton}
-                    <button
-                        type="button"
-                        class="session-action-btn ${subscribeBtnClass}"
-                        data-session-id="${session.id}"
-                        data-status="${subscriptionStatus}"
-                        data-subscribed="${isSubscribed ? 1 : 0}"
-                    >${subscribeBtnText}</button>
-                    <span class="subscriber-count" data-session-id="${session.id}">${formatSubscriberCount(subscriberCount)}</span>
-                </div>
-            `;
-        }
-
-        const subscriberCountMeta = showEditDelete
-            ? `<span class="subscriber-count" data-session-id="${session.id}">${formatSubscriberCount(subscriberCount)}</span>`
-            : '';
-
-        const expiredBadge = isExpired ? '<span class="session-expired-badge">Expired</span>' : '';
-
-        return `
-            <div class="session-card ${isExpired ? 'expired' : ''}">
-                <div class="session-header">
-                    <div>
-                        <span class="session-audience">${audienceLabel}</span>
-                        <div style="margin-top: 0.5rem;">
-                            <span class="session-subject">${session.subject}</span>
-                        </div>
-                    </div>
-                    <div class="session-status-badges">${expiredBadge}</div>
-                </div>
-                <h3 class="session-title">${session.title}</h3>
-                <p class="session-description">${session.description}</p>
-                <div class="session-meta">
-                    <div class="session-meta-item">
-                        <span class="session-meta-label">Date:</span>
-                        <span class="session-meta-value">${formatDate(session.date)}</span>
-                    </div>
-                    <div class="session-meta-item">
-                        <span class="session-meta-label">Time:</span>
-                        <span class="session-meta-value">${session.time} <span class="session-duration">[${session.duration}h]</span></span>
-                    </div>
-                </div>
-                ${tags ? `<div class="session-tags">${tags}</div>` : ''}
-                <div class="session-creator">
-                    Author: ${session.creator_name || 'Unknown'} • ${session.creator_university || session.university || 'Unknown University'}
-                </div>
-                ${subscriberCountMeta}
-                ${actions}
-            </div>
-        `;
-    }
-
-    function formatSubscriberCount(count) {
-        const safeCount = Math.max(0, Number(count || 0));
-        return `${safeCount} subscriber${safeCount === 1 ? '' : 's'}`;
-    }
-
-    function createEmptyState(title, text) {
-        return `
-            <div class="empty-state">
-                <div class="empty-state-icon">📚</div>
-                <h3 class="empty-state-title">${title}</h3>
-                <p class="empty-state-text">${text}</p>
-                <a href="${BASE_URL}/create-session" class="empty-state-btn">Create Session</a>
-            </div>
-        `;
-    }
-
-    function formatDate(dateStr) {
-        const date = new Date(dateStr + 'T00:00:00');
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
     }
 
     function editSession(sessionId) {
         window.location.href = `${BASE_URL}/create-session?session_id=${sessionId}`;
     }
 
-    function openDeleteModal(sessionId) {
-        sessionToDelete = sessionId;
-        document.getElementById('deleteModal').classList.add('show');
-    }
-
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.remove('show');
-        sessionToDelete = null;
-    }
-
-    function openSubscriberModal(buttonElement) {
-        const sessionId = Number(buttonElement.getAttribute('data-session-id') || 0);
-        if (!sessionId) {
-            alert('Invalid session ID.');
+    function renderSubscriberListLoading() {
+        const body = document.getElementById('sessionMainSubscriberBody');
+        if (!body) {
             return;
         }
 
-        sessionForSubscribersId = sessionId;
-        const sessionTitle = buttonElement.getAttribute('data-session-title') || 'Private Session';
-        document.getElementById('subscriberModalTitle').textContent = `Subscribe List - ${sessionTitle}`;
-        document.getElementById('subscriberModal').classList.add('show');
-        renderSubscriberModalLoading();
-        fetchSubscriberList(sessionId);
-    }
-
-    function closeSubscriberModal() {
-        document.getElementById('subscriberModal').classList.remove('show');
-        sessionForSubscribersId = null;
-        document.getElementById('subscriberModalBody').innerHTML = '';
-    }
-
-    function renderSubscriberModalLoading() {
-        document.getElementById('subscriberModalBody').innerHTML = `
+        body.innerHTML = `
             <div class="loading-spinner" style="padding: 1.5rem 0;">
                 <div class="spinner"></div>
             </div>
@@ -1171,10 +1428,13 @@
     }
 
     function renderSubscriberList(list) {
-        const body = document.getElementById('subscriberModalBody');
+        const body = document.getElementById('sessionMainSubscriberBody');
+        if (!body) {
+            return;
+        }
 
         if (!Array.isArray(list) || list.length === 0) {
-            body.innerHTML = '<div class="subscriber-modal-empty">No subscribers yet.</div>';
+            body.innerHTML = '<div class="session-main-subscriber-empty">No subscribers yet.</div>';
             return;
         }
 
@@ -1233,7 +1493,7 @@
     }
 
     function fetchSubscriberList(sessionId) {
-        fetch(`${BASE_URL}/api?controller=SessionController&action=getSubscriberList&session_id=${sessionId}`, {
+        return fetch(`${BASE_URL}/api?controller=SessionController&action=getSubscriberList&session_id=${sessionId}`, {
             credentials: 'same-origin'
         })
             .then(response => response.json())
@@ -1245,8 +1505,10 @@
             })
             .catch(error => {
                 console.error('Subscriber list error:', error);
-                document.getElementById('subscriberModalBody').innerHTML =
-                    `<div class="subscriber-modal-empty" style="color:#fc8181;">${escapeHtml(error.message || 'Failed to load subscriber list.')}</div>`;
+                const body = document.getElementById('sessionMainSubscriberBody');
+                if (body) {
+                    body.innerHTML = `<div class="session-main-subscriber-empty" style="color:#fc8181;">${escapeHtml(error.message || 'Failed to load subscriber list.')}</div>`;
+                }
             });
     }
 
@@ -1314,62 +1576,56 @@
             });
     }
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
-        if (sessionToDelete) {
-            deleteSession(sessionToDelete);
+    function deleteSession(sessionId, triggerButton) {
+        const normalizedSessionId = Number(sessionId || 0);
+        if (!normalizedSessionId) {
+            alert('Invalid session ID.');
+            return;
         }
-    });
 
-    function deleteSession(sessionId) {
-        const confirmBtn = document.getElementById('confirmDeleteBtn');
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Deleting...';
+        if (!window.confirm('Are you sure you want to delete this session?')) {
+            return;
+        }
+
+        if (triggerButton) {
+            triggerButton.disabled = true;
+            triggerButton.textContent = 'Deleting...';
+        }
 
         fetch(`${BASE_URL}/api?controller=SessionController&action=deleteSession`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: `id=${sessionId}`
+            body: `id=${normalizedSessionId}`
         })
             .then(response => response.json())
             .then(data => {
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = 'Delete';
-
                 if (!data.success) {
                     throw new Error(data.error || 'Failed to delete session');
                 }
 
-                closeDeleteModal();
-                loadMyessions(1);
+                sessionCache.delete(normalizedSessionId);
+                closeSessionModal();
+                loadMySessions(1);
+
+                if (document.getElementById('all-sessions-container').innerHTML) {
+                    loadAllSessions(1);
+                }
             })
             .catch(error => {
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = 'Delete';
                 console.error('Error deleting session:', error);
                 alert(error.message || 'Failed to delete session. Please try again.');
+            })
+            .finally(() => {
+                if (triggerButton) {
+                    triggerButton.disabled = false;
+                    triggerButton.textContent = 'Delete';
+                }
             });
     }
 
-    document.addEventListener('click', function (event) {
-        const subscribeListButton = event.target.closest('.session-subscribe-list-btn');
-        if (subscribeListButton) {
-            openSubscriberModal(subscribeListButton);
-            return;
-        }
-
-        const decisionButton = event.target.closest('.subscriber-decision-btn');
-        if (decisionButton) {
-            sendSubscriberDecision(decisionButton);
-            return;
-        }
-
-        const subscribeButton = event.target.closest('.session-subscribe-btn');
-        if (!subscribeButton) {
-            return;
-        }
-
+    function handleSubscribeAction(subscribeButton) {
         const sessionId = Number(subscribeButton.getAttribute('data-session-id') || 0);
         if (!sessionId) {
             alert('Invalid session ID.');
@@ -1400,15 +1656,26 @@
                 const nextStatus = normalizeSubscriptionStatus(state.subscription_status || (isSubscribed ? 'none' : 'approved'));
                 updateSubscribeButtonState(subscribeButton, nextStatus);
 
+                const cachedSession = getSessionFromCache(sessionId) || { id: sessionId };
+                cachedSession.subscription_status = nextStatus;
+                cachedSession.is_subscribed = nextStatus === 'none' ? 0 : 1;
+
+                if (typeof state.can_join !== 'undefined') {
+                    cachedSession.can_join = Number(state.can_join || 0);
+                }
+
+                if (typeof state.sub_count !== 'undefined') {
+                    cachedSession.sub_count = Math.max(0, Number(state.sub_count || 0));
+                }
+
+                upsertSessionCache(cachedSession);
+
                 if (typeof state.sub_count !== 'undefined') {
                     updateSubscriberCountForSession(sessionId, state.sub_count);
-                } else {
-                    const countElement = subscribeButton.parentElement.querySelector('.subscriber-count');
-                    if (countElement) {
-                        const currentCount = Number((countElement.textContent.match(/\d+/) || ['0'])[0]);
-                        const nextCount = isSubscribed ? Math.max(0, currentCount - 1) : currentCount + 1;
-                        updateSubscriberCountForSession(sessionId, nextCount);
-                    }
+                }
+
+                if (activeSessionId === sessionId) {
+                    openSessionModal(cachedSession);
                 }
             })
             .catch(error => {
@@ -1418,29 +1685,115 @@
             .finally(() => {
                 subscribeButton.disabled = false;
             });
+    }
+
+    document.querySelectorAll('.peer-tab').forEach(tab => {
+        tab.addEventListener('click', function () {
+            switchTab(this.dataset.tab);
+        });
     });
 
     document.getElementById('my-sessions-load-more').addEventListener('click', function () {
-        loadMyessions(mySessionsPage);
+        loadMySessions(mySessionsPage);
     });
 
     document.getElementById('all-sessions-load-more').addEventListener('click', function () {
         loadAllSessions(allSessionsPage);
     });
 
-    document.getElementById('deleteModal').addEventListener('click', function (e) {
-        if (e.target === this) {
-            closeDeleteModal();
+    document.addEventListener('click', function (event) {
+        const modal = document.getElementById('sessionMainModal');
+
+        if (event.target === modal) {
+            closeSessionModal();
+            return;
+        }
+
+        const closeButton = event.target.closest('[data-modal-action="close-session-modal"]');
+        if (closeButton) {
+            closeSessionModal();
+            return;
+        }
+
+        const card = event.target.closest('.session-card');
+        if (card && !event.target.closest('a, button, input, select, textarea, label')) {
+            const sessionId = Number(card.getAttribute('data-session-id') || 0);
+            openSessionModalById(sessionId).catch(error => {
+                console.error('Failed to open session modal:', error);
+                alert(error.message || 'Unable to open this session view.');
+            });
+            return;
+        }
+
+        const modalActionButton = event.target.closest('[data-modal-action]');
+        if (modalActionButton) {
+            const action = modalActionButton.getAttribute('data-modal-action');
+            const sessionId = Number(modalActionButton.getAttribute('data-session-id') || activeSessionId || 0);
+
+            if (action === 'edit-session') {
+                editSession(sessionId);
+                return;
+            }
+
+            if (action === 'delete-session') {
+                deleteSession(sessionId, modalActionButton);
+                return;
+            }
+
+            if (action === 'refresh-subscriber-list') {
+                sessionForSubscribersId = sessionId;
+                renderSubscriberListLoading();
+                fetchSubscriberList(sessionId);
+                return;
+            }
+        }
+
+        const decisionButton = event.target.closest('.subscriber-decision-btn');
+        if (decisionButton) {
+            sendSubscriberDecision(decisionButton);
+            return;
+        }
+
+        const subscribeButton = event.target.closest('.session-subscribe-btn');
+        if (subscribeButton) {
+            handleSubscribeAction(subscribeButton);
         }
     });
 
-    document.getElementById('subscriberModal').addEventListener('click', function (e) {
-        if (e.target === this) {
-            closeSubscriberModal();
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeSessionModal();
+            return;
         }
+
+        const targetCard = event.target && event.target.classList ? event.target : null;
+        if (!targetCard || !targetCard.classList.contains('session-card')) {
+            return;
+        }
+
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+
+        event.preventDefault();
+        const sessionId = Number(targetCard.getAttribute('data-session-id') || 0);
+        openSessionModalById(sessionId).catch(error => {
+            console.error('Failed to open session modal:', error);
+            alert(error.message || 'Unable to open this session view.');
+        });
     });
 
     window.addEventListener('load', function () {
-        loadMyessions(1);
+        const initialTab = pageParams.tab === 'all-sessions' ? 'all-sessions' : 'my-sessions';
+        switchTab(initialTab);
+
+        const deepLinkSessionId = Number(pageParams.session_id || 0);
+        if (!deepLinkSessionId) {
+            return;
+        }
+
+        openSessionModalById(deepLinkSessionId).catch(error => {
+            console.error('Deep-link session open failed:', error);
+        });
     });
 </script>
