@@ -71,6 +71,8 @@
             event.preventDefault();
 
             const formData = new FormData(form);
+            const currentEditId = editingDegreeId;
+            const isEditMode = Boolean(currentEditId);
             const action = editingDegreeId
                 ? 'updateDegreeProgramForm&id=' + encodeURIComponent(editingDegreeId)
                 : 'addDegreeProgram';
@@ -86,8 +88,14 @@
                 });
 
                 const payload = await readJsonSafely(response);
-                if (payload && payload.success === false) {
-                    throw new Error(payload.message || 'Unable to save degree program.');
+                if (!payload || payload.success !== true) {
+                    throw new Error((payload && payload.message) || 'Unable to save degree program.');
+                }
+
+                if (isEditMode) {
+                    applyFormValuesToCard(currentEditId);
+                    resetFormState(true);
+                    return;
                 }
 
                 window.location.reload();
@@ -119,12 +127,12 @@
 
             try {
                 const response = await apiRequest('removeDegreeProgram&id=' + encodeURIComponent(degreeId), {
-                    method: 'GET'
+                    method: 'POST'
                 });
 
                 const payload = await readJsonSafely(response);
-                if (payload && payload.success === false) {
-                    throw new Error(payload.message || 'Unable to delete degree program.');
+                if (!payload || payload.success !== true) {
+                    throw new Error((payload && payload.message) || 'Unable to delete degree program.');
                 }
 
                 window.location.reload();
@@ -147,10 +155,11 @@
                     method: 'GET'
                 });
 
-                const data = await response.json();
-                if (!data || typeof data !== 'object') {
+                const payload = await readJsonSafely(response);
+                if (!payload || payload.success !== true || !payload.data || typeof payload.data !== 'object') {
                     throw new Error('Invalid degree data response');
                 }
+                const data = payload.data;
 
                 const fallbackDegreeName = getText(degreeCard, '.degree-card-title');
                 const fallbackUnicode = getText(degreeCard, '.degree-card-code');
@@ -289,6 +298,66 @@
             return node ? node.textContent.trim() : '';
         }
 
+        function applyFormValuesToCard(degreeId) {
+            const selector = '.degree-card[data-degree-id="' + String(degreeId).replace(/"/g, '\\"') + '"]';
+            const degreeCard = listContent.querySelector(selector);
+            if (!degreeCard) {
+                return;
+            }
+
+            const degreeName = getFieldValue('degreeName');
+            const unicode = getFieldValue('unicode');
+            const description = getFieldValue('description');
+            const streamText = getSelectedOptionText('stream');
+            const universityText = getSelectedOptionText('university');
+            const duration = getFieldValue('duration');
+
+            const titleNode = degreeCard.querySelector('.degree-card-title');
+            if (titleNode) {
+                titleNode.textContent = degreeName;
+            }
+
+            const unicodeNode = degreeCard.querySelector('.degree-card-code');
+            if (unicodeNode) {
+                unicodeNode.textContent = unicode;
+            }
+
+            const descriptionNode = degreeCard.querySelector('.degree-card-description');
+            if (descriptionNode) {
+                descriptionNode.textContent = description;
+            }
+
+            const infoValues = degreeCard.querySelectorAll('.degree-card-item-value');
+            if (infoValues[0]) {
+                infoValues[0].textContent = universityText;
+            }
+            if (infoValues[1]) {
+                infoValues[1].textContent = streamText;
+            }
+            if (infoValues[2]) {
+                infoValues[2].textContent = duration ? duration + ' Years' : '';
+            }
+        }
+
+        function getFieldValue(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                return '';
+            }
+
+            return String(element.value || '').trim();
+        }
+
+        function getSelectedOptionText(selectId) {
+            const selectElement = document.getElementById(selectId);
+            if (!selectElement || !selectElement.options) {
+                return '';
+            }
+
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            return selectedOption ? selectedOption.textContent.trim() : '';
+        }
+
         function getDurationFromCard(card) {
             const durationText = getText(card, '.degree-card-item:nth-child(3) .degree-card-item-value');
             return durationText.replace(' Years', '').trim();
@@ -318,6 +387,7 @@
             const requestOptions = options || {};
             const headers = Object.assign(
                 {
+                    'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 requestOptions.headers || {}

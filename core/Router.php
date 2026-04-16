@@ -23,7 +23,6 @@ class Router
             '/register' => ['AuthController', 'register'],
             '/login' => ['AuthController', 'login'],
             '/api' => ['apiGateway', 'handleRequest'],
-            '/dashboard/admin/degreemanage/add' => ['ProgramController', 'addDegreeProgram'],
             '/profile/update' => ['DashboardController', 'profileUpdate'],
         ],
         'PUT' => [
@@ -34,9 +33,6 @@ class Router
         ],
         'DYNAMIC' => [
             '/:component' => ['DashboardController', 'renderComponent'],
-            '/dashboard/admin/degreemanage/remove/:id' => ['ProgramController', 'removeDegreeProgram'],
-            '/dashboard/admin/degreemanage/get/:id' => ['ProgramController', 'getDegreeProgramData'],
-            '/dashboard/admin/degreemanage/update/:id' => ['ProgramController', 'updateDegreeProgramForm'],
             '/view/profile/:id' => ['DashboardController', 'viewProfile'],
             '/this/is/a/test/:id' => ['TestController', 'testMethod']
         ]
