@@ -31,7 +31,7 @@
 .feed-open-btn.expanded {
     padding: 0.65rem 1.1rem;
     transform: translateY(-1px);
-    box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 34%, transparent 66%);
+    box-shadow: var(--glow-secondary);
 }
 
 .feed-open-icon {
@@ -80,9 +80,9 @@
     overflow: auto;
     border: 1px solid var(--border);
     border-radius: 1rem;
-    background: color-mix(in srgb, var(--card) 88%, #0d1117 12%);
+    background: var(--card);
     padding: 1.25rem;
-    box-shadow: 0 8px 30px color-mix(in srgb, var(--primary) 22%, transparent 78%);
+    box-shadow: var(--glow-primary);
 }
 
 .feed-composer-header {
@@ -165,7 +165,7 @@
 .feed-file-input::file-selector-button {
     border: 1px solid var(--border);
     border-radius: 0.55rem;
-    background: color-mix(in srgb, var(--key) 75%, #0b0f13 25%);
+    background: var(--key);
     color: var(--foreground);
     padding: 0.45rem 0.7rem;
     margin-right: 0.55rem;
@@ -287,7 +287,7 @@
     width: 100%;
     border: 1px solid var(--border);
     border-radius: 999px;
-    background: color-mix(in srgb, var(--key) 86%, #0b0f13 14%);
+    background: var(--key);
     color: var(--foreground);
     padding: 0.68rem 0.95rem;
     font-size: 0.92rem;
@@ -322,7 +322,7 @@
 .feed-card {
     border: 1px solid var(--border);
     border-radius: 0.95rem;
-    background: color-mix(in srgb, var(--card) 92%, #0b0f13 8%);
+    background: var(--card);
     padding: 1rem;
     display: grid;
     gap: 0.75rem;
@@ -373,10 +373,10 @@
 }
 
 .feed-item-media {
-    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent 30%);
+    border: 1px solid var(--border);
     border-radius: 0.85rem;
     overflow: hidden;
-    background: color-mix(in srgb, var(--key) 72%, #0b0f13 28%);
+    background: var(--key);
 }
 
 .feed-item-image {
@@ -391,7 +391,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 0.6rem;
-    border-top: 1px dashed color-mix(in srgb, var(--border) 70%, transparent 30%);
+    border-top: 1px dashed var(--border);
     padding-top: 0.7rem;
     font-size: 0.78rem;
     color: var(--muted-foreground);
