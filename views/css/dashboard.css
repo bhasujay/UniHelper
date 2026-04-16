@@ -577,13 +577,13 @@ main .dashboard-card {
   .main-content {
     margin-left: 0;
     margin-right: 0;
-    width: calc(100% - 2rem);
+    width: calc(100% - 0rem);
   }
 
   /* Override base main element sizing that assumes a visible 280px sidebar */
   main.main-content {
     margin-left: 0;
-    width: calc(100% - 2rem);
+    width: calc(100% - 0rem);
   }
 
   .mobile-menu-toggle {
