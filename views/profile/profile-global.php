@@ -52,9 +52,11 @@ if ($_SESSION['last_viewed_user_id'] != $targetUserId)
     $_SESSION['last_viewed_user_id'] = $targetUserId;
 }
 
-// Determine profile picture safely avoiding Undefined property warning
-$profilePicPath = $target->profile_picture;
-$profilePic = "/unihelper/public/" . $target->profile_picture;
+// Determine profile picture safely avoiding undefined property or double slashes
+$rawPic = $target->profile_picture ?? '/uploads/profilePictures/default-pfp.png';
+// Normalize: remove any leading slash so concatenation doesn't produce double slashes
+$normalizedPic = ltrim($rawPic, '/');
+$profilePic = '/unihelper/public/' . $normalizedPic;
 
 
 // Helpers

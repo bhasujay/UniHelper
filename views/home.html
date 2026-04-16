@@ -110,96 +110,152 @@
                 </section>
 
                 <section class="testimonials-section" aria-labelledby="testimonials-title">
-                    <h2 class="testimonials-title" id="testimonials-title">Trusted Students Across Sri Lanka</h2>
-                    <div class="testimonials-grid">
-                        <div class="testimonials-marquee">
-                            <div class="testimonials-track">
-                                <article class="testimonial-card">
-                                    <div class="testimonial-avatar" aria-hidden="true">KP</div>
-                                    <h3 class="testimonial-name">Kavindu Perera</h3>
-                                    <p class="testimonial-role">Undergraduate Student</p>
-                                    <p class="testimonial-text">This platform helped me connect with seniors and choose the right university path.</p>
-                                </article>
-                                <article class="testimonial-card">
-                                    <div class="testimonial-avatar" aria-hidden="true">AS</div>
-                                    <h3 class="testimonial-name">Ayesha Samarasinghe</h3>
-                                    <p class="testimonial-role">School Leaver</p>
-                                    <p class="testimonial-text">I compared programs quickly and found a clear path for my next step after A/Ls.</p>
-                                </article>
-                                <article class="testimonial-card" aria-hidden="true">
-                                    <div class="testimonial-avatar">KP</div>
-                                    <h3 class="testimonial-name">Kavindu Perera</h3>
-                                    <p class="testimonial-role">Undergraduate Student</p>
-                                    <p class="testimonial-text">This platform helped me connect with seniors and choose the right university path.</p>
-                                </article>
-                                <article class="testimonial-card" aria-hidden="true">
-                                    <div class="testimonial-avatar">AS</div>
-                                    <h3 class="testimonial-name">Ayesha Samarasinghe</h3>
-                                    <p class="testimonial-role">School Leaver</p>
-                                    <p class="testimonial-text">I compared programs quickly and found a clear path for my next step after A/Ls.</p>
-                                </article>
-                            </div>
-                        </div>
-                        <div class="testimonials-marquee">
-                            <div class="testimonials-track delay-slow">
-                                <article class="testimonial-card">
-                                    <div class="testimonial-avatar" aria-hidden="true">NS</div>
-                                    <h3 class="testimonial-name">Nethmi Silva</h3>
-                                    <p class="testimonial-role">Undergraduate Student</p>
-                                    <p class="testimonial-text">Very easy to use and super helpful for finding courses and events.</p>
-                                </article>
-                                <article class="testimonial-card">
-                                    <div class="testimonial-avatar" aria-hidden="true">DM</div>
-                                    <h3 class="testimonial-name">Dulanga Mendis</h3>
-                                    <p class="testimonial-role">Applicant</p>
-                                    <p class="testimonial-text">The event updates and peer advice saved me time when applying to multiple universities.</p>
-                                </article>
-                                <article class="testimonial-card" aria-hidden="true">
-                                    <div class="testimonial-avatar">NS</div>
-                                    <h3 class="testimonial-name">Nethmi Silva</h3>
-                                    <p class="testimonial-role">Undergraduate Student</p>
-                                    <p class="testimonial-text">Very easy to use and super helpful for finding courses and events.</p>
-                                </article>
-                                <article class="testimonial-card" aria-hidden="true">
-                                    <div class="testimonial-avatar">DM</div>
-                                    <h3 class="testimonial-name">Dulanga Mendis</h3>
-                                    <p class="testimonial-role">Applicant</p>
-                                    <p class="testimonial-text">The event updates and peer advice saved me time when applying to multiple universities.</p>
-                                </article>
-                            </div>
-                        </div>
-                        <div class="testimonials-marquee">
-                            <div class="testimonials-track delay-fast">
-                                <article class="testimonial-card">
-                                    <div class="testimonial-avatar" aria-hidden="true">IF</div>
-                                    <h3 class="testimonial-name">Isuru Fernando</h3>
-                                    <p class="testimonial-role">Undergraduate Student</p>
-                                    <p class="testimonial-text">Great experience! I found valuable peer support and guidance.</p>
-                                </article>
-                                <article class="testimonial-card">
-                                    <div class="testimonial-avatar" aria-hidden="true">RM</div>
-                                    <h3 class="testimonial-name">Rashmi Madushani</h3>
-                                    <p class="testimonial-role">First-Year Student</p>
-                                    <p class="testimonial-text">The discussions felt trustworthy and gave me confidence when picking my degree options.</p>
-                                </article>
-                                <article class="testimonial-card" aria-hidden="true">
-                                    <div class="testimonial-avatar">IF</div>
-                                    <h3 class="testimonial-name">Isuru Fernando</h3>
-                                    <p class="testimonial-role">Undergraduate Student</p>
-                                    <p class="testimonial-text">Great experience! I found valuable peer support and guidance.</p>
-                                </article>
-                                <article class="testimonial-card" aria-hidden="true">
-                                    <div class="testimonial-avatar">RM</div>
-                                    <h3 class="testimonial-name">Rashmi Madushani</h3>
-                                    <p class="testimonial-role">First-Year Student</p>
-                                    <p class="testimonial-text">The discussions felt trustworthy and gave me confidence when picking my degree options.</p>
-                                </article>
-                            </div>
-                        </div>
+                    <h2 class="testimonials-title" id="testimonials-title">Students Across Sri Lanka</h2>
+                    <div id="feedbackTestimonials" class="testimonials-grid" data-max-feedbacks="6">
+                        <article class="testimonial-card">
+                            <div class="testimonial-avatar" aria-hidden="true">..</div>
+                            <h3 class="testimonial-name">Loading feedback...</h3>
+                            <p class="testimonial-role">Please wait</p>
+                            <p class="testimonial-text">Fetching the latest feedback from users.</p>
+                        </article>
                     </div>
                 </section>
             </div>
         </main>
+
+        <script>
+            (function () {
+                const testimonialsGrid = document.getElementById('feedbackTestimonials');
+                if (!testimonialsGrid) {
+                    return;
+                }
+
+                const maxFeedbacks = Number(testimonialsGrid.dataset.maxFeedbacks) || 6;
+                const endpoint = `/UniHelper/api?controller=feedbackController&action=getFeedback&limit=${encodeURIComponent(maxFeedbacks)}`;
+
+                function toInitials(name) {
+                    const parts = (name || 'Anonymous')
+                        .trim()
+                        .split(/\s+/)
+                        .filter(Boolean)
+                        .slice(0, 2);
+
+                    if (parts.length === 0) {
+                        return 'AN';
+                    }
+
+                    return parts.map(part => part.charAt(0).toUpperCase()).join('');
+                }
+
+                function truncate(text, maxLength) {
+                    const value = String(text || '').trim();
+                    if (value.length <= maxLength) {
+                        return value;
+                    }
+
+                    return `${value.slice(0, maxLength - 1)}...`;
+                }
+
+                function createFeedbackCard(feedback) {
+                    const name = truncate(feedback.name || 'Anonymous User', 50);
+                    const title = truncate(feedback.title || 'Community Feedback', 42);
+                    const message = truncate(feedback.message || 'No message provided.', 200);
+
+                    const card = document.createElement('article');
+                    card.className = 'testimonial-card';
+
+                    const avatar = document.createElement('div');
+                    avatar.className = 'testimonial-avatar';
+                    avatar.setAttribute('aria-hidden', 'true');
+                    avatar.textContent = toInitials(name);
+
+                    const nameEl = document.createElement('h3');
+                    nameEl.className = 'testimonial-name';
+                    nameEl.textContent = name;
+
+                    const titleEl = document.createElement('p');
+                    titleEl.className = 'testimonial-role';
+                    titleEl.textContent = title;
+
+                    const messageEl = document.createElement('p');
+                    messageEl.className = 'testimonial-text';
+                    messageEl.textContent = message;
+
+                    card.appendChild(avatar);
+                    card.appendChild(nameEl);
+                    card.appendChild(titleEl);
+                    card.appendChild(messageEl);
+
+                    return card;
+                }
+
+                function renderFallback(message) {
+                    testimonialsGrid.innerHTML = '';
+
+                    const card = document.createElement('article');
+                    card.className = 'testimonial-card';
+
+                    const avatar = document.createElement('div');
+                    avatar.className = 'testimonial-avatar';
+                    avatar.setAttribute('aria-hidden', 'true');
+                    avatar.textContent = 'UH';
+
+                    const nameEl = document.createElement('h3');
+                    nameEl.className = 'testimonial-name';
+                    nameEl.textContent = 'UniHelper Community';
+
+                    const titleEl = document.createElement('p');
+                    titleEl.className = 'testimonial-role';
+                    titleEl.textContent = 'Feedback Feed';
+
+                    const messageEl = document.createElement('p');
+                    messageEl.className = 'testimonial-text';
+                    messageEl.textContent = message;
+
+                    card.appendChild(avatar);
+                    card.appendChild(nameEl);
+                    card.appendChild(titleEl);
+                    card.appendChild(messageEl);
+                    testimonialsGrid.appendChild(card);
+                }
+
+                async function loadFeedbackTestimonials() {
+                    try {
+                        const response = await fetch(endpoint, {
+                            headers: {
+                                Accept: 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Request failed');
+                        }
+
+                        const payload = await response.json();
+                        const feedbackList = Array.isArray(payload.data) ? payload.data : [];
+                        const visibleFeedbacks = feedbackList.slice(0, maxFeedbacks);
+
+                        if (visibleFeedbacks.length === 0) {
+                            renderFallback('No feedback has been posted yet. Be the first to share your experience.');
+                            return;
+                        }
+
+                        testimonialsGrid.innerHTML = '';
+                        const fragment = document.createDocumentFragment();
+
+                        visibleFeedbacks.forEach(function (feedback) {
+                            fragment.appendChild(createFeedbackCard(feedback));
+                        });
+
+                        testimonialsGrid.appendChild(fragment);
+                    } catch (error) {
+                        renderFallback('Feedback is unavailable right now. Please check back in a moment.');
+                    }
+                }
+
+                loadFeedbackTestimonials();
+            })();
+        </script>
 
         <footer class="site-footer">
             <div class="site-footer-inner">

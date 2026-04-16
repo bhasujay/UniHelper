@@ -1,268 +1,205 @@
 <?php
-// Feedback Forum Component
+require_once __DIR__ . '/../../models/User.php';
+
+use app\models\User;
+
+$currentUser = null;
+if (isset($_SESSION['user_id'])) {
+    $userModel = new User();
+    $currentUser = $userModel->findById($_SESSION['user_id']);
+}
+
+$is_admin = ($currentUser && $currentUser->role === 'role-admin') ? 1 : 0;
+$defaultName = '';
+
+if ($currentUser) {
+    $defaultName = trim(($currentUser->firstName ?? '') . ' ' . ($currentUser->lastName ?? ''));
+}
 ?>
 
 <style>
 .feedback-forum-container {
-    position: relative;
     display: grid;
-    gap: 1.5rem;
-    padding: 1.5rem;
+    gap: 1rem;
+    padding: 1.25rem;
     color: var(--foreground);
 }
 
-.feedback-forum-container::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(circle at top left, var(--bg-blur2), transparent 32%),
-        radial-gradient(circle at bottom right, var(--bg-blur1), transparent 36%);
-    pointer-events: none;
-    z-index: 0;
-}
-
-.feedback-forum-container > * {
-    position: relative;
-    z-index: 1;
-}
-
-.feedback-panel,
-.feedback-item,
-.feedback-empty-state {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, transparent), color-mix(in srgb, var(--text_background) 88%, transparent));
-    border: 1px solid var(--border);
-    border-radius: 1.25rem;
-    box-shadow: var(--glow-secondary);
-}
-
-
-.feedback-content {
+.feedback-layout {
     display: grid;
-    grid-template-columns: minmax(320px, 0.95fr) minmax(0, 1.45fr);
-    gap: 1.5rem;
+    grid-template-columns: minmax(300px, 0.95fr) minmax(0, 1.4fr);
+    gap: 1rem;
     align-items: start;
 }
 
+.feedback-layout.admin-only {
+    grid-template-columns: 1fr;
+}
+
 .feedback-panel {
-    padding: 1.35rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    padding: 1.15rem;
 }
 
 .feedback-panel-header {
     display: flex;
     justify-content: space-between;
+    align-items: flex-end;
     gap: 1rem;
-    align-items: flex-start;
     margin-bottom: 1rem;
 }
 
 .feedback-panel-header h2 {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
+    line-height: 1.3;
 }
 
-.feedback-panel-header p,
-.feedback-list-caption {
+.feedback-panel-header p {
+    margin-top: 0.2rem;
+    font-size: 0.9rem;
     color: var(--muted-foreground);
-    font-size: 0.92rem;
 }
 
 .feedback-form {
     display: grid;
-    gap: 1rem;
+    gap: 0.9rem;
 }
 
-.feedback-form-grid {
-    display: grid;
-    gap: 1rem;
-}
-
-.form-group {
+.feedback-form .form-group {
     display: grid;
     gap: 0.45rem;
 }
 
-.form-group label {
+.feedback-form label {
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--foreground);
 }
 
-.form-group input,
-.form-group textarea {
+.feedback-form input,
+.feedback-form textarea,
+.feedback-search-input {
     width: 100%;
     border: 1px solid var(--border);
-    border-radius: 0.95rem;
-    background: color-mix(in srgb, var(--key) 72%, transparent);
+    border-radius: 0.6rem;
+    background: var(--key);
     color: var(--foreground);
-    padding: 0.9rem 1rem;
+    padding: 0.72rem 0.85rem;
+    font: inherit;
     outline: none;
-    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.form-group input::placeholder,
-.form-group textarea::placeholder {
+.feedback-form input::placeholder,
+.feedback-form textarea::placeholder,
+.feedback-search-input::placeholder {
     color: var(--muted-foreground);
 }
 
-.form-group input:focus,
-.form-group textarea:focus {
-    border-color: color-mix(in srgb, var(--primary) 70%, transparent);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent);
+.feedback-form input:focus,
+.feedback-form textarea:focus,
+.feedback-search-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.18);
 }
 
-.form-group textarea {
-    min-height: 180px;
+.feedback-form textarea {
+    min-height: 160px;
     resize: vertical;
 }
 
-.feedback-form-note {
-    color: var(--muted-foreground);
-    font-size: 0.84rem;
-}
-
-.form-actions {
+.feedback-form-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 0.6rem;
+    margin-top: 0.2rem;
 }
 
-.btn-submit,
-.btn-clear,
-.feedback-action-btn {
-    border: none;
-    border-radius: 0.9rem;
-    padding: 0.85rem 1.2rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
-}
-
-.btn-submit {
-    background: var(--btn-gradient-primary);
-    color: #fff;
-    box-shadow: var(--glow-secondary);
-}
-
-.btn-clear {
-    background: transparent;
-    color: var(--foreground);
-    border: 1px solid var(--border);
-}
-
-.btn-submit:hover,
-.btn-clear:hover,
-.feedback-action-btn:hover {
-    transform: translateY(-1px);
-}
-
-.feedback-list-panel {
-    display: grid;
-    gap: 1rem;
+.feedback-search-wrap {
+    width: min(320px, 100%);
 }
 
 .feedback-list {
     display: grid;
-    gap: 1rem;
+    gap: 0.85rem;
 }
 
 .feedback-item {
-    padding: 1.2rem;
     display: grid;
-    gap: 0.9rem;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.8rem;
+    background: var(--text_background);
 }
 
 .feedback-item-header {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
     align-items: flex-start;
+    gap: 0.8rem;
 }
 
 .feedback-item-title {
-    font-size: 1.08rem;
+    font-size: 1.04rem;
     line-height: 1.35;
-}
-
-.feedback-item-actions {
-    display: flex;
-    gap: 0.55rem;
-}
-
-.feedback-action-btn {
-    min-width: 72px;
-    background: color-mix(in srgb, var(--key) 75%, transparent);
     color: var(--foreground);
-    border: 1px solid var(--border);
-}
-
-.feedback-action-btn.delete {
-    color: #ff8c8c;
-    border-color: color-mix(in srgb, #ff8c8c 40%, var(--border));
+    word-break: break-word;
 }
 
 .feedback-item-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.65rem;
-    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.86rem;
     color: var(--muted-foreground);
-    font-size: 0.88rem;
 }
 
 .feedback-item-content {
-    color: var(--foreground);
     white-space: pre-wrap;
-}
-
-.feedback-item-footer {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: center;
-    padding-top: 0.4rem;
-    border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-}
-
-.feedback-comments-title {
-    color: var(--muted-foreground);
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-
-.comment-actions {
-    display: flex;
-    gap: 0.55rem;
-}
-
-.btn-comment,
-.btn-comment-cancel {
-    border: 1px solid var(--border);
-    background: transparent;
     color: var(--foreground);
-    border-radius: 999px;
-    padding: 0.45rem 0.8rem;
-    cursor: pointer;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.feedback-item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.feedback-delete-btn {
+    padding: 0.42rem 0.82rem;
+    color: #d76e6e;
+    border-color: #7f4646;
+}
+
+.feedback-delete-btn:hover {
+    border-color: #d76e6e;
 }
 
 .feedback-empty-state {
-    padding: 2rem;
+    padding: 1.45rem 1rem;
+    border: 1px dashed var(--border);
+    border-radius: 0.8rem;
+    background: var(--text_background);
     text-align: center;
 }
 
 .feedback-empty-state h3 {
-    font-size: 1.1rem;
-    margin-bottom: 0.45rem;
+    font-size: 1.02rem;
+    margin-bottom: 0.35rem;
 }
 
 .feedback-empty-state p {
     color: var(--muted-foreground);
-    max-width: 42ch;
     margin: 0 auto;
+    max-width: 46ch;
 }
 
-@media (max-width: 1080px) {
-    .feedback-content {
+@media (max-width: 980px) {
+    .feedback-layout {
         grid-template-columns: 1fr;
     }
 }
@@ -272,75 +209,104 @@
         padding: 1rem;
     }
 
-    .feedback-panel,
-    .feedback-item {
+    .feedback-panel {
         padding: 1rem;
     }
 
-    .feedback-item-header,
-    .feedback-item-footer,
     .feedback-panel-header {
         flex-direction: column;
+        align-items: stretch;
     }
 
-    .feedback-item-actions,
-    .comment-actions,
-    .form-actions {
-        width: 100%;
-    }
-
-    .feedback-action-btn,
-    .btn-submit,
-    .btn-clear,
-    .btn-comment,
-    .btn-comment-cancel {
+    .feedback-form-actions .btn,
+    .feedback-item-actions .btn {
         width: 100%;
         justify-content: center;
+    }
+
+    .feedback-item-header {
+        flex-direction: column;
     }
 }
 </style>
 
-<div class="feedback-forum-container">
-    <div class="feedback-content">
-        <section class="feedback-panel feedback-form-section">
-            <div class="feedback-panel-header">
-                <div>
-                    <h2>Send your feedback</h2>
+<div class="feedback-forum-container" data-is-admin="<?= $is_admin ? '1' : '0' ?>">
+    <div class="feedback-layout <?= $is_admin ? 'admin-only' : '' ?>">
+        <?php if (!$is_admin): ?>
+            <section class="feedback-panel feedback-form-section">
+                <div class="feedback-panel-header">
+                    <div>
+                        <h2>Send Your Feedback</h2>
+                        <p>Post once and track what has been shared by everyone.</p>
+                    </div>
                 </div>
-            </div>
 
-            <form id="feedbackForm" class="feedback-form">
-                <div class="feedback-form-grid">
+                <form id="feedbackForm" class="feedback-form">
                     <div class="form-group">
                         <label for="yourName">Your Name</label>
-                        <input type="text" id="yourName" name="name" placeholder="Enter your name" required>
+                        <input
+                            type="text"
+                            id="yourName"
+                            name="name"
+                            placeholder="Enter your name"
+                            value="<?= htmlspecialchars($defaultName) ?>"
+                            required
+                        >
                     </div>
 
                     <div class="form-group">
                         <label for="postTitle">Post Title</label>
-                        <input type="text" id="postTitle" name="title" placeholder="Summarize the feedback clearly" required>
+                        <input
+                            type="text"
+                            id="postTitle"
+                            name="title"
+                            placeholder="Summarize the feedback clearly"
+                            required
+                        >
                     </div>
 
                     <div class="form-group">
                         <label for="feedbackMessage">Feedback Message</label>
-                        <textarea id="feedbackMessage" name="message" placeholder="Write the issue, idea, or improvement suggestion" required></textarea>
+                        <textarea
+                            id="feedbackMessage"
+                            name="message"
+                            placeholder="Write the issue, idea, or improvement suggestion"
+                            required
+                        ></textarea>
                     </div>
-                </div>
 
-
-                <div class="form-actions">
-                    <button type="submit" class="btn-submit">Submit Post</button>
-                    <button type="reset" class="btn-clear">Clear</button>
-                </div>
-            </form>
-        </section>
+                    <div class="feedback-form-actions">
+                        <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                        <button type="reset" class="btn btn-outline">Clear</button>
+                    </div>
+                </form>
+            </section>
+        <?php endif; ?>
 
         <section class="feedback-panel feedback-list-panel">
             <div class="feedback-panel-header">
                 <div>
-                    <h2>Feedback Posts</h2>
+                    <h2><?= $is_admin ? 'All Feedback' : 'Community Feedback' ?></h2>
+                    <p>
+                        <?= $is_admin
+                            ? 'Read all submissions, search quickly, and remove items when needed.'
+                            : 'Read-only feed of the latest user submissions.' ?>
+                    </p>
                 </div>
+
+                <?php if ($is_admin): ?>
+                    <div class="feedback-search-wrap">
+                        <input
+                            type="search"
+                            id="feedbackSearchInput"
+                            class="feedback-search-input"
+                            placeholder="Search by name, title, or message"
+                            aria-label="Search feedback"
+                        >
+                    </div>
+                <?php endif; ?>
             </div>
+
             <div id="feedbackList" class="feedback-list">
                 <div class="feedback-empty-state">
                     <h3>Loading feedback</h3>
@@ -352,10 +318,18 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+    const forumContainer = document.querySelector('.feedback-forum-container');
+    if (!forumContainer) {
+        return;
+    }
+
+    const isAdmin = forumContainer.getAttribute('data-is-admin') === '1';
     const feedbackForm = document.getElementById('feedbackForm');
     const feedbackList = document.getElementById('feedbackList');
+    const feedbackSearchInput = document.getElementById('feedbackSearchInput');
     const apiBaseUrl = '/UniHelper/api';
+    let feedbackCache = [];
 
     function buildFeedbackApiUrl(action, params = {}) {
         const query = new URLSearchParams({
@@ -366,9 +340,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return `${apiBaseUrl}?${query.toString()}`;
     }
-    
-    // Load existing feedback posts when page loads
-    loadFeedback();
+
+    function notify(message, type = 'success') {
+        if (typeof window.showToast === 'function') {
+            const toastType = type === 'error' ? 'error' : 'success';
+            window.showToast(message, toastType);
+            return;
+        }
+
+        if (type === 'error') {
+            console.error(message);
+            return;
+        }
+
+        console.log(message);
+    }
 
     function renderEmptyState(title, message) {
         feedbackList.innerHTML = `
@@ -379,424 +365,315 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
 
-    /**
-     * Client-side validation for feedback form
-     * Checks for empty fields and basic format validation
-     */
     function validateFeedbackForm(formData) {
         const errors = [];
-        
-        // Check if name is empty or too short
-        if (!formData.name || formData.name.trim().length === 0) {
+        const name = (formData.name || '').trim();
+        const title = (formData.title || '').trim();
+        const message = (formData.message || '').trim();
+
+        if (!name) {
             errors.push('Name is required');
-        } else if (formData.name.trim().length < 2) {
+        } else if (name.length < 2) {
             errors.push('Name must be at least 2 characters');
+        } else if (name.length > 100) {
+            errors.push('Name must not exceed 100 characters');
         }
-        
-        // Check if title is empty or too short
-        if (!formData.title || formData.title.trim().length === 0) {
+
+        if (!title) {
             errors.push('Post title is required');
-        } else if (formData.title.trim().length < 5) {
+        } else if (title.length < 5) {
             errors.push('Post title must be at least 5 characters');
+        } else if (title.length > 255) {
+            errors.push('Post title must not exceed 255 characters');
         }
-        
-        // Check if message is empty or too short
-        if (!formData.message || formData.message.trim().length === 0) {
+
+        if (!message) {
             errors.push('Feedback message is required');
-        } else if (formData.message.trim().length < 10) {
+        } else if (message.length < 10) {
             errors.push('Feedback message must be at least 10 characters');
+        } else if (message.length > 5000) {
+            errors.push('Feedback message must not exceed 5000 characters');
         }
-        
+
         return errors;
     }
-    
-    /**
-     * Sanitize user input to prevent basic XSS
-     * Trims whitespace and encodes special HTML characters
-     */
-    function sanitizeInput(input) {
-        // Trim whitespace
-        let sanitized = input.trim();
-        // Create a temporary div element to escape HTML
-        const div = document.createElement('div');
-        div.textContent = sanitized;
-        return div.innerHTML;
+
+    function formatDate(rawValue) {
+        const parsedDate = rawValue ? new Date(rawValue) : new Date();
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return new Date().toLocaleDateString();
+        }
+
+        return parsedDate.toLocaleDateString();
     }
-    
-    /**
-     * Submit feedback via fetch() without page reload
-     * Sends data to /feedback/submit endpoint
-     */
-    function submitFeedback(feedbackData) {
-        // Show loading state
-        const submitBtn = feedbackForm.querySelector('.btn-submit');
-        const originalBtnText = submitBtn.textContent;
-        submitBtn.textContent = 'Submitting...';
-        submitBtn.disabled = true;
-        
-        // Prepare payload - pass data exactly as entered (no modification)
-        const payload = {
-            name: feedbackData.name,
-            title: feedbackData.title,
-            message: feedbackData.message
-        };
-        
-        // Send POST request via fetch()
-        // Use full path with /UniHelper/ to match the application's deployment structure
-        fetch(buildFeedbackApiUrl('submitFeedback'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify(payload)
-        })
-        .then(response => {
-            // Check if response is JSON
-            if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Handle API response
-            submitBtn.textContent = originalBtnText;
-            submitBtn.disabled = false;
-            
-            if (data.success) {
-                // Success: Add feedback to the list and reset form
-                addFeedbackToList({
-                    id: data.data.id,
-                    name: data.data.name,
-                    title: data.data.title,
-                    message: data.data.message,
-                    created_at: data.data.created_at
-                });
-                feedbackForm.reset();
-                showNotification('Feedback submitted successfully!', 'success');
-            } else {
-                // Error response from server
-                showNotification(data.message || 'Failed to submit feedback', 'error');
-            }
-        })
-        .catch(error => {
-            // Network or parsing error
-            submitBtn.textContent = originalBtnText;
-            submitBtn.disabled = false;
-            console.error('Error submitting feedback:', error);
-            showNotification('An error occurred while submitting feedback. Please try again.', 'error');
-        });
+
+    function createFeedbackItem(feedback) {
+        const item = document.createElement('article');
+        item.className = 'feedback-item';
+        item.setAttribute('data-feedback-id', String(feedback.id || ''));
+
+        const header = document.createElement('div');
+        header.className = 'feedback-item-header';
+
+        const title = document.createElement('h3');
+        title.className = 'feedback-item-title';
+        title.textContent = feedback.title || 'Untitled feedback';
+        header.appendChild(title);
+
+        if (isAdmin) {
+            const actions = document.createElement('div');
+            actions.className = 'feedback-item-actions';
+
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.className = 'btn btn-outline feedback-delete-btn';
+            deleteButton.textContent = 'Delete';
+            deleteButton.addEventListener('click', function () {
+                deleteFeedback(feedback.id);
+            });
+
+            actions.appendChild(deleteButton);
+            header.appendChild(actions);
+        }
+
+        const meta = document.createElement('div');
+        meta.className = 'feedback-item-meta';
+
+        const author = document.createElement('span');
+        author.textContent = `By ${feedback.name || 'Unknown user'}`;
+
+        const date = document.createElement('span');
+        date.textContent = formatDate(feedback.created_at);
+
+        meta.appendChild(author);
+        meta.appendChild(date);
+
+        const content = document.createElement('p');
+        content.className = 'feedback-item-content';
+        content.textContent = feedback.message || '';
+
+        item.appendChild(header);
+        item.appendChild(meta);
+        item.appendChild(content);
+
+        return item;
     }
-    
-    /**
-     * Display notification message to user
-     */
-    function showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 4px;
-            color: white;
-            font-weight: 500;
-            z-index: 10000;
-            animation: slideIn 0.3s ease;
-            ${type === 'success' ? 'background-color: #10b981;' : 'background-color: #ef4444;'}
-        `;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        // Remove notification after 5 seconds
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }, 5000);
-    }
-    
-    // Add CSS animations for notifications
-    if (!document.getElementById('feedbackNotificationStyles')) {
-        const style = document.createElement('style');
-        style.id = 'feedbackNotificationStyles';
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(400px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            @keyframes slideOut {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(400px);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    // Form submission handler
-    if (feedbackForm) {
-        feedbackForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Collect form data
-            const formData = {
-                name: document.getElementById('yourName').value,
-                title: document.getElementById('postTitle').value,
-                message: document.getElementById('feedbackMessage').value
-            };
-            
-            // Validate form data
-            const validationErrors = validateFeedbackForm(formData);
-            
-            if (validationErrors.length > 0) {
-                // Display validation errors
-                showNotification(validationErrors.join(', '), 'error');
+
+    function renderFeedbackList(feedbackItems, isFiltered = false) {
+        feedbackList.innerHTML = '';
+
+        if (!Array.isArray(feedbackItems) || feedbackItems.length === 0) {
+            if (isFiltered) {
+                renderEmptyState('No matches found', 'Try a different keyword in the search box.');
                 return;
             }
-            
-            // Check if we're editing or creating
-            const editId = feedbackForm.getAttribute('data-edit-id');
-            
-            if (editId) {
-                // Update existing feedback
-                updateFeedbackItem(editId, formData);
-            } else {
-                // Submit new feedback
-                submitFeedback(formData);
+
+            if (isAdmin) {
+                renderEmptyState('No feedback available', 'User submissions will appear here.');
+                return;
             }
+
+            renderEmptyState('No feedback yet', 'Be the first person to share an idea or issue.');
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        feedbackItems.forEach(function (feedback) {
+            fragment.appendChild(createFeedbackItem(feedback));
         });
+
+        feedbackList.appendChild(fragment);
     }
 
-    /**
-     * Update an existing feedback item
-     */
-    function updateFeedbackItem(feedbackId, feedbackData) {
-        const submitBtn = feedbackForm.querySelector('.btn-submit');
-        const originalBtnText = submitBtn.textContent;
-        submitBtn.textContent = 'Updating...';
-        submitBtn.disabled = true;
-        
-        const payload = {
-            id: feedbackId,
-            name: feedbackData.name,
-            title: feedbackData.title,
-            message: feedbackData.message
-        };
-        
-        fetch(buildFeedbackApiUrl('updateFeedback'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify(payload)
-        })
-        .then(response => {
+    function applySearchAndRender() {
+        if (!isAdmin || !feedbackSearchInput) {
+            renderFeedbackList(feedbackCache, false);
+            return;
+        }
+
+        const searchTerm = feedbackSearchInput.value.trim().toLowerCase();
+        if (!searchTerm) {
+            renderFeedbackList(feedbackCache, false);
+            return;
+        }
+
+        const filtered = feedbackCache.filter(function (feedback) {
+            return [feedback.name, feedback.title, feedback.message].some(function (value) {
+                return String(value || '').toLowerCase().includes(searchTerm);
+            });
+        });
+
+        renderFeedbackList(filtered, true);
+    }
+
+    async function requestConfirmation(message) {
+        if (typeof window.confirm !== 'function') {
+            return true;
+        }
+
+        const result = window.confirm(message);
+        if (result && typeof result.then === 'function') {
+            return Boolean(await result);
+        }
+
+        return Boolean(result);
+    }
+
+    async function deleteFeedback(feedbackId) {
+        if (!isAdmin || !feedbackId) {
+            return;
+        }
+
+        const confirmed = await requestConfirmation('Are you sure you want to delete this feedback?');
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const response = await fetch(buildFeedbackApiUrl('deleteFeedback'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ id: feedbackId })
+            });
+
             if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.status);
+                throw new Error('Failed to delete feedback: ' + response.status);
             }
-            return response.json();
-        })
-        .then(data => {
-            submitBtn.textContent = originalBtnText;
-            submitBtn.disabled = false;
-            
-            if (data.success) {
-                feedbackForm.reset();
-                feedbackForm.removeAttribute('data-edit-id');
-                submitBtn.textContent = 'Submit Post';
-                showNotification('Feedback updated successfully!', 'success');
-                
-                // Reload feedback list
-                loadFeedback();
-            } else {
-                showNotification(data.message || 'Failed to update feedback', 'error');
+
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.message || 'Failed to delete feedback');
             }
-        })
-        .catch(error => {
-            submitBtn.textContent = originalBtnText;
-            submitBtn.disabled = false;
-            console.error('Error updating feedback:', error);
-            showNotification('An error occurred while updating feedback. ' + (error.message || ''), 'error');
-        });
+
+            feedbackCache = feedbackCache.filter(function (feedback) {
+                return String(feedback.id) !== String(feedbackId);
+            });
+
+            applySearchAndRender();
+            notify('Feedback deleted successfully!', 'success');
+        } catch (error) {
+            console.error('Error deleting feedback:', error);
+            notify(error.message || 'An error occurred while deleting feedback.', 'error');
+        }
     }
 
-    /**
-     * Add submitted feedback to the list display
-     * Takes sanitized feedback data and inserts it at the top
-     */
-    function addFeedbackToList(feedback) {
-        const rawDate = feedback.created_at ? new Date(feedback.created_at) : new Date();
-        const dateStr = Number.isNaN(rawDate.getTime())
-            ? new Date().toISOString().split('T')[0]
-            : rawDate.toISOString().split('T')[0];
-        
-        const newItem = document.createElement('div');
-        newItem.className = 'feedback-item';
-        newItem.setAttribute('data-feedback-id', feedback.id || '');
-        
-        newItem.innerHTML = `
-            <div class="feedback-item-header">
-                <h3 class="feedback-item-title"></h3>
-                <div class="feedback-item-actions">
-                    <button class="feedback-action-btn btn-edit-feedback" type="button" title="Edit">Edit</button>
-                    <button class="feedback-action-btn delete btn-delete-feedback" type="button" title="Delete">Delete</button>
-                </div>
-            </div>
-            <div class="feedback-item-meta">
-                <span>By <span class="feedback-item-author"></span></span>
-                <span>•</span>
-                <span>${dateStr}</span>
-            </div>
-            <p class="feedback-item-content"></p>
-            
-            <div class="feedback-item-footer">
-                <div class="feedback-comments-title">Comments</div>
-                <div class="comment-actions">
-                    <button class="btn-comment" type="button">Post Comment</button>
-                    <button class="btn-comment-cancel" type="button">Cancel</button>
-                </div>
-            </div>
-        `;
-        
-        // Set text content to prevent XSS
-        newItem.querySelector('.feedback-item-title').textContent = feedback.title;
-        newItem.querySelector('.feedback-item-author').textContent = feedback.name;
-        newItem.querySelector('.feedback-item-content').textContent = feedback.message;
-        
-        // Add edit button handler
-        const editBtn = newItem.querySelector('.btn-edit-feedback');
-        editBtn.addEventListener('click', function() {
-            editFeedback(feedback);
-        });
-        
-        // Add delete button handler
-        const deleteBtn = newItem.querySelector('.btn-delete-feedback');
-        deleteBtn.addEventListener('click', function() {
-            deleteFeedback(feedback.id || '', newItem);
-        });
-        
-        feedbackList.insertBefore(newItem, feedbackList.firstChild);
-    }
+    async function loadFeedback() {
+        try {
+            const response = await fetch(buildFeedbackApiUrl('getFeedback'), {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
 
-    /**
-     * Load all feedback posts from the server
-     */
-    function loadFeedback() {
-        fetch(buildFeedbackApiUrl('getFeedback'), {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to load feedback: ' + response.status);
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success && Array.isArray(data.data)) {
-                feedbackList.innerHTML = ''; // Clear existing content
-                
-                // Sort by created_at descending (newest first)
-                data.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-                if (data.data.length === 0) {
-                    renderEmptyState('No feedback yet', 'Be the first person to share an idea, issue, or improvement.');
-                    return;
-                }
-                
-                // Add each feedback item
-                data.data.forEach(feedback => {
-                    addFeedbackToList(feedback);
-                });
+            const data = await response.json();
+            if (!data.success || !Array.isArray(data.data)) {
+                throw new Error(data.message || 'Failed to load feedback');
+            }
+
+            feedbackCache = data.data.slice().sort(function (a, b) {
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
+
+            applySearchAndRender();
+        } catch (error) {
+            console.error('Error loading feedback:', error);
+            renderEmptyState('Failed to load feedback', 'Please refresh the page and try again.');
+            notify('Failed to load feedback. Please refresh the page.', 'error');
+        }
+    }
+
+    async function submitFeedback(feedbackData) {
+        if (!feedbackForm) {
+            return;
+        }
+
+        const submitButton = feedbackForm.querySelector('.btn-primary');
+        const originalText = submitButton ? submitButton.textContent : '';
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+        }
+
+        try {
+            const response = await fetch(buildFeedbackApiUrl('submitFeedback'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    name: feedbackData.name,
+                    title: feedbackData.title,
+                    message: feedbackData.message
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit feedback: ' + response.status);
+            }
+
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.message || 'Failed to submit feedback');
+            }
+
+            feedbackForm.reset();
+            notify('Feedback submitted successfully!', 'success');
+            await loadFeedback();
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            notify(error.message || 'An error occurred while submitting feedback.', 'error');
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
+        }
+    }
+
+    if (feedbackSearchInput) {
+        feedbackSearchInput.addEventListener('input', applySearchAndRender);
+    }
+
+    if (feedbackForm) {
+        feedbackForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const nameInput = document.getElementById('yourName');
+            const titleInput = document.getElementById('postTitle');
+            const messageInput = document.getElementById('feedbackMessage');
+
+            const formData = {
+                name: nameInput ? nameInput.value : '',
+                title: titleInput ? titleInput.value : '',
+                message: messageInput ? messageInput.value : ''
+            };
+
+            const validationErrors = validateFeedbackForm(formData);
+            if (validationErrors.length > 0) {
+                notify(validationErrors.join(', '), 'error');
                 return;
             }
 
-            throw new Error(data.message || 'Failed to load feedback');
-        })
-        .catch(error => {
-            console.error('Error loading feedback:', error);
-            renderEmptyState('Failed to load feedback', 'Please refresh the page and try again.');
-            showNotification('Failed to load feedback. Please refresh the page.', 'error');
+            await submitFeedback(formData);
         });
     }
 
-    /**
-     * Edit feedback - populate form with feedback data
-     */
-    function editFeedback(feedback) {
-        document.getElementById('yourName').value = feedback.name;
-        document.getElementById('postTitle').value = feedback.title;
-        document.getElementById('feedbackMessage').value = feedback.message;
-        
-        // Store the ID in the form for update
-        feedbackForm.setAttribute('data-edit-id', feedback.id);
-        
-        // Change submit button text
-        const submitBtn = feedbackForm.querySelector('.btn-submit');
-        submitBtn.textContent = 'Update Feedback';
-        setActiveFilterButton(addNewPostBtn);
-        
-        // Scroll to form
-        feedbackForm.scrollIntoView({ behavior: 'smooth' });
-        document.getElementById('yourName').focus();
-        
-        showNotification('Editing feedback - update and submit to save changes', 'info');
-    }
-
-    /**
-     * Delete feedback post
-     */
-    function deleteFeedback(feedbackId, feedbackElement) {
-        if (!confirm('Are you sure you want to delete this feedback?')) {
-            return;
-        }
-        
-        fetch(buildFeedbackApiUrl('deleteFeedback'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({ id: feedbackId })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                feedbackElement.remove();
-                showNotification('Feedback deleted successfully!', 'success');
-            } else {
-                showNotification(data.message || 'Failed to delete feedback', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting feedback:', error);
-            showNotification('An error occurred while deleting feedback. ' + (error.message || ''), 'error');
-        });
-    }
-
+    loadFeedback();
 });
 </script>

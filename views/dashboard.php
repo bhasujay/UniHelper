@@ -152,7 +152,7 @@
         <!-- Minimal footer -->
         <div class="sidebar-footer">
             <div class="sidebar-footer-logo">UniHelper</div>
-            <a href="feedback-forum" class="sidebar-footer-link<?= $feedbackPageActive ? ' active' : '' ?>">Feedback Us</a><br>
+            <a href="feedback-forum" class="sidebar-footer-link">Feedback Us</a><br>
             <a href="mailto:unihelper@gmail.com" class="sidebar-footer-link">Support: unihelper@gmail.com</a>
             <div class="sidebar-footer-copy">&copy; <?= date('Y') ?> UniHelper</div>
         </div>
