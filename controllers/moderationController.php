@@ -2,7 +2,7 @@
 
 namespace app\controllers;
 
-require_once dirname(__DIR__) . '\models\qa-report.php';
+require_once dirname(__DIR__) . '/models/qa-report.php';
 
 use app\models\QaReport;
 use app\core\Request;

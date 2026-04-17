@@ -201,22 +201,41 @@ class ProgramController extends DashboardController
                 $this->sendJsonResponse(false, 'Method not allowed', null, 405);
                 return;
             }
-            
-            // Get search parameters
-            $searchTerm = $_GET['q'] ?? '';
+
+            $searchTerm = trim((string)($request->get('q') ?? ''));
+            $unicodeCode = trim((string)(
+                $request->get('unicode_code')
+                ?? $request->get('unicode')
+                ?? ''
+            ));
+
+            $limit = (int)($request->get('limit') ?? 20);
+            $limit = max(1, min($limit, 100));
+
+            $offset = (int)($request->get('offset') ?? 0);
+            $offset = max(0, $offset);
+
             $filters = [
-                'university_id' => $_GET['university_id'] ?? null,
-                'stream' => $_GET['stream'] ?? null,
-                'major_id' => $_GET['major_id'] ?? null,
-                'unicode_code' => $_GET['unicode_code'] ?? null,
-                'limit' => $_GET['limit'] ?? 20,
-                'offset' => $_GET['offset'] ?? 0
+                'university_id' => $request->get('university_id'),
+                'stream' => trim((string)($request->get('stream') ?? '')),
+                'major_id' => $request->get('major_id'),
+                'unicode' => $unicodeCode,
+                'limit' => $limit,
+                'offset' => $offset
             ];
             
             // Remove empty filters
-            $filters = array_filter($filters, function($value) {
-                return $value !== null && $value !== '';
-            });
+            $filters = array_filter(
+                $filters,
+                function ($value, $key) {
+                    if ($key === 'offset') {
+                        return $value !== null && $value >= 0;
+                    }
+
+                    return $value !== null && $value !== '';
+                },
+                ARRAY_FILTER_USE_BOTH
+            );
             
             $programs = $this->programModel->searchPrograms($searchTerm, $filters);
             
@@ -263,8 +282,8 @@ class ProgramController extends DashboardController
                 $this->sendJsonResponse(false, 'Method not allowed', null, 405);
                 return;
             }
-            
-            $term = $_GET['term'] ?? '';
+
+            $term = trim((string)($request->get('term') ?? ''));
             if (strlen($term) < 2) {
                 $this->sendJsonResponse(true, 'No suggestions', []);
                 return;

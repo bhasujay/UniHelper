@@ -2,8 +2,8 @@
 
 namespace app\controllers;
 
-require_once dirname(__DIR__) . '\models\qa.php';
-require_once dirname(__DIR__) . '\models\User.php';
+require_once dirname(__DIR__) . '/models/qa.php';
+require_once dirname(__DIR__) . '/models/User.php';
 
 use app\models\Qna;
 use app\core\Request;
