@@ -35,6 +35,55 @@
         document.body.appendChild(composer);
     }
 
+    function readDashboardPageParams() {
+        const main = document.getElementById('dashboardMain');
+        if (!main) {
+            return {};
+        }
+
+        try {
+            return JSON.parse(main.dataset.pageParams || '{}') || {};
+        } catch (_error) {
+            return {};
+        }
+    }
+
+    function parseDeepLinkTarget() {
+        const pageParams = readDashboardPageParams();
+
+        let source = String(pageParams.source || '').trim().toLowerCase();
+        let rawId = String(pageParams.post || pageParams.source_id || '').trim();
+
+        // Fallback to URL params to support direct/manual links outside dashboard routing.
+        if (source === '' || rawId === '') {
+            try {
+                const url = new URL(window.location.href);
+                if (source === '') {
+                    source = String(url.searchParams.get('source') || '').trim().toLowerCase();
+                }
+                if (rawId === '') {
+                    rawId = String(url.searchParams.get('post') || url.searchParams.get('source_id') || '').trim();
+                }
+            } catch (_error) {
+                return null;
+            }
+        }
+
+        if (source === '') {
+            source = 'post';
+        }
+
+        const sourceId = Number(rawId);
+        if ((source !== 'post' && source !== 'session') || !Number.isFinite(sourceId) || sourceId <= 0) {
+            return null;
+        }
+
+        return {
+            source: source,
+            source_id: sourceId,
+        };
+    }
+
     const state = {
         page: 1,
         limit: 8,
@@ -49,6 +98,10 @@
         editingPostId: 0,
         initialEditImagePath: '',
         removeExistingImage: false,
+        deepLinkTarget: parseDeepLinkTarget(),
+        deepLinkResolved: false,
+        deepLinkResolving: false,
+        deepLinkNotFoundNotified: false,
     };
 
     const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -315,6 +368,99 @@
         }
     }
 
+    function consumeDeepLinkParamsFromUrl() {
+        if (!window.history || typeof window.history.replaceState !== 'function') {
+            return;
+        }
+
+        // Match QA deep-link behavior: clear query after handling so refresh won't re-trigger.
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    function findDeepLinkedCard() {
+        const target = state.deepLinkTarget;
+        if (!target || !list) {
+            return null;
+        }
+
+        return list.querySelector(
+            '.feed-card[data-source="' + target.source + '"][data-source-id="' + String(target.source_id) + '"]'
+        );
+    }
+
+    function spotlightCard(card) {
+        if (!card) {
+            return;
+        }
+
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        window.setTimeout(function () {
+            card.classList.add('feed-card-highlight');
+            window.setTimeout(function () {
+                card.classList.remove('feed-card-highlight');
+            }, 2600);
+        }, 120);
+    }
+
+    async function resolveDeepLinkTarget() {
+        if (!state.deepLinkTarget || state.deepLinkResolved || state.deepLinkResolving) {
+            return;
+        }
+
+        if (isSearchMode()) {
+            state.deepLinkResolved = true;
+            consumeDeepLinkParamsFromUrl();
+            return;
+        }
+
+        state.deepLinkResolving = true;
+        try {
+            // Keep loading feed pages until the target card appears or the feed ends.
+            while (!state.deepLinkResolved) {
+                const card = findDeepLinkedCard();
+                if (card) {
+                    state.deepLinkResolved = true;
+                    consumeDeepLinkParamsFromUrl();
+                    spotlightCard(card);
+                    break;
+                }
+
+                if (!state.hasMore) {
+                    state.deepLinkResolved = true;
+                    consumeDeepLinkParamsFromUrl();
+                    if (!state.deepLinkNotFoundNotified) {
+                        state.deepLinkNotFoundNotified = true;
+                        showToast('The linked post is unavailable or no longer visible to you.', 'error');
+                    }
+                    break;
+                }
+
+                const result = await fetchFeed(false);
+                if (!result.success) {
+                    state.deepLinkResolved = true;
+                    if (!state.deepLinkNotFoundNotified) {
+                        state.deepLinkNotFoundNotified = true;
+                        showToast('Unable to open the linked post right now. Please try again.', 'error');
+                    }
+                    break;
+                }
+
+                // Prevent endless loops when pagination does not append any rows.
+                if (result.added === 0 && state.hasMore) {
+                    state.deepLinkResolved = true;
+                    if (!state.deepLinkNotFoundNotified) {
+                        state.deepLinkNotFoundNotified = true;
+                        showToast('Unable to find the linked post in feed results.', 'error');
+                    }
+                    break;
+                }
+            }
+        } finally {
+            state.deepLinkResolving = false;
+        }
+    }
+
     async function submitLike(item, likeBtn) {
         if (!item || !likeBtn || likeBtn.disabled) {
             return;
@@ -478,6 +624,9 @@
     function renderItem(item) {
         const card = document.createElement('article');
         card.className = 'feed-card';
+        card.dataset.source = String(item.source || '');
+        card.dataset.sourceId = String(item.source_id || '');
+        card.id = 'feed-item-' + String(item.source || 'item') + '-' + String(item.source_id || '0');
 
         card.innerHTML = [
             '<div class="feed-card-head">',
@@ -606,7 +755,12 @@
     }
 
     async function fetchFeed(reset) {
-        if (state.loading) return;
+        if (state.loading) {
+            return {
+                success: false,
+                added: 0,
+            };
+        }
 
         if (reset) {
             state.page = 1;
@@ -614,7 +768,12 @@
             list.innerHTML = '';
         }
 
-        if (!state.hasMore) return;
+        if (!state.hasMore) {
+            return {
+                success: true,
+                added: 0,
+            };
+        }
 
         state.loading = true;
         loadMoreBtn.disabled = true;
@@ -632,12 +791,14 @@
             }
 
             const rows = Array.isArray(payload.data) ? payload.data : [];
+            let added = 0;
             if (reset && rows.length === 0) {
                 showEmpty('No posts yet. Publish the first update for your audience.');
             } else {
                 rows.forEach(function (row) {
                     list.appendChild(renderItem(row));
                 });
+                added = rows.length;
             }
 
             state.hasMore = !!payload.has_more;
@@ -646,11 +807,19 @@
             }
 
             loadMoreBtn.style.display = state.hasMore ? 'inline-flex' : 'none';
+            return {
+                success: true,
+                added: added,
+            };
         } catch (error) {
             if (!list.children.length) {
                 showEmpty('Unable to load feed right now.');
             }
             showToast(error.message || 'Feed loading failed.', 'error');
+            return {
+                success: false,
+                added: 0,
+            };
         } finally {
             state.loading = false;
             loadMoreBtn.disabled = false;
@@ -928,5 +1097,17 @@
     setComposerModeCreate();
     updateSearchClearVisibility();
     toggleRolePicker();
-    fetchFeed(true);
+    fetchFeed(true).then(function () {
+        // Mirror QA deep-link timing: wait until initial load settles, then resolve target item.
+        if (!state.deepLinkTarget) {
+            return;
+        }
+
+        const waitAndResolve = setInterval(function () {
+            if (!state.loading && !state.deepLinkResolving) {
+                clearInterval(waitAndResolve);
+                resolveDeepLinkTarget();
+            }
+        }, 100);
+    });
 })();

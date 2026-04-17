@@ -438,6 +438,26 @@ class FeedController
         try {
             $result = $this->feedLikeModel->toggleLike((int)$this->viewer->id, $source, $sourceId);
 
+            if ($source === 'post' && !empty($result['liked_by_viewer'])) {
+                try {
+                    $post = $this->feedPostModel->findActivePostById($sourceId);
+                    if ($post) {
+                        $postOwnerId = (int)($post['user_id'] ?? 0);
+                        $actorName = trim(((string)($this->viewer->firstName ?? '')) . ' ' . ((string)($this->viewer->lastName ?? '')));
+
+                        $this->notificationModel->createPostLikeNotification(
+                            $postOwnerId,
+                            (int)$this->viewer->id,
+                            $actorName,
+                            $sourceId,
+                            (string)($post['title'] ?? '')
+                        );
+                    }
+                } catch (\Throwable $notifyError) {
+                    error_log('FeedController: Failed to send like notification for post ' . $sourceId . ' - ' . $notifyError->getMessage());
+                }
+            }
+
             $this->json([
                 'success' => true,
                 'data' => [
