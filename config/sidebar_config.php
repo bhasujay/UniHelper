@@ -22,6 +22,7 @@ return [
         ['component' => 'announcements',   'title' => 'Feed'],
     ],
     'role-admin' => [
+        ['component' => 'system-overview',   'title' => 'System Overview'],
         ['component' => 'announcements',   'title' => 'Feed'],
         ['component' => 'degree-programs-management',   'title' => 'Degree Management'],
         ['component' => 'connections', 'title' => 'Connections'],
