@@ -3,6 +3,7 @@
 namespace app\models;
 
 require_once dirname(__DIR__, 1) . '/models/base-model.php';
+require_once dirname(__DIR__, 1) . '/models/notify.php';
 
 use PDO;
 use PDOException;
@@ -10,11 +11,18 @@ use Exception;
 
 class Session_model extends BaseModel {
     protected $table = 'sessions';
+    private $notifyModel;
 
     private const SUB_STATUS_NONE = 'none';
     private const SUB_STATUS_PENDING = 'pending';
     private const SUB_STATUS_APPROVED = 'approved';
     private const SUB_STATUS_REJECTED = 'rejected';
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->notifyModel = new Notify();
+    }
     
     /**
      * Get all sessions excluding soft-deleted and manually deleted ones
@@ -588,7 +596,7 @@ class Session_model extends BaseModel {
         try {
             $pdo->beginTransaction();
 
-                        $sessionSql = "SELECT id, audience, university
+                                                $sessionSql = "SELECT id, user_id, title, audience, university
                            FROM {$this->table}
                            WHERE id = :session_id
                              AND is_deleted = 0
@@ -683,6 +691,14 @@ class Session_model extends BaseModel {
             $this->syncSubCount($sessionId);
             $state = $this->getSubscriptionState($userId, $sessionId, (string)$session['audience']);
             $state['sub_count'] = $this->getSubCount($sessionId);
+
+            if ((string)$session['audience'] === 'private' && (int)$session['user_id'] !== (int)$userId) {
+                $this->safeInsertSessionNotification(
+                    (int)$session['user_id'],
+                    'A user has subscribed to your private session.',
+                    $this->buildSessionDeepLink((int)$sessionId, 'my-sessions')
+                );
+            }
 
             $pdo->commit();
             return $state;
@@ -862,6 +878,14 @@ class Session_model extends BaseModel {
             $this->syncSubCount($sessionId);
             $subCount = $this->getSubCount($sessionId);
 
+            if ($status === self::SUB_STATUS_APPROVED && (int)$subscriberId !== (int)$ownerId) {
+                $this->safeInsertSessionNotification(
+                    (int)$subscriberId,
+                    'Your private session subscription was approved.',
+                    $this->buildSessionDeepLink((int)$sessionId, 'all-sessions')
+                );
+            }
+
             $pdo->commit();
 
             return [
@@ -979,9 +1003,43 @@ class Session_model extends BaseModel {
 
         try {
             $stmt = $this->db->prepare($sql);
-            return $stmt->execute($params);
+            $updated = $stmt->execute($params);
+
+            if ($updated && $stmt->rowCount() > 0) {
+                $subscriberIds = $this->getNonRejectedSubscriberIds((int)$id);
+                foreach ($subscriberIds as $subscriberId) {
+                    if ((int)$subscriberId === (int)$userId) {
+                        continue;
+                    }
+
+                    $this->safeInsertSessionNotification(
+                        (int)$subscriberId,
+                        'A session you subscribed to has been updated by the author.',
+                        $this->buildSessionDeepLink((int)$id, 'all-sessions')
+                    );
+                }
+            }
+
+            return $updated;
         } catch (PDOException $e) {
             throw new Exception("Failed to update session: " . $e->getMessage());
+        }
+    }
+
+    public function notifyDeletedSessionToSubscribers(int $sessionId, int $ownerId): void
+    {
+        $subscriberIds = $this->getNonRejectedSubscriberIds($sessionId);
+
+        foreach ($subscriberIds as $subscriberId) {
+            if ((int)$subscriberId === (int)$ownerId) {
+                continue;
+            }
+
+            $this->safeInsertSessionNotification(
+                (int)$subscriberId,
+                'A session you subscribed to has been deleted by the author.',
+                $this->buildSessionDeepLink($sessionId, 'all-sessions')
+            );
         }
     }
     
@@ -1051,6 +1109,39 @@ class Session_model extends BaseModel {
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['session_id' => $sessionId]);
+    }
+
+    private function getNonRejectedSubscriberIds(int $sessionId): array
+    {
+        $sql = "SELECT Subscriber_ID
+                FROM subscribers
+                WHERE Session_ID = :session_id
+                  AND status <> 'rejected'";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['session_id' => $sessionId]);
+
+        $subscriberIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return array_map('intval', $subscriberIds ?: []);
+    }
+
+    private function buildSessionDeepLink(int $sessionId, string $tab): string
+    {
+        $safeTab = $tab === 'my-sessions' ? 'my-sessions' : 'all-sessions';
+        return '/UniHelper/peer-learning?session_id=' . $sessionId . '&tab=' . $safeTab;
+    }
+
+    private function safeInsertSessionNotification(int $recipientId, string $message, string $link): void
+    {
+        if ($recipientId <= 0) {
+            return;
+        }
+
+        try {
+            $this->notifyModel->insertNotification($recipientId, $message, 'session', $link);
+        } catch (\Throwable $e) {
+            // Notification publishing must not block session workflows.
+        }
     }
 
     private function getSubscriptionState($userId, $sessionId, string $audience): array

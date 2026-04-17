@@ -659,7 +659,13 @@ class SessionController
             }
             
             // Delete the session
-            $this->sessionModel->softDelete($sessionId);
+            $deleted = $this->sessionModel->softDelete((int)$sessionId);
+            if (!$deleted) {
+                throw new \Exception('Failed to delete session.');
+            }
+
+            // Notify all non-rejected subscribers.
+            $this->sessionModel->notifyDeletedSessionToSubscribers((int)$sessionId, (int)$this->user->id);
             
             echo json_encode([
                 'success' => true,
