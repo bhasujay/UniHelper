@@ -712,6 +712,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Keep search results container hidden until a search is triggered.
         clearSearch();
     }
+
+    function spotlightDeepLinkTarget(element) {
+        if (!element) return;
+
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        window.setTimeout(function() {
+            element.classList.add('qa-deeplink-highlight');
+            window.setTimeout(function() {
+                element.classList.remove('qa-deeplink-highlight');
+            }, 2600);
+        }, 120);
+    }
     
     // Deep-link support: if ?question=<id> was passed, auto-open that question
     // once the initial batch of questions has been rendered.
@@ -735,13 +747,29 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!isFetching) {
                 clearInterval(waitAndOpen);
                 viewQuestion(targetId).then(function() {
+                    const qaViewModal = document.querySelector('.qa-question-view');
+                    const questionViewContent = qaViewModal ? qaViewModal.querySelector('.qa-view-content') : null;
+
                     // If an answer ID was also provided, scroll to that answer
                     const answerId = pageParams.answer;
                     if (answerId) {
-                        const answerEl = document.getElementById('answer-' + answerId);
-                        if (answerEl) {
-                            answerEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
+                        let attempts = 0;
+                        const waitAndSpotlightAnswer = setInterval(function() {
+                            attempts += 1;
+                            const answerEl = document.getElementById('answer-' + answerId);
+                            if (answerEl) {
+                                clearInterval(waitAndSpotlightAnswer);
+                                spotlightDeepLinkTarget(answerEl);
+                                return;
+                            }
+
+                            if (attempts >= 20) {
+                                clearInterval(waitAndSpotlightAnswer);
+                                spotlightDeepLinkTarget(questionViewContent);
+                            }
+                        }, 100);
+                    } else {
+                        spotlightDeepLinkTarget(questionViewContent);
                     }
                 });
 

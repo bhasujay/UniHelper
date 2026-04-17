@@ -197,7 +197,7 @@ class FeedController
                 if (!empty($recipientIds)) {
                     $notifMsg = 'New ' . ucfirst($postType) . ': ' . $title;
                     $notifUrl = '/unihelper/announcements';
-                    $this->notificationModel->createMany($recipientIds, $notifMsg, 'other', $notifUrl);
+                    $this->feedPostModel->pushNotifications($recipientIds, $notifMsg, 'other', $notifUrl);
                 }
             } catch (\Throwable $notifyError) {
                 error_log('FeedController: Failed to send notifications for post ' . $newId . ': ' . $notifyError->getMessage());
@@ -445,7 +445,7 @@ class FeedController
                         $postOwnerId = (int)($post['user_id'] ?? 0);
                         $actorName = trim(((string)($this->viewer->firstName ?? '')) . ' ' . ((string)($this->viewer->lastName ?? '')));
 
-                        $this->notificationModel->createPostLikeNotification(
+                        $this->feedLikeModel->createPostLikeNotification(
                             $postOwnerId,
                             (int)$this->viewer->id,
                             $actorName,

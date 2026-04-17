@@ -3,6 +3,7 @@
 namespace app\models;
 
 require_once dirname(__DIR__, 1) . '/models/base-model.php';
+require_once dirname(__DIR__, 1) . '/models/notify.php';
 
 use PDO;
 use PDOException;
@@ -11,9 +12,16 @@ use Exception;
 class FeedPost extends BaseModel
 {
     protected $table = 'feed_posts';
+    private $notifyModel;
 
     private const VALID_TYPES = ['announcement', 'event', 'general'];
     private const VALID_AUDIENCE_MODES = ['all_roles', 'selected_roles'];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->notifyModel = new Notify();
+    }
 
     public function createPost(array $data): int
     {
@@ -26,6 +34,30 @@ class FeedPost extends BaseModel
         }
 
         return (int)$this->create($data);
+    }
+
+    public function pushNotifications(array $recipientIds, string $message, string $type = 'other', ?string $link = null): int
+    {
+        $normalizedIds = [];
+        foreach ($recipientIds as $recipientId) {
+            $id = (int)$recipientId;
+            if ($id > 0) {
+                $normalizedIds[$id] = true;
+            }
+        }
+
+        $normalizedIds = array_keys($normalizedIds);
+        if (empty($normalizedIds)) {
+            return 0;
+        }
+
+        $sentCount = 0;
+        foreach ($normalizedIds as $userId) {
+            $this->notifyModel->insertNotification($userId, $message, $type, $link);
+            $sentCount++;
+        }
+
+        return $sentCount;
     }
 
     public function getVisiblePostsForRole(string $viewerRole, int $limit = 100): array
