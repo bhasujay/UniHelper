@@ -1,0 +1,124 @@
+<?php
+
+namespace app\models;
+
+use app\core\Database;
+
+require_once __DIR__ . '/notify.php';
+
+use app\models\notify;
+
+class badger
+{
+    private $db;
+    private $notify;
+    private $badgelookup;
+
+
+    public function __construct()
+    {
+        $this->db = Database::getInstance();
+        $this->notify = new notify();
+        $this->badgelookup = [
+                'curious-mind' => [
+                    'id'   => 1,
+                    'name' => 'Curious Mind'
+                ],
+                'insightful-question' => [
+                    'id'   => 2,
+                    'name' => 'Insightful Question'
+                ],
+                'top-question' => [
+                    'id'   => 3,
+                    'name' => 'Top Question'
+                ],
+                'regular-inquirer' => [
+                    'id'   => 4,
+                    'name' => 'Regular Inquirer'
+                ],
+                'discussion-starter' => [
+                    'id'   => 5,
+                    'name' => 'Discussion Starter'
+                ],
+                'peer-influencer' => [
+                    'id'   => 6,
+                    'name' => 'Peer Influencer'
+                ],
+                'trendsetter' => [
+                    'id'   => 7,
+                    'name' => 'Trendsetter'
+                ],
+                'explorer' => [
+                    'id'   => 8,
+                    'name' => 'Explorer'
+                ],
+                'avid-voter' => [
+                    'id'   => 9,
+                    'name' => 'Avid Voter'
+                ],
+                'community-member' => [
+                    'id'   => 10,
+                    'name' => 'Community Member'
+                ],
+                'social-worker' => [
+                    'id'   => 11,
+                    'name' => 'Social Worker'
+                ],
+                'celebrity' => [
+                    'id'   => 12,
+                    'name' => 'Celebrity'
+                ],
+            ];
+    }
+
+    // this is a clever helper fuction to check if a user already has a badge, to avoid duplicate entries and unnecessary notifications
+    public function hasBadge($userId, $badgeName)
+    {
+        try {
+            $sql = "SELECT COUNT(*) FROM user_badges WHERE user_id = :user_id AND badge_id = :badge_id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':user_id', $userId);
+            $stmt->bindParam(':badge_id', $this->badgelookup[$badgeName]['id']);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (\PDOException $e) {
+            error_log("Badger hasBadge error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // add a new badger entry for a user
+    public function add($userId, $badgeName)
+    {
+        // check if the user already has the badge, if so, skip the insert and notification
+        if ($this->hasBadge($userId, $badgeName)) {
+            return true; // badge already exists, no need to add or notify, return true to indicate "success" since the user effectively has the badge
+        }
+        try {
+            $sql = "INSERT INTO user_badges (user_id, badge_id) VALUES (:user_id, :badge_id)";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':user_id', $userId);
+            $stmt->bindParam(':badge_id', $this->badgelookup[$badgeName]['id']);
+
+            // Execute the insert FIRST — if it fails (e.g. duplicate badge), no notification is sent
+            $inserted = $stmt->execute();
+
+            if ($inserted) {
+                $type = ($badgeName === 'celebrity') ? 'other' : 'qa';
+                $this->notify->insertNotification(
+                    $userId,
+                    "Congratulations! You've earned the '" . $this->badgelookup[$badgeName]['name'] . "' badge.",
+                    $type,
+                    '/unihelper/profile/view'
+                );
+            }
+
+            return $inserted;
+        } catch (\PDOException $e) {
+            error_log("Badger add error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+
+}

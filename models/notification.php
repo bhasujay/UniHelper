@@ -19,12 +19,12 @@ class Notification extends BaseModel
 
     public function checkAny($userId)
     {
-        $sql = "SELECT 1 FROM {$this->table} WHERE subscriber_id = :user_id AND is_read = 0 LIMIT 1";
+        $sql = "SELECT COUNT(*) FROM {$this->table} WHERE subscriber_id = :user_id AND is_read = 0";
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':user_id', (int) $userId, PDO::PARAM_INT);
         $stmt->execute();
 
-        return (bool) $stmt->fetchColumn();
+        return (int) $stmt->fetchColumn();
     }
 
     public function getUnread($userId)

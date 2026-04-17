@@ -808,8 +808,8 @@
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 1rem;
-    width: 90%;
-    max-width: 900px;
+    width: 70%;
+    max-width: 750px;
     height: 80%;
     max-height: 380px;
     position: relative;
@@ -1530,4 +1530,127 @@
 /* Menu dropdown */
 [data-theme="light"] .qa-menu-dropdown {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* ===================================================================
+   BADGE HOVER PANEL
+   =================================================================== */
+
+.qa-badge-panel {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    z-index: 10100;
+    white-space: nowrap;
+    /* entrance animation */
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    pointer-events: none;   /* disabled until fully shown */
+}
+
+.qa-badge-panel.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+/* Direction variants — position set by JS; these just flip entrance direction */
+.qa-badge-panel.panel-above {
+    transform: translateY(-4px) scale(0.97);
+}
+.qa-badge-panel.panel-above.visible {
+    transform: translateY(0) scale(1);
+}
+
+/* Individual badge item */
+.qa-badge-item {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), z-index 0s;
+    cursor: default;
+    z-index: 0;
+}
+
+.qa-badge-item:hover {
+    transform: scale(1.9);
+    z-index: 10;
+}
+
+.qa-badge-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+    display: block;
+    background: transparent;
+}
+
+/* Badge tooltip */
+.qa-badge-item::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 15, 20, 0.94);
+    color: #fff;
+    font-size: 0.5rem;
+    line-height: 1.35;
+    padding: 5px 8px;
+    border-radius: 6px;
+    white-space: pre;         /* keep exactly two lines: name then description */
+    max-width: none;
+    text-align: left;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 20;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.qa-badge-panel.panel-below .qa-badge-item::after {
+    top: calc(100% + 10px);
+    bottom: auto;
+}
+
+.qa-badge-item:hover::after {
+    opacity: 1;
+}
+
+/* Skeleton shimmer badges while loading */
+.qa-badge-skeleton {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: linear-gradient(90deg,
+        var(--border) 25%,
+        var(--text_background) 50%,
+        var(--border) 75%);
+    background-size: 200% 100%;
+    animation: badgeShimmer 1.2s infinite;
+}
+
+@keyframes badgeShimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .qa-badge-panel {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .qa-badge-item::after {
+    background: rgba(30, 30, 35, 0.92);
 }

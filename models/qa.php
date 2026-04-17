@@ -5,14 +5,27 @@ namespace app\models;
 use app\core\Database;
 
 require_once dirname(__DIR__) . '/models/base-model.php';
+require_once dirname(__DIR__) . '\models\base-model.php';
+require_once dirname(__DIR__) . '\models\user-stat.php';
+require_once dirname(__DIR__) . '\models\badger.php';
+require_once dirname(__DIR__) . '\models\notify.php';
+
+use app\models\UserStat;
 
 class Qna extends BaseModel
 {
+    private $userStat;
+    private $badger;
+    private $notify;
     public function __construct()
     {
         parent::__construct();
         $this->table = 'questions';
         $this->primaryKey = 'q_id';
+        $this->userStat = new UserStat();
+        $this->badger = new Badger();
+        $this->notify = new Notify();
+
     }
 
     public function create($data)
@@ -31,6 +44,11 @@ class Qna extends BaseModel
         if (isset($data['tags']) && is_array($data['tags'])) {
             $tags = $data['tags'];
         }
+        $tags = array_values(array_filter(array_unique(array_map(function ($tag) {
+            return trim((string)$tag);
+        }, $tags)), function ($tag) {
+            return $tag !== '';
+        }));
         if (isset($data['tags'])) {
             unset($data['tags']);
         }
@@ -49,10 +67,14 @@ class Qna extends BaseModel
         foreach ($tags as $tag) {
             $stmt->execute(['tag_name' => $tag]);
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-            if ($result) {
+            if ($result && !in_array((int)$result['tag_id'], $tagIds, true)) {
                 $tagIds[] = $result['tag_id'];
             }
         }
+
+        $currentUserId = (int)$data['user_id'];
+        $trendsetterUsers = [];
+
         // update the post count for each tag
         $updateTagStmt = $this->db->prepare("UPDATE tags SET post_count = post_count + 1 WHERE tag_id = :tag_id");
         foreach ($tagIds as $tagId) {
@@ -63,12 +85,46 @@ class Qna extends BaseModel
         foreach ($tagIds as $tagId) {
             $questionTagStmt->execute(['q_id' => $questionId, 'tag_id' => $tagId]);
         }
+
+        // Trendsetter: when a tag has exactly two distinct users (requesting user + one other),
+        // reward the other user as the tag starter.
+        $trendsetterStmt = $this->db->prepare(
+                "SELECT DISTINCT q.user_id
+                    FROM qa_tag qt
+                    JOIN questions q ON q.q_id = qt.q_id
+                    WHERE qt.tag_id = :tag_id
+                        AND q.status IN ('normal', 'flagged')"
+        );
+        foreach ($tagIds as $tagId) {
+            $trendsetterStmt->execute(['tag_id' => $tagId]);
+            $distinctUsers = array_map('intval', $trendsetterStmt->fetchAll(\PDO::FETCH_COLUMN));
+
+            if (count($distinctUsers) === 2 && in_array($currentUserId, $distinctUsers, true)) {
+                foreach ($distinctUsers as $userId) {
+                    if ($userId !== $currentUserId) {
+                        $trendsetterUsers[$userId] = true;
+                    }
+                }
+            }
+        }
         
         // Now update the timestamps using MySQL's NOW()
         $sql = "UPDATE questions SET added_time = NOW(), last_modified = NOW() WHERE q_id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $questionId]);
+
+        // Award explorer when a single question has 3 or more unique tags.
+        if (count($tagIds) >= 3) {
+            $this->badger->add($currentUserId, 'explorer');
+        }
+
+        foreach (array_keys($trendsetterUsers) as $oldAuthorId) {
+            $this->badger->add((int)$oldAuthorId, 'trendsetter');
+        }
         
+        // Increment the ask_count stat for the user
+        $this->userStat->increment($data['user_id'], 'ask_count');
+
         return $questionId;
     }
     
@@ -99,6 +155,24 @@ class Qna extends BaseModel
                       WHERE q_id = :q_id";
         $updateStmt = $this->db->prepare($updateSql);
         $updateStmt->execute(['q_id' => $data['q_id']]);
+
+        // Increment the answer_count stat for the user
+        $this->userStat->increment($data['user_id'], 'answer_count');
+
+        // check if a question recieves how much answers to award badges
+        $stmt = $this->db->prepare("SELECT user_id, answer_count FROM questions WHERE q_id = :q_id");
+        $stmt->execute(['q_id' => $data['q_id']]);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if ($result && $result['answer_count'] == 3) { // if the question receives 3 answers
+            $this->badger->add($result['user_id'], 'discussion-starter');
+        } else if ($result && $result['answer_count'] == 10) { // if the question receives 10 answers
+            $this->badger->add($result['user_id'], 'peer-influencer');
+        }
+
+        // send notification to the question author when their question receives a new answer
+        $questionAuthorId = $result['user_id'];
+        $questionId = $data['q_id'];
+        $this->notify->insertNotification($questionAuthorId, "Your question has received a new answer.", 'qa', "/unihelper/qa-forum?question=" . $questionId . "&answer=" . $answerId);
         
         return $answerId;
     }
@@ -173,7 +247,7 @@ class Qna extends BaseModel
         $sql = "
             SELECT q.* 
             FROM questions q JOIN qa_tag qt ON q.q_id = qt.q_id JOIN tags t ON t.tag_id = qt.tag_id
-            WHERE q.status = 'normal' AND t.tag_name = :tag
+            WHERE q.status IN ('normal', 'flagged') AND t.tag_name = :tag
             ORDER BY q.vote_count DESC, q.answer_count DESC, q.added_time DESC, q.last_modified DESC
             LIMIT :offset, :limit
         ";
@@ -266,6 +340,25 @@ class Qna extends BaseModel
             'delta' => $delta,
             'q_id' => $questionId
         ]);
+
+        // check the question that has been upvoted 
+        if ($newVote == 1) {
+            $stmt = $this->db->prepare("SELECT user_id, vote_count FROM questions WHERE q_id = :q_id");
+            $stmt->execute(['q_id' => $questionId]);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if ($result && $result['vote_count'] == 1) {
+                $this->notify->insertNotification($result['user_id'], "Your question has received its first upvote!", 'qa', "/unihelper/qa-forum?question=" . $questionId);
+            } else if ($result && $result['vote_count'] == 5) { // if the question reaches 5 votes
+                $this->badger->add($result['user_id'], 'insightful-question');
+            } else if ($result && $result['vote_count'] == 20) { // if the question reaches 20 votes
+                $this->badger->add($result['user_id'], 'top-question');
+            } else if ($result && $result['vote_count'] == -5) { // if the question reaches 50 votes 
+                $this->notify->insertNotification($result['user_id'], "Your question has received 50 votes. Keep up the good work!", 'qa', "/unihelper/qa-forum?question=" . $questionId);
+            }
+
+        // Increment the vote_count stat for the user. it does not matter if it's an upvote or downvote, we want to track the total number of votes cast by the user for badge purposes
+        $this->userStat->increment($userId, 'vote_count');
+        }
     }
 
     // vote related functions
@@ -404,22 +497,21 @@ class Qna extends BaseModel
         $tagIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
 
         // Handle the image deletion
-        if ($question['img_path']) {
-            $this->deleteQuestionImages($questionId);
-        }
+        // if ($question['img_path']) {
+        //     $this->deleteQuestionImages($questionId);
+        // }
 
-        // Delete the question (this will also delete entries in qa_tag, answers, and votes due to foreign key constraints)
-        $deleteSql = "DELETE FROM questions WHERE q_id = :questionId";
-        $deleteStmt = $this->db->prepare($deleteSql);
-        $deleteStmt->bindValue(':questionId', (int)$questionId, \PDO::PARAM_INT);
-        $deleteStmt->execute();
-        
-        // Check if deletion was successful
-        $rowsAffected = $deleteStmt->rowCount();
+        // Mark the question as removed instead of deleting it
+        $updateSql = "UPDATE questions SET status = 'removed', last_modified = NOW() WHERE q_id = :questionId";
+        $updateStmt = $this->db->prepare($updateSql);
+        $updateStmt->bindValue(':questionId', (int)$questionId, \PDO::PARAM_INT);
+        $updateStmt->execute();
+
+        // Check if update was successful
+        $rowsAffected = $updateStmt->rowCount();
         if ($rowsAffected === 0) {
-            throw new \Exception('Failed to delete question - no rows affected');
+            throw new \Exception('Failed to delete question');
         }
-
         // Update post counts for associated tags
         if (!empty($tagIds)) {
             $updateTagSql = "UPDATE tags SET post_count = post_count - 1 WHERE tag_id IN (" . implode(',', array_map('intval', $tagIds)) . ")";
@@ -429,6 +521,9 @@ class Qna extends BaseModel
         // delete the tags that are no longer associated with any questions
         $cleanupTagSql = "DELETE FROM tags WHERE post_count <= 0";
         $this->db->exec($cleanupTagSql);
+
+        // update the user stats for the ask_count
+        $this->userStat->decrement($userId, 'ask_count');
 
         return true;
     }
@@ -455,16 +550,16 @@ class Qna extends BaseModel
             }
         }
         
-        // Delete the answer
-        $deleteSql = "DELETE FROM answers WHERE a_id = :answerId";
-        $deleteStmt = $this->db->prepare($deleteSql);
-        $deleteStmt->bindValue(':answerId', (int)$answerId, \PDO::PARAM_INT);
-        $deleteStmt->execute();
-        
-        // Check if deletion was successful
-        $rowsAffected = $deleteStmt->rowCount();
+        // Mark the answer as removed instead of deleting it
+        $updateSql = "UPDATE answers SET status = 'removed' WHERE a_id = :answerId";
+        $updateStmt = $this->db->prepare($updateSql);
+        $updateStmt->bindValue(':answerId', (int)$answerId, \PDO::PARAM_INT);
+        $updateStmt->execute();
+
+        // Check if update was successful
+        $rowsAffected = $updateStmt->rowCount();
         if ($rowsAffected === 0) {
-            throw new \Exception('Failed to delete answer - no rows affected');
+            throw new \Exception('Failed to delete answer');
         }
 
         // Update the answer count in the questions table
@@ -473,6 +568,9 @@ class Qna extends BaseModel
                       WHERE q_id = :q_id";
         $updateStmt = $this->db->prepare($updateSql);
         $updateStmt->execute(['q_id' => $answer['q_id']]);
+
+        // Update the user stats for the answer_count
+        $this->userStat->decrement($userId, 'answer_count');
 
         return true;
     }
@@ -509,5 +607,26 @@ class Qna extends BaseModel
         return true;
     }
 
+    // get the questions that a user has posted
+    public function getQuestionsByUserId($userId)
+    {
+        $sql = "SELECT * FROM questions WHERE user_id = :userId AND status IN ('normal', 'flagged') ORDER BY added_time DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':userId', (int)$userId, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getUsersName($userId)
+    {
+        $sql = "SELECT first_name, last_name FROM users WHERE id = :userId";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':userId', (int)$userId, \PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        return $result ? $result['first_name'] . ' ' . $result['last_name'] : null;
+    }
 
 }

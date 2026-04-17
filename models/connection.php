@@ -8,13 +8,17 @@ use PDOException;
 use Exception;
 
 require_once dirname(__DIR__) . '/models/base-model.php';
+require_once dirname(__DIR__) . '\models\base-model.php';
+require_once dirname(__DIR__) . '\models\notify.php';
 
 Class Connection extends BaseModel
 {
+    private $notify;
     public function __construct()
     {
         parent::__construct();
         $this->table = 'connections';
+        $this->notify = new Notify();
     }
 
     // state: 'private'|'public'|'friend'
@@ -27,7 +31,7 @@ Class Connection extends BaseModel
         }
 
         if ($state === 'private') {
-            $sql = "SELECT id, first_name, last_name, role FROM users WHERE id = :id";
+            $sql = "SELECT id, first_name, last_name, role, profile_picture FROM users WHERE id = :id";
         } elseif ($state === 'public') {
             $sql = "SELECT id, first_name, last_name, email, role, al_year, university, major, profile_role, profile_picture, created_at, public, moderator
                     FROM users WHERE id = :id";
@@ -90,7 +94,17 @@ Class Connection extends BaseModel
             ]);
 
             $stmt = $this->db->prepare($sqlIns);
-            return $stmt->execute([':uid' => $userId, ':fid' => $friendId]);
+            $stmt->execute([':uid' => $userId, ':fid' => $friendId]);
+
+            // send the notification to the receiver
+            $this->notify->insertNotification(
+                $friendId,
+                "You have a new connection request from " . $this->getTargetUser($userId, 'public')->first_name,
+                'connection',
+                "/unihelper/view/profile/" . $userId
+            );
+
+            return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
             throw new Exception("Failed to create connection request: " . $e->getMessage());
         }
@@ -107,6 +121,15 @@ Class Connection extends BaseModel
         try {
             $stmt = $this->db->prepare($sql);
             $stmt->execute([':uid' => $userId, ':fid' => $friendId]);
+
+            // send the notification to the requester
+            $this->notify->insertNotification(
+                $friendId,
+                "Your connection request to " . $this->getTargetUser($userId, 'public')->first_name . " has been accepted",
+                'connection',
+                "/unihelper/view/profile/" . $userId
+            );
+
             return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
             throw new Exception("Failed to accept connection: " . $e->getMessage());

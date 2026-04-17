@@ -28,5 +28,11 @@ return [
         ['component' => 'connections', 'title' => 'Connections'],
         ['component' => 'qa-forum',        'title' => 'Q&A Forum'],
         ['component' => 'moderation', 'title' => 'Moderation'],
+        ['component' => 'announcements',   'title' => 'Feed'],
+        ['component' => 'admin-panel',   'title' => 'Admin Panel'],
+        ['component' => 'connections', 'title' => 'Connections'],
+        ['component' => 'qa-forum',        'title' => 'Q&A Forum'],
+        ['component' => 'moderation', 'title' => 'Moderation'],
+        ['component' => 'feedback-forum', 'title' => 'User Feedbacks'],
     ],
 ];

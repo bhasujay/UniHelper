@@ -1,5 +1,4 @@
 <link rel="stylesheet" href="/unihelper/views/css/components/moderation.css">
-<script src="/unihelper/views/js/moderation.js"></script>
 
 <?php
 require_once __DIR__ . '/../../models/User.php';
@@ -8,10 +7,184 @@ use App\Models\User;
 $user = new User();
 $user = $user->findById($_SESSION['user_id']);
 $is_moderator = ($user && (int) $user->mod === 1) ? 1 : 0;
+$is_admin = ($user && $user->role === 'role-admin') ? 1 : 0;
 ?>
 
 <div class="moderation-wrapper">
-    <?php if (!$is_moderator): ?>
+    <?php if ($is_admin): ?>
+        <script src="/unihelper/views/js/moderation-admin.js"></script>
+
+        <div class="mod-admin-layout">
+            <!-- Left Side: Reports Queue -->
+            <div class="mod-admin-left">
+                <div class="mod-panel-header">
+                    <div class="mod-header-text">
+                        <h1 class="mod-panel-title">Moderation Queue</h1>
+                        <p class="mod-panel-subtitle">Global oversight of reported content</p>
+                    </div>
+                    <div class="mod-filter-group" style="display:flex; align-items:center; gap:var(--spacing-sm);">
+                        <button id="adminRefreshReportsBtn" class="mod-refresh-btn" title="Refresh Reports">
+                            <span class="refresh-icon">🔄</span>
+                        </button>
+                        <div class="mod-search-container admin-search-container">
+                            <input type="text" id="adminReportSearch" class="mod-search-input" placeholder="Search reports...">
+                            <button type="button" id="adminSearchClearBtn" class="mod-search-clear" style="display: none;">&times;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mod-tabs" id="adminReportsTabs">
+                    <button class="mod-tab active" data-tab="admin-pending">
+                        Pending
+                        <span class="mod-tab-count" id="adminPendingCount" style="display:none;">0</span>
+                    </button>
+                    <button class="mod-tab" data-tab="admin-mods-resolved">
+                        Mod Resolved
+                        <span class="mod-tab-count" id="adminModsResolvedCount" style="display:none;">0</span>
+                    </button>
+                    <button class="mod-tab" data-tab="admin-forwarded">
+                        Forwarded
+                        <span class="mod-tab-count" id="adminForwardedCount" style="display:none;">0</span>
+                    </button>
+                    <button class="mod-tab" data-tab="admin-resolved">
+                        Admin Resolved
+                        <span class="mod-tab-count" id="adminResolvedCount" style="display:none;">0</span>
+                    </button>
+                    <div class="mod-tab-indicator"></div>
+                </div>
+
+                <div class="mod-panels" id="adminReportsPanels">
+                    <div class="mod-tab-panel active" data-panel="admin-pending">
+                        <div class="mod-report-list" id="adminPendingList"></div>
+                    </div>
+                    <div class="mod-tab-panel" data-panel="admin-mods-resolved">
+                        <div class="mod-report-list" id="adminModsResolvedList"></div>
+                    </div>
+                    <div class="mod-tab-panel" data-panel="admin-forwarded">
+                        <div class="mod-report-list" id="adminForwardedList"></div>
+                    </div>
+                    <div class="mod-tab-panel" data-panel="admin-resolved">
+                        <div class="mod-report-list" id="adminResolvedList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Moderators Management -->
+            <div class="mod-admin-right">
+                <div class="mod-panel-header">
+                    <div class="mod-header-text">
+                        <h1 class="mod-panel-title">Team Management</h1>
+                        <p class="mod-panel-subtitle">Manage system moderators</p>
+                    </div>
+                    <button id="adminRefreshModsBtn" class="mod-refresh-btn" title="Refresh Team">
+                        <span class="refresh-icon">🔄</span>
+                    </button>
+                </div>
+
+                <div class="mod-tabs" id="adminModsTabs">
+                    <button class="mod-tab active" data-tab="admin-mods-all">
+                        All
+                        <span class="mod-tab-count" id="adminModsAllCount" style="display:none;">0</span>
+                    </button>
+                    <button class="mod-tab" data-tab="admin-mods-requests">
+                        Requests
+                        <span class="mod-tab-count" id="adminModsRequestsCount" style="display:none;">0</span>
+                    </button>
+                    <div class="mod-tab-indicator"></div>
+                </div>
+
+                <div class="mod-panels admin-mod-panels" id="adminModsPanels">
+                    <div class="mod-tab-panel active" data-panel="admin-mods-all">
+                        <div class="mod-modlist" id="adminModsAllList"></div>
+                    </div>
+                    <div class="mod-tab-panel" data-panel="admin-mods-requests">
+                        <div class="mod-modlist" id="adminModsRequestsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlays (Hidden by default) -->
+        <!-- View Moderator Overlay -->
+        <div id="adminViewModOverlay" class="mod-admin-overlay" style="display: none;">
+            <div class="mod-admin-modal">
+                <button type="button" class="mod-modal-close-icon close-modal-btn">&times;</button>
+                <div class="mod-profile-header">
+                    <img class="mod-profile-avatar" id="viewModAvatar" src="/unihelper/views/assets/default-pfp.png" alt="">
+                    <div class="mod-profile-details">
+                        <h2 id="viewModName">Name</h2>
+                        <p id="viewModUni">University</p>
+                    </div>
+                </div>
+                <div class="mod-modal-actions">
+                    <button type="button" class="mod-btn-outline" id="viewModProfileBtn">View Profile</button>
+                    <button type="button" class="mod-btn-outline" id="viewActivityBtn">View Activity</button>
+                    <button type="button" class="mod-btn-submit" style="background: #ff4757; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);" id="removeModBtn">Remove Access</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Request Overlay -->
+        <div id="adminViewReqOverlay" class="mod-admin-overlay" style="display: none;">
+            <div class="mod-admin-modal">
+                <button type="button" class="mod-modal-close-icon close-modal-btn">&times;</button>
+                <div class="mod-profile-header">
+                    <img class="mod-profile-avatar" id="viewReqAvatar" src="/unihelper/views/assets/default-pfp.png" alt="">
+                    <div class="mod-profile-details">
+                        <h2 id="viewReqName">Name</h2>
+                        <p id="viewReqUni">University</p>
+                    </div>
+                </div>
+                <div class="mod-motivation-box">
+                    <div class="mod-motivation-title">Moderator Message</div>
+                    <p id="viewReqMotivation">User motivation statement replaces this text...</p>
+                </div>
+                <div class="mod-modal-actions">
+                    <button type="button" class="mod-btn-outline" id="viewReqProfileBtn">View Profile</button>
+                    <button type="button" class="mod-btn-submit" style="background: #ff4757; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);" id="rejectReqBtn">Reject</button>
+                    <button type="button" class="mod-btn-submit" style="background: #2ed573; box-shadow: 0 5px 15px rgba(46, 213, 115, 0.3);" id="acceptReqBtn">Accept</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Report Card Template -->
+        <template id="adminReportCardTemplate">
+            <div class="mod-report-card">
+                <div class="mod-report-top">
+                    <div class="mod-report-meta">
+                        <span class="mod-report-type-badge"></span>
+                        <span class="mod-report-time"></span>
+                    </div>
+                </div>
+                <div class="mod-report-body">
+                    <p class="mod-report-reason"></p>
+                    <p class="mod-report-text"></p>
+                </div>
+                <div class="mod-report-footer">
+                    <div class="mod-reporter-group" style="display: flex; align-items: center;">
+                        <div class="mod-reporter">
+                            <img class="mod-reporter-avatar reporter-avatar" src="/unihelper/views/assets/default-pfp.png" alt="">
+                            <span class="mod-reporter-name reporter-name"></span>
+                        </div>
+                    </div>
+                    <div class="mod-report-actions"></div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Admin Mod Card Template -->
+        <template id="adminModCardTemplate">
+            <div class="admin-mod-card">
+                <img class="admin-mod-avatar" src="/unihelper/views/assets/default-pfp.png" alt="">
+                <div class="admin-mod-info">
+                    <div class="admin-mod-name">Name</div>
+                    <div class="admin-mod-uni">University</div>
+                </div>
+                <button class="mod-action-btn action-undo admin-mod-action-btn">Action</button>
+            </div>
+        </template>
+    <?php elseif (!$is_moderator): ?>
+        <script src="/unihelper/views/js/moderation.js"></script>
         <div class="mod-native-layout">
             <div class="mod-hero-compact">
                 <h1 class="mod-hero-title">Step up. <span class="gradient-text">Become a Moderator.</span></h1>
@@ -106,12 +279,17 @@ $is_moderator = ($user && (int) $user->mod === 1) ? 1 : 0;
             </div>
         </div>
     <?php else: ?>
-
+        <script src="/unihelper/views/js/moderation.js"></script>
         <!-- ========== MODERATOR PANEL ========== -->
         <div class="mod-panel">
             <div class="mod-panel-header">
-                <h1 class="mod-panel-title">Moderation</h1>
-                <p class="mod-panel-subtitle">Review and manage reported content</p>
+                <div class="mod-header-text">
+                    <h1 class="mod-panel-title">Moderation</h1>
+                    <p class="mod-panel-subtitle">Review and manage reported content</p>
+                </div>
+                <button id="refreshPendingBtn" class="mod-refresh-btn">
+                    <span class="refresh-icon">🔄</span>
+                </button>
             </div>
 
             <div class="mod-tabs">

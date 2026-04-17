@@ -50,6 +50,7 @@ class ApiGateway
         $publicRoutes = [
             'authcontroller' => ['checkexistsaction'],
             'otpcontroller' => ['generateotpaction', 'validateotpaction'],
+            'feedbackcontroller' => ['getfeedback'],
         ];
 
         $controllerKey = strtolower($controller);

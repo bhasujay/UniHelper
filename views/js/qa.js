@@ -222,6 +222,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ansUsernameEl.style.textDecorationColor = 'transparent';
                     ansUsernameEl.onmouseenter = () => ansUsernameEl.style.textDecorationColor = 'currentColor';
                     ansUsernameEl.onmouseleave = () => ansUsernameEl.style.textDecorationColor = 'transparent';
+                    // Badge hover panel — question view answer cards open above
+                    bindBadgeHoverPanel(ansUsernameEl, userID, 'above');
 
                     card.querySelector('.qa-time').textContent = 'Just now';
                     card.querySelector('.qa-answer-body').textContent = answerText;
@@ -773,9 +775,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
 
-                // Clean the URL so a refresh won't re-trigger the deep link
-                const cleanUrl = window.location.pathname;
-                window.history.replaceState({}, '', cleanUrl);
+                // Intentionally keep the deep-link in the address bar (do not clear URL)
+            }
+        }, 100);
+    })();
+
+    // Deep-link support for user questions
+    (function handleDeepLinkUser() {
+        const main = document.getElementById('dashboardMain');
+        if (!main) return;
+
+        let pageParams;
+        try { pageParams = JSON.parse(main.dataset.pageParams || '{}'); }
+        catch (_) { return; }
+
+        const targetUserId = pageParams.user;
+        if (!targetUserId) return;
+
+        // Wait for initial fetchQuestions to finish or at least not fail
+        const waitAndLoadUser = setInterval(function() {
+            if (!isFetching) {
+                clearInterval(waitAndLoadUser);
+                fetch(`/unihelper/api?controller=qaController&action=getQuestionsByUser&user_id=${targetUserId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.username) {
+                            activateUserTagInBar(data.username, data.data);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching user questions:', error));
             }
         }, 100);
     })();

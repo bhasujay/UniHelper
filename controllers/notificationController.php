@@ -56,10 +56,11 @@ class NotificationController
         }
 
         try {
-            $hasUnread = $this->notificationModel->checkAny($userId);
+            $unreadCount = $this->notificationModel->checkAny($userId);
             $this->json([
                 'success' => true,
-                'has_unread' => $hasUnread
+                'unread_count' => (int) $unreadCount,
+                'has_unread' => ((int) $unreadCount) > 0
             ]);
         } catch (\Throwable $e) {
             $this->json([

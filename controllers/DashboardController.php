@@ -201,8 +201,6 @@ class DashboardController
         $error = $this->user->update();
 
         if ($error instanceof \PDOException) {
-
-            
             if (strpos($error->getMessage(), 'SQLSTATE[23000]') !== false) {
                 $errorMsg = 'Email already in use by another account.';
             } else {

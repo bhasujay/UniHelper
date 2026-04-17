@@ -136,7 +136,6 @@
 
     <aside class="sidebar">
         <ul class="sidebar-menu">
-            <!-- Undergraduate Features -->
             <div class="sidebar-section">
                 <div class="sidebar-section-title"><?= htmlspecialchars($role_title) ?></div>
                 <?php foreach ($sidebar as $item): ?>
@@ -153,7 +152,8 @@
         <!-- Minimal footer -->
         <div class="sidebar-footer">
             <div class="sidebar-footer-logo">UniHelper</div>
-            <a href="mailto:project.unihelper@gmail.com" class="sidebar-footer-link">Support: project.unihelper@gmail.com</a>
+            <a href="feedback-forum" class="sidebar-footer-link">Feedback Us</a><br>
+            <a href="mailto:unihelper@gmail.com" class="sidebar-footer-link">Support: unihelper@gmail.com</a>
             <div class="sidebar-footer-copy">&copy; <?= date('Y') ?> UniHelper</div>
         </div>
     </aside>
