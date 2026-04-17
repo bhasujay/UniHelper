@@ -603,7 +603,7 @@
         inset: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.72);
+        background: rgba(0, 0, 0, 0.2);
         z-index: 10001;
         justify-content: center;
         align-items: center;
@@ -1229,6 +1229,10 @@
     const sessionSearchInput = document.getElementById('peer-session-search-input');
     const sessionSearchClearButton = document.getElementById('peer-session-search-clear');
 
+    if (typeof window._peerLearningDeepLinkHandled === 'undefined') {
+        window._peerLearningDeepLinkHandled = false;
+    }
+
     if (sessionMainModalElement && sessionMainModalElement.parentElement !== document.body) {
         document.body.appendChild(sessionMainModalElement);
     }
@@ -1254,6 +1258,51 @@
             console.warn('Invalid page params for peer-learning:', error);
             return {};
         }
+    }
+
+    function normalizeTabName(rawTab) {
+        return rawTab === 'all-sessions' ? 'all-sessions' : 'my-sessions';
+    }
+
+    function normalizePositiveInt(rawValue) {
+        const parsed = Number(rawValue);
+        return Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
+    }
+
+    function replaceBrowserUrl(url) {
+        if (!window.history || typeof window.history.replaceState !== 'function') {
+            return;
+        }
+
+        window.history.replaceState({}, '', url);
+    }
+
+    function buildSessionDeepLinkUrl(sessionId, tabName) {
+        const normalizedSessionId = normalizePositiveInt(sessionId);
+        if (!normalizedSessionId) {
+            return `${BASE_URL}/peer-learning`;
+        }
+
+        const normalizedTab = normalizeTabName(tabName);
+        return `${BASE_URL}/peer-learning?session_id=${encodeURIComponent(String(normalizedSessionId))}&tab=${encodeURIComponent(normalizedTab)}`;
+    }
+
+    function syncUrlToActiveSession(sessionId, tabName) {
+        replaceBrowserUrl(buildSessionDeepLinkUrl(sessionId, tabName));
+    }
+
+    function resetPeerLearningUrl() {
+        replaceBrowserUrl(`${BASE_URL}/peer-learning`);
+    }
+
+    function showPeerLearningError(message) {
+        const safeMessage = message || 'Something went wrong. Please try again.';
+        if (typeof window.showToast === 'function') {
+            window.showToast(safeMessage, 'error');
+            return;
+        }
+
+        alert(safeMessage);
     }
 
     function normalizeSearchQuery(value) {
@@ -1691,7 +1740,7 @@
         const safeSession = upsertSessionCache(session) || session;
         const sessionId = Number(safeSession.id || 0);
         if (!sessionId) {
-            alert('Invalid session ID.');
+            showPeerLearningError('Invalid session ID.');
             return;
         }
 
@@ -1703,6 +1752,7 @@
         modal.classList.add('show');
         modal.setAttribute('aria-hidden', 'false');
         updateBodyModalState();
+        syncUrlToActiveSession(sessionId, currentTab);
 
         if (isOwnerSession(safeSession) && String(safeSession.audience || '') === 'private') {
             sessionForSubscribersId = sessionId;
@@ -1717,6 +1767,7 @@
         activeSessionId = null;
         sessionForSubscribersId = null;
         updateBodyModalState();
+        resetPeerLearningUrl();
     }
 
     function showCreateSessionModalLoading() {
@@ -1897,7 +1948,7 @@
     }
 
     function openSessionModalById(sessionId) {
-        const normalizedId = Number(sessionId || 0);
+        const normalizedId = normalizePositiveInt(sessionId);
         if (!normalizedId) {
             return Promise.reject(new Error('Invalid session ID.'));
         }
@@ -1915,7 +1966,7 @@
     }
 
     function switchTab(tabName) {
-        const normalizedTab = tabName === 'all-sessions' ? 'all-sessions' : 'my-sessions';
+        const normalizedTab = normalizeTabName(tabName);
 
         document.querySelectorAll('.peer-tab').forEach(tab => {
             tab.classList.remove('active');
@@ -2535,7 +2586,7 @@
             const sessionId = Number(card.getAttribute('data-session-id') || 0);
             openSessionModalById(sessionId).catch(error => {
                 console.error('Failed to open session modal:', error);
-                alert(error.message || 'Unable to open this session view.');
+                showPeerLearningError(error.message || 'Unable to open this session view.');
             });
             return;
         }
@@ -2601,22 +2652,34 @@
         const sessionId = Number(targetCard.getAttribute('data-session-id') || 0);
         openSessionModalById(sessionId).catch(error => {
             console.error('Failed to open session modal:', error);
-            alert(error.message || 'Unable to open this session view.');
+            showPeerLearningError(error.message || 'Unable to open this session view.');
         });
     });
 
     window.addEventListener('load', function () {
         syncSearchUiToCurrentTab();
-        const initialTab = pageParams.tab === 'all-sessions' ? 'all-sessions' : 'my-sessions';
-        switchTab(initialTab);
-
-        const deepLinkSessionId = Number(pageParams.session_id || 0);
-        if (!deepLinkSessionId) {
+        if (window._peerLearningDeepLinkHandled) {
             return;
         }
 
-        openSessionModalById(deepLinkSessionId).catch(error => {
-            console.error('Deep-link session open failed:', error);
-        });
+        window._peerLearningDeepLinkHandled = true;
+
+        const initialTab = normalizeTabName(pageParams.tab);
+        switchTab(initialTab)
+            .then(() => {
+                const deepLinkSessionId = normalizePositiveInt(pageParams.session_id);
+                if (!deepLinkSessionId) {
+                    return;
+                }
+
+                return openSessionModalById(deepLinkSessionId).catch(error => {
+                    console.error('Deep-link session open failed:', error);
+                    showPeerLearningError(error.message || 'Unable to open this session from the link.');
+                });
+            })
+            .catch(error => {
+                console.error('Peer-learning initialization failed:', error);
+                showPeerLearningError('Failed to initialize Peer Learning. Please refresh and try again.');
+            });
     });
 </script>
