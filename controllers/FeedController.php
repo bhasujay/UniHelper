@@ -3,11 +3,13 @@
 namespace app\controllers;
 
 require_once dirname(__DIR__, 1) . '/models/FeedPost.php';
+require_once dirname(__DIR__, 1) . '/models/FeedLike.php';
 require_once dirname(__DIR__, 1) . '/models/Session_model.php';
 require_once dirname(__DIR__, 1) . '/models/User.php';
 require_once dirname(__DIR__, 1) . '/models/notification.php';
 
 use app\core\Request;
+use app\models\FeedLike;
 use app\models\FeedPost;
 use app\models\Session_model;
 use app\models\User;
@@ -16,6 +18,7 @@ use app\models\Notification;
 class FeedController
 {
     private const VALID_ROLES = ['role-applicant', 'role-undergrad', 'role-profile', 'role-admin'];
+    private const SELECTABLE_AUDIENCE_ROLES = ['role-applicant', 'role-undergrad'];
     private const VALID_TYPES = ['announcement', 'event', 'general'];
     private const MAX_IMAGE_BYTES = 5242880;
     private const IMAGE_MIME_TO_EXT = [
@@ -27,6 +30,7 @@ class FeedController
     private const FEED_UPLOAD_DIR_RELATIVE = 'public/uploads/feedPosts';
 
     private $feedPostModel;
+    private $feedLikeModel;
     private $sessionModel;
     private $viewer;
     private $notificationModel;
@@ -48,6 +52,7 @@ class FeedController
         }
 
         $this->feedPostModel = new FeedPost();
+        $this->feedLikeModel = new FeedLike();
         $this->sessionModel = new Session_model();
         $this->notificationModel = new Notification();
     }
@@ -99,6 +104,7 @@ class FeedController
 
             $total = count($items);
             $paged = array_slice($items, $offset, $limit);
+            $paged = $this->attachLikeState($paged);
 
             $this->json([
                 'success' => true,
@@ -224,6 +230,231 @@ class FeedController
         }
     }
 
+    public function updatePost(Request $request): void
+    {
+        $postId = (int)($request->get('post_id') ?? 0);
+        $uploadedNewImagePath = null;
+        if ($postId <= 0) {
+            $this->json(['success' => false, 'message' => 'Valid post ID is required.'], 422);
+            return;
+        }
+
+        try {
+            $existingPost = $this->feedPostModel->findActivePostById($postId);
+            if (!$existingPost) {
+                $this->json(['success' => false, 'message' => 'Post not found.'], 404);
+                return;
+            }
+
+            if (!$this->canManagePost($existingPost)) {
+                $this->json(['success' => false, 'message' => 'You are not allowed to edit this post.'], 403);
+                return;
+            }
+
+            $title = trim((string)($request->get('title') ?? ''));
+            $body = trim((string)($request->get('body') ?? ''));
+            $postType = trim((string)($request->get('post_type') ?? 'announcement'));
+            $audienceMode = trim((string)($request->get('audience_mode') ?? 'all_roles'));
+            $audienceRolesInput = $request->get('audience_roles');
+            $imageFile = $_FILES['image'] ?? null;
+            $removeImage = $this->toBool($request->get('remove_image'));
+
+            if ($title === '') {
+                $this->json(['success' => false, 'message' => 'Title is required.'], 422);
+                return;
+            }
+
+            if (mb_strlen($title) > 255) {
+                $this->json(['success' => false, 'message' => 'Title must not exceed 255 characters.'], 422);
+                return;
+            }
+
+            if ($body === '') {
+                $this->json(['success' => false, 'message' => 'Content is required.'], 422);
+                return;
+            }
+
+            if (!in_array($postType, self::VALID_TYPES, true)) {
+                $this->json(['success' => false, 'message' => 'Invalid post type.'], 422);
+                return;
+            }
+
+            if (!in_array($audienceMode, ['all_roles', 'selected_roles'], true)) {
+                $this->json(['success' => false, 'message' => 'Invalid audience selection.'], 422);
+                return;
+            }
+
+            $roles = $this->sanitizeRoleList($audienceRolesInput);
+            if ($audienceMode === 'selected_roles' && empty($roles)) {
+                $this->json(['success' => false, 'message' => 'Select at least one audience role.'], 422);
+                return;
+            }
+
+            if (is_array($imageFile) && (int)($imageFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $imageValidationError = $this->validateUploadedImage($imageFile);
+                if ($imageValidationError !== null) {
+                    $this->json(['success' => false, 'message' => $imageValidationError], 422);
+                    return;
+                }
+            }
+
+            $audienceRoles = $audienceMode === 'selected_roles'
+                ? $this->serializeAudienceRoles($roles)
+                : null;
+
+            $oldImagePath = (string)($existingPost['image_path'] ?? '');
+            $newImagePath = $oldImagePath !== '' ? $oldImagePath : null;
+
+            if (is_array($imageFile) && (int)($imageFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $uploadedNewImagePath = $this->saveUploadedImage($imageFile);
+                $newImagePath = $uploadedNewImagePath;
+            } elseif ($removeImage) {
+                $newImagePath = null;
+            }
+
+            $updated = $this->feedPostModel->updatePost($postId, [
+                'post_type' => $postType,
+                'title' => $title,
+                'body' => $body,
+                'image_path' => $newImagePath,
+                'audience_mode' => $audienceMode,
+                'audience_roles' => $audienceRoles,
+            ]);
+
+            if (!$updated) {
+                throw new \RuntimeException('Failed to update post.');
+            }
+
+            if ($oldImagePath !== '' && $oldImagePath !== (string)($newImagePath ?? '')) {
+                $this->removeUploadedImage($oldImagePath);
+            }
+
+            $updatedPost = $this->feedPostModel->findActivePostById($postId);
+
+            $this->json([
+                'success' => true,
+                'message' => 'Post updated successfully.',
+                'data' => $updatedPost ? $this->normalizeFeedPost($updatedPost) : null,
+            ]);
+        } catch (\RuntimeException $e) {
+            if (!empty($uploadedNewImagePath)) {
+                $this->removeUploadedImage($uploadedNewImagePath);
+            }
+
+            $this->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        } catch (\Throwable $e) {
+            if (!empty($uploadedNewImagePath)) {
+                $this->removeUploadedImage($uploadedNewImagePath);
+            }
+
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to update post.',
+            ], 500);
+        }
+    }
+
+    public function deletePost(Request $request): void
+    {
+        $postId = (int)($request->get('post_id') ?? 0);
+        if ($postId <= 0) {
+            $this->json(['success' => false, 'message' => 'Valid post ID is required.'], 422);
+            return;
+        }
+
+        try {
+            $existingPost = $this->feedPostModel->findActivePostById($postId);
+            if (!$existingPost) {
+                $this->json(['success' => false, 'message' => 'Post not found.'], 404);
+                return;
+            }
+
+            if (!$this->canManagePost($existingPost)) {
+                $this->json(['success' => false, 'message' => 'You are not allowed to delete this post.'], 403);
+                return;
+            }
+
+            $deleted = $this->feedPostModel->softDeletePost($postId);
+            if (!$deleted) {
+                $this->json(['success' => false, 'message' => 'Post not found.'], 404);
+                return;
+            }
+
+            try {
+                $this->feedLikeModel->deleteLikesForSource('post', $postId);
+            } catch (\Throwable $likeCleanupError) {
+                error_log('FeedController: Failed to cleanup likes for post ' . $postId . ' - ' . $likeCleanupError->getMessage());
+            }
+
+            $oldImagePath = (string)($existingPost['image_path'] ?? '');
+            if ($oldImagePath !== '') {
+                $this->removeUploadedImage($oldImagePath);
+            }
+
+            $this->json([
+                'success' => true,
+                'message' => 'Post deleted successfully.',
+            ]);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to delete post.',
+            ], 500);
+        }
+    }
+
+    public function toggleLike(Request $request): void
+    {
+        $source = strtolower(trim((string)($request->get('source') ?? '')));
+        $sourceId = (int)($request->get('source_id') ?? 0);
+
+        if (!$this->feedLikeModel->isValidSourceType($source)) {
+            $this->json([
+                'success' => false,
+                'message' => 'Invalid like source.',
+            ], 422);
+            return;
+        }
+
+        if ($sourceId <= 0) {
+            $this->json([
+                'success' => false,
+                'message' => 'Valid source ID is required.',
+            ], 422);
+            return;
+        }
+
+        if (!$this->sourceExistsForLike($source, $sourceId)) {
+            $this->json([
+                'success' => false,
+                'message' => 'Feed item not found.',
+            ], 404);
+            return;
+        }
+
+        try {
+            $result = $this->feedLikeModel->toggleLike((int)$this->viewer->id, $source, $sourceId);
+
+            $this->json([
+                'success' => true,
+                'data' => [
+                    'source' => $source,
+                    'source_id' => $sourceId,
+                    'liked_by_viewer' => (bool)($result['liked_by_viewer'] ?? false),
+                    'like_count' => (int)($result['like_count'] ?? 0),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to update like.',
+            ], 500);
+        }
+    }
+
     private function normalizeFeedPost(array $post): array
     {
         $roles = $this->parseAudienceRoles($post['audience_roles'] ?? null);
@@ -246,8 +477,12 @@ class FeedController
             'image_path' => (string)($post['image_path'] ?? ''),
             'created_at' => (string)$post['created_at'],
             'audience_label' => $audienceLabel,
+            'author_id' => (int)($post['user_id'] ?? 0),
             'author_name' => $authorName,
             'author_role_label' => $this->roleLabel((string)($post['author_role'] ?? '')),
+            'can_manage' => $this->canManagePost($post),
+            'like_count' => 0,
+            'liked_by_viewer' => false,
             'meta' => [
                 'roles' => $roles,
             ],
@@ -274,8 +509,12 @@ class FeedController
             'body' => (string)($session['description'] ?? ''),
             'created_at' => (string)($session['feed_created_at'] ?? ''),
             'audience_label' => $sessionAudience,
+            'author_id' => (int)($session['user_id'] ?? 0),
             'author_name' => $authorName,
             'author_role_label' => $this->roleLabel((string)($session['creator_role'] ?? '')),
+            'can_manage' => false,
+            'like_count' => 0,
+            'liked_by_viewer' => false,
             'meta' => [
                 'subject' => (string)($session['subject'] ?? ''),
                 'date' => (string)($session['date'] ?? ''),
@@ -301,7 +540,7 @@ class FeedController
         $sanitized = [];
         foreach ($roles as $role) {
             $normalized = trim((string)$role);
-            if ($normalized !== '' && in_array($normalized, self::VALID_ROLES, true)) {
+            if ($normalized !== '' && in_array($normalized, self::SELECTABLE_AUDIENCE_ROLES, true)) {
                 $sanitized[$normalized] = true;
             }
         }
@@ -423,6 +662,61 @@ class FeedController
         if (is_file($absolutePath)) {
             @unlink($absolutePath);
         }
+    }
+
+    private function attachLikeState(array $items): array
+    {
+        if (empty($items)) {
+            return $items;
+        }
+
+        try {
+            $stats = $this->feedLikeModel->getLikeStatsForItems($items, (int)($this->viewer->id ?? 0));
+            foreach ($items as &$item) {
+                $key = (string)($item['source'] ?? '') . '-' . (int)($item['source_id'] ?? 0);
+                $item['like_count'] = (int)($stats[$key]['like_count'] ?? ($item['like_count'] ?? 0));
+                $item['liked_by_viewer'] = (bool)($stats[$key]['liked_by_viewer'] ?? ($item['liked_by_viewer'] ?? false));
+            }
+            unset($item);
+        } catch (\Throwable $likeError) {
+            error_log('FeedController: Failed to attach like stats - ' . $likeError->getMessage());
+        }
+
+        return $items;
+    }
+
+    private function sourceExistsForLike(string $source, int $sourceId): bool
+    {
+        try {
+            if ($source === 'post') {
+                return $this->feedPostModel->findActivePostById($sourceId) !== null;
+            }
+
+            if ($source === 'session') {
+                return $this->sessionModel->exists($sourceId);
+            }
+
+            return false;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    private function canManagePost(array $post): bool
+    {
+        $isAdmin = (string)($this->viewer->role ?? '') === 'role-admin';
+        $isOwner = (int)($post['user_id'] ?? 0) === (int)($this->viewer->id ?? 0);
+        return $isAdmin || $isOwner;
+    }
+
+    private function toBool($value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        $normalized = strtolower(trim((string)$value));
+        return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
     }
 
     private function roleLabel(string $role): string

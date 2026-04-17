@@ -75,12 +75,10 @@ $currentRole = isset($user->role) ? (string)$user->role : '';
             <div id="feedRoleChoices" class="feed-role-choices" aria-live="polite">
                 <label class="feed-role-chip"><input type="checkbox" name="audience_roles[]" value="role-applicant"> Applicant</label>
                 <label class="feed-role-chip"><input type="checkbox" name="audience_roles[]" value="role-undergrad"> Undergraduate</label>
-                <label class="feed-role-chip"><input type="checkbox" name="audience_roles[]" value="role-profile"> Profile</label>
-                <label class="feed-role-chip"><input type="checkbox" name="audience_roles[]" value="role-admin"> Admin</label>
             </div>
 
                 <div class="feed-actions">
-                    <p class="feed-help">Session posts are automatically included here and follow session audience rules.</p>
+                    <p class="feed-help">Session posts are automatically included here and follow session audience rules. System admins can always view all feed posts.</p>
                     <div class="feed-action-buttons">
                         <button type="button" class="feed-btn-secondary" id="feedCancelComposerBtn">Cancel</button>
                         <button type="submit" class="feed-btn" id="feedPublishBtn">Publish to Feed</button>
