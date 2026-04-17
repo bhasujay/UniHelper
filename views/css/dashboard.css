@@ -735,6 +735,10 @@ body {
   /* Use only local system fonts */
 }
 
+body.notification-modal-open {
+  overflow: hidden;
+}
+
 /* Toast Notification Styles */
 .toast-container {
   position: fixed;
@@ -1043,12 +1047,13 @@ body {
   align-items: flex-start;
   justify-content: center;
   padding-top: 5vh;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
+  will-change: opacity;
 }
 
 .notification-modal-overlay.show {
@@ -1074,6 +1079,8 @@ body {
   overflow: hidden;
   transform: translateY(20px) scale(0.97);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+  contain: layout paint;
 }
 
 .notification-modal-overlay.show .notification-modal {
@@ -1240,6 +1247,10 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
   animation: notifSlideIn 0.3s ease forwards;
+}
+
+.notification-list.is-bulk-rendering .notification-item {
+  animation: none;
 }
 
 .notification-item:hover {
@@ -1461,7 +1472,7 @@ body {
 }
 
 [data-theme="light"] .notification-modal-overlay {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.12);
 }
 
 /* Notification item borders need to be visible on white */

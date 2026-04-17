@@ -36,6 +36,9 @@
         hasFetchedRead: false,
         activeTab: 'new',
         serverUnreadCount: 0,
+        unreadRequestPromise: null,
+        readRequestPromise: null,
+        renderedUnreadCount: null,
     };
 
     // icons for the notification types
@@ -111,6 +114,15 @@
         }
     }
 
+    function scheduleAfterPaint(callback) {
+        if (typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(callback);
+            return;
+        }
+
+        window.setTimeout(callback, 0);
+    }
+
     function formatTime(value) {
         if (!value) return 'Just now';
         const date = new Date(value);
@@ -142,11 +154,42 @@
     }
 
     function clearAndRender(tabName, rows) {
-        clearTab(tabName);
+        const list = lists[tabName];
+        if (!list) {
+            return;
+        }
+
+        list.classList.add('is-bulk-rendering');
+        const fragment = document.createDocumentFragment();
+
         (rows || []).forEach(function (row) {
-            addNotification(tabName, mapNotification(row));
+            const item = createNotificationItem(mapNotification(row));
+            if (!item) {
+                return;
+            }
+
+            if (tabName === 'opened') {
+                const markBtn = item.querySelector('.notification-item-action.mark-action');
+                if (markBtn) {
+                    markBtn.remove();
+                }
+            }
+
+            fragment.appendChild(item);
         });
+
+        list.replaceChildren(fragment);
         refreshEmpty(tabName);
+
+        if (tabName === 'new') {
+            updateNewCount(list.children.length);
+        }
+
+        scheduleAfterPaint(function () {
+            if (lists[tabName]) {
+                lists[tabName].classList.remove('is-bulk-rendering');
+            }
+        });
     }
 
     function normalizeUnreadCount(value) {
@@ -167,6 +210,10 @@
     }
 
     function shouldFetchUnreadFromServer() {
+        if (state.unreadRequestPromise) {
+            return false;
+        }
+
         if (!state.hasFetchedUnread) {
             return true;
         }
@@ -186,33 +233,71 @@
         }
     }
 
-    async function fetchUnread() {
-        const payload = await apiGet('getUnread');
-        clearAndRender('new', payload.data || []);
-        state.hasFetchedUnread = true;
-        state.serverUnreadCount = getLoadedUnreadCount();
-        updateNewCount(state.serverUnreadCount);
+    function fetchUnread() {
+        if (state.unreadRequestPromise) {
+            return state.unreadRequestPromise;
+        }
+
+        state.unreadRequestPromise = apiGet('getUnread')
+            .then(function (payload) {
+                clearAndRender('new', payload.data || []);
+                state.hasFetchedUnread = true;
+                state.serverUnreadCount = getLoadedUnreadCount();
+                updateNewCount(state.serverUnreadCount);
+            })
+            .finally(function () {
+                state.unreadRequestPromise = null;
+            });
+
+        return state.unreadRequestPromise;
     }
 
-    async function fetchRead() {
-        const payload = await apiGet('getRead');
-        clearAndRender('opened', payload.data || []);
-        state.hasFetchedRead = true;
+    function fetchRead() {
+        if (state.readRequestPromise) {
+            return state.readRequestPromise;
+        }
+
+        state.readRequestPromise = apiGet('getRead')
+            .then(function (payload) {
+                clearAndRender('opened', payload.data || []);
+                state.hasFetchedRead = true;
+            })
+            .finally(function () {
+                state.readRequestPromise = null;
+            });
+
+        return state.readRequestPromise;
     }
 
     // ── Modal open / close ──────────────────────────────────────────
     function openModal() {
+        if (!overlay) {
+            return;
+        }
+
         overlay.classList.add('show');
-        document.body.style.overflow = 'hidden'; // prevent bg scroll
-        switchTab('new');
+        document.body.classList.add('notification-modal-open');
+
+        // Let the modal paint first, then run tab/fetch logic.
+        scheduleAfterPaint(function () {
+            switchTab('new');
+        });
     }
 
     function closeModal() {
+        if (!overlay) {
+            return;
+        }
+
         overlay.classList.remove('show');
-        document.body.style.overflow = '';
+        document.body.classList.remove('notification-modal-open');
     }
 
     function toggleModal() {
+        if (!overlay) {
+            return;
+        }
+
         overlay.classList.contains('show') ? closeModal() : openModal();
     }
 
@@ -252,22 +337,29 @@
     });
 
     function switchTab(name) {
-        state.activeTab = name;
-
-        // Update tab buttons
-        tabs.forEach(function (t) {
-            t.classList.toggle('active', t.getAttribute('data-tab') === name);
-        });
-
-        // Move slide indicator
-        if (tabsContainer) {
-            tabsContainer.setAttribute('data-active', name);
+        if (!name) {
+            return;
         }
 
-        // Show correct panel
-        panels.forEach(function (p) {
-            p.classList.toggle('active', p.getAttribute('data-panel') === name);
-        });
+        const isSameTab = state.activeTab === name;
+        state.activeTab = name;
+
+        if (!isSameTab) {
+            // Update tab buttons
+            tabs.forEach(function (t) {
+                t.classList.toggle('active', t.getAttribute('data-tab') === name);
+            });
+
+            // Move slide indicator
+            if (tabsContainer) {
+                tabsContainer.setAttribute('data-active', name);
+            }
+
+            // Show correct panel
+            panels.forEach(function (p) {
+                p.classList.toggle('active', p.getAttribute('data-panel') === name);
+            });
+        }
 
         if (name === 'new' && shouldFetchUnreadFromServer()) {
             fetchUnread().catch(function (error) {
@@ -307,18 +399,29 @@
         const normalizedCount = normalizeUnreadCount(count);
 
         if (normalizedCount > 0) {
-            dot.textContent = normalizedCount > 99 ? '99+' : String(normalizedCount);
+            const nextText = normalizedCount > 99 ? '99+' : String(normalizedCount);
+            if (dot.textContent !== nextText) {
+                dot.textContent = nextText;
+            }
             dot.classList.add('active');
             return;
         }
 
-        dot.textContent = '';
+        if (dot.textContent) {
+            dot.textContent = '';
+        }
         dot.classList.remove('active');
     }
 
     // ── Badge count on the "New" tab ────────────────────────────────
     function updateNewCount(count) {
         const normalizedCount = normalizeUnreadCount(count);
+
+        if (state.renderedUnreadCount === normalizedCount) {
+            return;
+        }
+
+        state.renderedUnreadCount = normalizedCount;
 
         if (newCountBadge) {
             if (normalizedCount > 0) {
@@ -466,7 +569,7 @@
     function clearTab(tabName) {
         const list = lists[tabName];
         if (!list) return;
-        list.innerHTML = '';
+        list.replaceChildren();
         refreshEmpty(tabName);
         if (tabName === 'new') updateNewCount(0);
     }
@@ -484,13 +587,29 @@
     async function handleMarkAllAsRead() {
         await apiPost('markAllAsRead', {});
 
+        if (!lists.new || !lists.opened) {
+            updateNewCount(0);
+            notify('All notifications marked as read.', 'success');
+            return;
+        }
+
         const items = lists.new.querySelectorAll('.notification-item[data-notif-id]');
-        Array.prototype.slice.call(items).forEach(function (item) {
-            const id = item.getAttribute('data-notif-id');
-            if (id) {
-                markAsOpened(id);
-            }
-        });
+        if (items.length > 0) {
+            const fragment = document.createDocumentFragment();
+
+            Array.prototype.forEach.call(items, function (item) {
+                const actionBtn = item.querySelector('.notification-item-action.mark-action');
+                if (actionBtn) {
+                    actionBtn.remove();
+                }
+                fragment.appendChild(item);
+            });
+
+            lists.opened.prepend(fragment);
+        }
+
+        refreshEmpty('new');
+        refreshEmpty('opened');
 
         updateNewCount(0);
         notify('All notifications marked as read.', 'success');
