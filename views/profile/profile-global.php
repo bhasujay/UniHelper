@@ -33,8 +33,14 @@ $state = $isPublic ? 'public' : 'private';
 $statusRow = $connectionModel->checkStatus($currentUserId, $targetUserId);
 $friendStatus = $statusRow ? $statusRow['status'] : 'none';
 $initiatedBy = $statusRow ? $statusRow['requester_id'] : null;
+$isViewerAdmin = (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'role-admin');
 
 if ($friendStatus === 'accepted') {
+    $state = 'friend';
+}
+
+// Admins can inspect full profile details regardless of connection/public state.
+if ($isViewerAdmin) {
     $state = 'friend';
 }
 
@@ -246,6 +252,221 @@ if ($userBadges) {
         margin-left: 0.5rem;
         border: 2px solid var(--card);
     }
+
+    .gp-report-btn {
+        border-color: rgba(239, 68, 68, 0.45) !important;
+        color: #ef4444 !important;
+    }
+    .gp-report-btn:hover {
+        background: rgba(239, 68, 68, 0.12) !important;
+        color: #ef4444 !important;
+    }
+
+    .gp-reportmodal {
+        position: fixed;
+        inset: 0;
+        z-index: 10020;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .gp-reportmodal-content {
+        width: min(500px, 90%);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+        padding: 1.25rem 1.5rem;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .gp-reportmodal-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .gp-reportmodal-content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .gp-reportmodal-content::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+    }
+
+    .gp-reportmodal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        border: none;
+        background: transparent;
+        color: var(--muted-foreground);
+        font-size: 2rem;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0;
+        width: 2rem;
+        height: 2rem;
+        transition: color 0.2s ease;
+    }
+
+    .gp-reportmodal-close:hover {
+        color: var(--text);
+    }
+
+    .gp-reportmodal-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .gp-reportmodal-header h2 {
+        margin: 0;
+        color: var(--text);
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .gp-reportmodal-header p {
+        margin: 0.25rem 0 0;
+        color: var(--muted-foreground);
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .gp-report-radio-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .gp-report-radio-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--text_background);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .gp-report-radio-label:hover {
+        border-color: var(--primary);
+    }
+
+    .gp-report-radio-label:has(input:checked) {
+        border-color: #e5484d;
+        background: rgba(229, 72, 77, 0.05);
+    }
+
+    .gp-report-radio-label input[type="radio"] {
+        margin-top: 0.15rem;
+        width: 1.1rem;
+        height: 1.1rem;
+        accent-color: #e5484d;
+        cursor: pointer;
+    }
+
+    .gp-report-radio-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .gp-report-radio-title {
+        color: var(--text);
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .gp-report-radio-desc {
+        color: var(--muted-foreground);
+        font-size: 0.8rem;
+    }
+
+    .gp-report-details-group {
+        display: none;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .gp-report-details-group label {
+        color: var(--text);
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .gp-report-details-group textarea {
+        width: 100%;
+        min-height: 60px;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        background: var(--text_background);
+        color: var(--text);
+        padding: 0.7rem 0.8rem;
+        resize: vertical;
+        font: inherit;
+    }
+
+    .gp-report-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .gp-report-actions .btn {
+        flex: 1;
+        padding: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .gp-report-submit-btn {
+        background: #c23d41;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: background 0.2s;
+    }
+
+    .gp-report-submit-btn:hover:not(:disabled) {
+        background: #cf2f35;
+    }
+
+    .gp-report-submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    [data-theme="light"] .gp-reportmodal {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="light"] .gp-reportmodal-content {
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04) inset;
+    }
+
+    [data-theme="light"] .gp-report-radio-label:has(input:checked) {
+        background: rgba(207, 47, 53, 0.05);
+    }
 </style>
 
 <div class="profile-card-container" id="globalProfileContainer" data-target-id="<?= htmlspecialchars($targetUserId) ?>" data-current-user-id="<?= htmlspecialchars($currentUserId) ?>">
@@ -305,6 +526,13 @@ if ($userBadges) {
             </div>
 
             <div class="profile-top-actions">
+                <button class="btn btn-outline gp-report-btn" id="openProfileReportBtn" type="button">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 21V5"></path>
+                        <path d="M5 5c2.2-1.4 4.4-1.4 6.6 0s4.4 1.4 6.6 0V13c-2.2 1.4-4.4 1.4-6.6 0S7.2 11.6 5 13"></path>
+                    </svg>
+                    Report User
+                </button>
                 <button class="btn btn-outline" id="openBadgeShowcaseBtn" type="button">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="8" r="6"></circle>
@@ -417,6 +645,68 @@ if ($userBadges) {
                 </div>
             <?php endif; ?>
         </div>
+    </div>
+</div>
+
+<!-- Profile Report Modal -->
+<div class="gp-reportmodal" id="profileReportModal" aria-hidden="true">
+    <div class="gp-reportmodal-content" role="dialog" aria-modal="true" aria-labelledby="profileReportTitle">
+        <button class="gp-reportmodal-close" id="closeProfileReportBtn" aria-label="Close">&times;</button>
+
+        <div class="gp-reportmodal-header">
+            <h2 id="profileReportTitle">Report User</h2>
+            <p>Select the reason that best matches this profile behavior.</p>
+        </div>
+
+        <form id="profileReportForm">
+            <div class="gp-report-radio-group">
+                <label class="gp-report-radio-label">
+                    <input type="radio" name="profile_report_reason" value="harassment" required>
+                    <div class="gp-report-radio-content">
+                        <span class="gp-report-radio-title">Harassment</span>
+                        <span class="gp-report-radio-desc">Bullying, threatening, or abusive behavior.</span>
+                    </div>
+                </label>
+                <label class="gp-report-radio-label">
+                    <input type="radio" name="profile_report_reason" value="spam">
+                    <div class="gp-report-radio-content">
+                        <span class="gp-report-radio-title">Spam</span>
+                        <span class="gp-report-radio-desc">Unwanted repetitive outreach or promotional behavior.</span>
+                    </div>
+                </label>
+                <label class="gp-report-radio-label">
+                    <input type="radio" name="profile_report_reason" value="inappropriate_pfp">
+                    <div class="gp-report-radio-content">
+                        <span class="gp-report-radio-title">Inappropriate Profile Picture</span>
+                        <span class="gp-report-radio-desc">Profile image violates platform standards.</span>
+                    </div>
+                </label>
+                <label class="gp-report-radio-label">
+                    <input type="radio" name="profile_report_reason" value="fake_account">
+                    <div class="gp-report-radio-content">
+                        <span class="gp-report-radio-title">Fake Account</span>
+                        <span class="gp-report-radio-desc">Impersonation, suspicious identity, or non-genuine account.</span>
+                    </div>
+                </label>
+                <label class="gp-report-radio-label">
+                    <input type="radio" name="profile_report_reason" value="other">
+                    <div class="gp-report-radio-content">
+                        <span class="gp-report-radio-title">Other</span>
+                        <span class="gp-report-radio-desc">Use this when your reason is not listed above.</span>
+                    </div>
+                </label>
+            </div>
+
+            <div class="gp-report-details-group" id="profileReportDetailsGroup">
+                <label for="profileReportDetails">Details</label>
+                <textarea id="profileReportDetails" placeholder="Provide relevant details for moderators..."></textarea>
+            </div>
+
+            <div class="gp-report-actions">
+                <button type="button" class="btn btn-outline" id="cancelProfileReportBtn">Cancel</button>
+                <button type="submit" class="btn gp-report-submit-btn" id="submitProfileReportBtn">Submit Report</button>
+            </div>
+        </form>
     </div>
 </div>
 

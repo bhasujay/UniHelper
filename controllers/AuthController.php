@@ -5,12 +5,14 @@ namespace app\controllers;
 require_once dirname(__DIR__, 1) . '/models/University.php';
 require_once dirname(__DIR__, 1) . '/models/Major.php';
 require_once dirname(__DIR__, 1) . '/models/User.php';
+require_once dirname(__DIR__, 1) . '/models/userManagement.php';
 require_once dirname(__DIR__, 1) . '/models/Notify.php';
 require_once dirname(__DIR__, 1) . '/models/user-stat.php';
 
 use app\core\Application;
 use app\core\Request;
 use app\models\User;
+use app\models\UserManagement;
 use app\models\University;
 use app\models\Major;
 use app\models\Notify;
@@ -29,6 +31,10 @@ class AuthController
             if (empty($email) || empty($hashedPassword)) {
                 return $this->render('login.php', ['error' => 'Email and password are required']);
             }
+
+            // Restore previously deleted account snapshot before authentication.
+            $userManagement = new UserManagement();
+            $userManagement->restoreDeletedUserByEmail($email);
 
             // Find user by email
             $user = new User();

@@ -69,6 +69,13 @@ class DashboardController
     public function renderComponent($params)
     {
         $component = $params['component'] ?? $this->role_data[$this->user->role][0]['component'];
+
+        // we should verify that the requested component is actually allowed for the user's role to prevent unauthorized access to components.
+        $allowedComponents = array_column($this->role_data[$this->user->role], 'component');
+        if (!in_array($component, $allowedComponents)) {
+            return $this->renderDashboard("<div class='error'>Unauthorized access to component: {$component}</div>", $this->role_data[$this->user->role]);
+        }
+        
         
         // Set active component
         $this->activeComponent = $component;

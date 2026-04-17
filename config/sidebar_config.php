@@ -22,11 +22,12 @@ return [
         ['component' => 'announcements',   'title' => 'Feed'],
     ],
     'role-admin' => [
-        ['component' => 'announcements',   'title' => 'Feed'],
         ['component' => 'admin-panel',   'title' => 'Admin Panel'],
-        ['component' => 'connections', 'title' => 'Connections'],
-        ['component' => 'qa-forum',        'title' => 'Q&A Forum'],
+        ['component' => 'user-management', 'title' => 'User Management'],
         ['component' => 'moderation', 'title' => 'Moderation'],
+        ['component' => 'announcements',   'title' => 'Feed'],
         ['component' => 'feedback-forum', 'title' => 'User Feedbacks'],
+        ['component' => 'qa-forum',        'title' => 'Q&A Forum'],
+        ['component' => 'connections', 'title' => 'Connections'],
     ],
 ];

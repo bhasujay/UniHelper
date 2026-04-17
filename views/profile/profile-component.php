@@ -245,7 +245,119 @@ if ($userBadges) {
                     </svg>
                     Change Password
                 </a>
+                <button type="button" class="btn btn-outline profile-delete-btn" id="openDeleteAccountBtn" data-user-id="<?= htmlspecialchars($profileOwnerId) ?>">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                    </svg>
+                    Delete My Account
+                </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div id="deleteAccountConfirmModal" class="cp-otp-overlay" style="display:none">
+    <div class="cp-otp-modal-content" role="dialog" aria-modal="true" aria-labelledby="deleteAccountConfirmTitle">
+        <div class="cp-otp-header">
+            <div class="cp-otp-icon-wrapper">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                </svg>
+            </div>
+            <h2 class="cp-otp-title" id="deleteAccountConfirmTitle">Delete Your Account</h2>
+            <p class="cp-otp-subtitle">This will remove your profile from the platform.</p>
+        </div>
+
+        <div class="delete-confirm-body">
+            <p>You're about to delete your account. Please review the details below before continuing:</p>
+            <ul class="delete-confirm-list">
+                <li>Your account and profile access will be removed.</li>
+                <li>You can activate your account again by logging in.</li>
+                <li>You will need your password and a one-time code to continue.</li>
+            </ul>
+            <p>Continue only if you are sure you want to delete your account.</p>
+        </div>
+
+        <div class="cp-otp-actions">
+            <button type="button" class="btn btn-outline" id="deleteConfirmCancelBtn">Cancel</button>
+            <button type="button" class="btn btn-primary" id="deleteConfirmContinueBtn">Continue</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Password Modal -->
+<div id="deleteAccountPasswordModal" class="cp-otp-overlay" style="display:none">
+    <div class="cp-otp-modal-content" role="dialog" aria-modal="true" aria-labelledby="deleteAccountPasswordTitle">
+        <div class="cp-otp-header">
+            <div class="cp-otp-icon-wrapper">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <h2 class="cp-otp-title" id="deleteAccountPasswordTitle">Confirm Password</h2>
+            <p class="cp-otp-subtitle">Enter your password to continue the deletion process.</p>
+        </div>
+
+        <div class="profile-edit-group">
+            <label for="deleteAccountPassword">Password</label>
+            <div class="cp-input-wrapper">
+                <input type="password" id="deleteAccountPassword" name="deleteAccountPassword" placeholder="Enter your password" autocomplete="current-password">
+                <button type="button" class="cp-toggle-btn" data-target="deleteAccountPassword" aria-label="Toggle password visibility">
+                    <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="7" ry="5"/><circle cx="12" cy="12" r="2"/></svg>
+                    <svg class="eye-slash-icon" style="display:none" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="7" ry="5"/><circle cx="12" cy="12" r="2"/><line x1="5" y1="5" x2="19" y2="19"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="cp-otp-message cp-otp-error-msg" id="deletePasswordError"></div>
+        <div class="cp-otp-message cp-otp-loading-msg" id="deletePasswordLoading">Verifying...</div>
+
+        <div class="cp-otp-actions">
+            <button type="button" class="btn btn-outline" id="deletePasswordCancelBtn">Cancel</button>
+            <button type="button" class="btn btn-primary" id="deletePasswordContinueBtn">Continue</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account OTP Modal -->
+<div id="deleteAccountOtpModal" class="cp-otp-overlay" style="display:none">
+    <div class="cp-otp-modal-content">
+        <div class="cp-otp-header">
+            <div class="cp-otp-icon-wrapper">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <h2 class="cp-otp-title">Verify Your Identity</h2>
+            <p class="cp-otp-subtitle">We've sent a 6-digit code to <strong id="deleteOtpEmailDisplay"><?= htmlspecialchars($user->email) ?></strong></p>
+        </div>
+        <div class="cp-otp-inputs">
+            <input type="text" maxlength="1" class="cp-otp-digit" data-index="0">
+            <input type="text" maxlength="1" class="cp-otp-digit" data-index="1">
+            <input type="text" maxlength="1" class="cp-otp-digit" data-index="2">
+            <input type="text" maxlength="1" class="cp-otp-digit" data-index="3">
+            <input type="text" maxlength="1" class="cp-otp-digit" data-index="4">
+            <input type="text" maxlength="1" class="cp-otp-digit" data-index="5">
+        </div>
+        <div class="cp-otp-message cp-otp-error-msg" id="deleteOtpError"></div>
+        <div class="cp-otp-message cp-otp-loading-msg" id="deleteOtpLoading">Verifying...</div>
+        <div class="cp-otp-actions">
+            <button type="button" class="btn btn-outline cp-otp-cancel-btn" id="deleteOtpCancelBtn">Cancel</button>
+            <button type="button" class="btn btn-primary cp-otp-verify-btn" id="deleteOtpVerifyBtn">
+                <span>Verify &amp; Delete</span>
+            </button>
+        </div>
+        <div class="cp-otp-resend">
+            Didn't receive code? <a class="cp-otp-resend-link" id="deleteOtpResendLink">Resend</a>
         </div>
     </div>
 </div>
@@ -307,6 +419,8 @@ if ($userBadges) {
         </div>
     </div>
 </div>
+
+<script src="/unihelper/views/js/profile-delete.js"></script>
 
 <script>
 (function () {

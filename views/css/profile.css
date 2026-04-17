@@ -176,6 +176,39 @@
     transform: translateY(-2px);
 }
 
+.profile-delete-btn {
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+}
+
+.profile-delete-btn:hover {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.delete-confirm-body {
+    text-align: left;
+    color: var(--muted-foreground);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.delete-confirm-list {
+    margin: 0.75rem 0 0;
+    padding-left: 1.2rem;
+    color: var(--muted-foreground);
+}
+
+.delete-confirm-list li {
+    margin-bottom: 0.4rem;
+}
+
+.delete-confirm-warning {
+    color: #f87171;
+    font-weight: 600;
+}
+
 /* Edit Profile Styles */
 .profile-edit-form {
     width: 100%;

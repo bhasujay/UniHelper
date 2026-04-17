@@ -27,6 +27,9 @@ class ApiGateway
             return null;
         }
 
+        // role based access control can be implemented here as well if needed, but for now we are just checking if the route is in the public routes list.
+        
+
         if (file_exists(dirname(__DIR__,1) . '/controllers/' . $controller . '.php')) {
             require_once dirname(__DIR__,1) . '/controllers/' . $controller . '.php';
             $controllerClass = 'app\\controllers\\' . ucfirst($controller);
@@ -52,6 +55,8 @@ class ApiGateway
             'otpcontroller' => ['generateotpaction', 'validateotpaction'],
             'feedbackcontroller' => ['getfeedback'],
         ];
+
+        // role based access control can be implemented here as well if needed, but for now we are just checking if the route is in the public routes list.
 
         $controllerKey = strtolower($controller);
         $actionKey = strtolower($action);
