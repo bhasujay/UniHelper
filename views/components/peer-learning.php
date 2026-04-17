@@ -21,8 +21,48 @@
     }
 
     /* Peer Learning Component Styles */
+    .peer-learning-container,
+    .session-main-modal {
+        --peer-surface: var(--card);
+        --peer-surface-soft: var(--text_background);
+        --peer-border: var(--border);
+        --peer-border-strong: rgba(0, 170, 255, 0.38);
+        --peer-divider: rgba(0, 170, 255, 0.18);
+        --peer-tint-soft: rgba(0, 170, 255, 0.14);
+        --peer-tint-subtle: rgba(0, 170, 255, 0.07);
+        --peer-focus-ring: rgba(0, 170, 255, 0.24);
+        --peer-focus-shadow: rgba(0, 170, 255, 0.3);
+        --peer-overlay: rgba(0, 0, 0, 0.35);
+        --peer-on-primary: #0b1220;
+        --peer-danger: #d64545;
+        --peer-danger-hover: #bf3a3a;
+        --peer-danger-soft: #ef6464;
+        --peer-warning: #c9852e;
+        --peer-success: #2f855a;
+        --peer-form-border: rgba(0, 170, 255, 0.3);
+        --peer-picker-filter: invert(1) brightness(1.8) sepia(1) saturate(4) hue-rotate(175deg);
+        --peer-form-color-scheme: dark;
+    }
+
     .peer-learning-container {
         width: 100%;
+    }
+
+    [data-theme="light"] .peer-learning-container,
+    [data-theme="light"] .session-main-modal {
+        --peer-surface: #ffffff;
+        --peer-surface-soft: #f7f9fd;
+        --peer-border-strong: rgba(0, 95, 189, 0.35);
+        --peer-divider: rgba(0, 95, 189, 0.18);
+        --peer-tint-soft: rgba(0, 95, 189, 0.14);
+        --peer-tint-subtle: rgba(0, 95, 189, 0.08);
+        --peer-focus-ring: rgba(0, 95, 189, 0.24);
+        --peer-focus-shadow: rgba(0, 95, 189, 0.26);
+        --peer-overlay: rgba(15, 23, 42, 0.28);
+        --peer-on-primary: #0b1220;
+        --peer-form-border: rgba(0, 95, 189, 0.28);
+        --peer-picker-filter: none;
+        --peer-form-color-scheme: light;
     }
 
     .peer-learning-toolbar {
@@ -48,8 +88,8 @@
         flex: 1;
         min-width: 0;
         border-radius: 0.6rem;
-        border: 1px solid rgba(164, 109, 255, 0.4);
-        background: rgba(8, 8, 8, 0.5);
+        border: 1px solid var(--peer-border-strong);
+        background: var(--peer-surface-soft);
         color: var(--foreground);
         padding: 0.7rem 0.9rem;
         font-size: 0.95rem;
@@ -62,7 +102,7 @@
     .peer-session-search-input:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 2px rgba(164, 109, 255, 0.2);
+        box-shadow: 0 0 0 2px var(--peer-focus-ring);
     }
 
     .peer-session-search-btn,
@@ -79,7 +119,7 @@
 
     .peer-session-search-btn {
         background: var(--gradient-primary);
-        color: rgb(0, 0, 0);
+        color: var(--peer-on-primary);
     }
 
     .peer-session-search-btn:hover {
@@ -89,13 +129,13 @@
 
     .peer-session-search-clear-btn {
         background: transparent;
-        border-color: rgba(164, 109, 255, 0.45);
+        border-color: var(--peer-border-strong);
         color: var(--primary);
         display: none;
     }
 
     .peer-session-search-clear-btn:hover {
-        background: rgba(164, 109, 255, 0.15);
+        background: var(--peer-tint-soft);
     }
 
     .peer-create-session-btn {
@@ -104,7 +144,7 @@
         border-radius: 50%;
         border: 1px solid var(--primary);
         background: var(--primary);
-        color: rgb(255, 255, 255);
+        color: var(--peer-on-primary);
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -119,7 +159,7 @@
 
     .peer-create-session-btn:hover {
         background: var(--primary);
-        color: rgb(0, 0, 0);
+        color: var(--peer-on-primary);
         transform: translateY(-2px);
         box-shadow: var(--glow-primary);
     }
@@ -134,9 +174,9 @@
         right: calc(100% + 0.65rem);
         top: 50%;
         transform: translateY(-50%) translateX(10px);
-        background: rgba(164, 109, 255, 0.16);
+        background: var(--peer-tint-soft);
         color: var(--primary);
-        border: 1px solid rgba(164, 109, 255, 0.35);
+        border: 1px solid var(--peer-border-strong);
         border-radius: 999px;
         padding: 0.45rem 0.85rem;
         white-space: nowrap;
@@ -176,7 +216,7 @@
 
     .peer-tab:hover {
         color: var(--primary);
-        background: rgba(164, 109, 255, 0.05);
+        background: var(--peer-tint-subtle);
     }
 
     .peer-tab.active {
@@ -201,9 +241,9 @@
     }
 
     .session-card {
-        background: rgba(8, 8, 8, 0.5);
+        background: var(--peer-surface);
         backdrop-filter: blur(8px);
-        border: 1px solid rgba(164, 109, 255, 0.2);
+        border: 1px solid var(--peer-divider);
         border-radius: 1rem;
         padding: 1.5rem;
         transition: all 0.3s ease;
@@ -238,7 +278,7 @@
         letter-spacing: 0.5px;
         padding: 0.4rem 0.8rem;
         background: var(--gradient-primary);
-        color: rgb(0, 0, 0);
+        color: var(--peer-on-primary);
         border-radius: 0.35rem;
     }
 
@@ -292,8 +332,8 @@
         flex-direction: column;
         gap: 0.5rem;
         padding: 1rem 0;
-        border-top: 1px solid rgba(164, 109, 255, 0.1);
-        border-bottom: 1px solid rgba(164, 109, 255, 0.1);
+        border-top: 1px solid var(--peer-divider);
+        border-bottom: 1px solid var(--peer-divider);
     }
 
     .session-meta-item {
@@ -339,10 +379,10 @@
     .session-tag {
         font-size: 0.75rem;
         padding: 0.35rem 0.7rem;
-        background: rgba(164, 109, 255, 0.15);
+        background: var(--peer-tint-soft);
         color: var(--primary);
         border-radius: 0.3rem;
-        border: 1px solid rgba(164, 109, 255, 0.3);
+        border: 1px solid var(--peer-border-strong);
     }
 
     .session-creator {
@@ -352,7 +392,7 @@
         font-size: 0.85rem;
         color: var(--muted-foreground);
         padding-top: 0.5rem;
-        border-top: 1px solid rgba(164, 109, 255, 0.1);
+        border-top: 1px solid var(--peer-divider);
     }
 
     .session-creator-avatar {
@@ -360,9 +400,9 @@
         height: 32px;
         border-radius: 50%;
         object-fit: cover;
-        border: 1px solid rgba(164, 109, 255, 0.4);
+        border: 1px solid var(--peer-border-strong);
         flex-shrink: 0;
-        background: rgba(164, 109, 255, 0.1);
+        background: var(--peer-tint-soft);
     }
 
     .session-creator-details {
@@ -406,7 +446,7 @@
 
     .session-join-btn {
         background: var(--gradient-primary);
-        color: rgb(0, 0, 0);
+        color: var(--peer-on-primary);
     }
 
     .session-join-btn:hover {
@@ -415,23 +455,23 @@
     }
 
     .session-edit-btn {
-        background: rgba(164, 109, 255, 0.2);
+        background: var(--peer-tint-soft);
         color: var(--primary);
         border: 1px solid var(--primary);
     }
 
     .session-edit-btn:hover {
         background: var(--primary);
-        color: rgb(0, 0, 0);
+        color: var(--peer-on-primary);
     }
 
     .session-delete-btn {
-        background: #9f0505;
+        background: var(--peer-danger);
         color: white;
     }
 
     .session-delete-btn:hover {
-        background: #a10808;
+        background: var(--peer-danger-hover);
     }
 
     .session-actions-all {
@@ -449,18 +489,18 @@
     }
 
     .session-subscribe-btn.subscribed {
-        background: #fc8181;
+        background: var(--peer-danger-soft);
         color: #ffffff;
-        border-color: #fc8181;
+        border-color: var(--peer-danger-soft);
     }
 
     .session-subscribe-btn.subscribed:hover {
-        background: #f56565;
+        background: var(--peer-danger);
     }
 
     .session-subscribe-btn.pending {
-        border-color: #f6ad55;
-        color: #f6ad55;
+        border-color: var(--peer-warning);
+        color: var(--peer-warning);
     }
 
     .session-subscribe-btn.pending:hover {
@@ -496,8 +536,8 @@
     .empty-state {
         text-align: center;
         padding: 3rem 2rem;
-        background: rgba(8, 8, 8, 0.5);
-        border: 1px dashed rgba(164, 109, 255, 0.3);
+        background: var(--peer-surface);
+        border: 1px dashed var(--peer-border-strong);
         border-radius: 1rem;
     }
 
@@ -524,7 +564,7 @@
         display: inline-block;
         padding: 0.75rem 2rem;
         background: var(--gradient-primary);
-        color: rgb(0, 0, 0);
+        color: var(--peer-on-primary);
         border: none;
         border-radius: 0.5rem;
         font-weight: 600;
@@ -547,7 +587,7 @@
     .spinner {
         width: 40px;
         height: 40px;
-        border: 3px solid rgba(164, 109, 255, 0.2);
+        border: 3px solid var(--peer-divider);
         border-top-color: var(--primary);
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
@@ -574,7 +614,7 @@
     }
 
     .load-more-btn:hover {
-        background: rgba(164, 109, 255, 0.1);
+        background: var(--peer-tint-soft);
     }
 
     .session-card {
@@ -588,7 +628,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.4px;
-        border-top: 1px dashed rgba(164, 109, 255, 0.2);
+        border-top: 1px dashed var(--peer-divider);
         padding-top: 0.75rem;
     }
 
@@ -603,7 +643,7 @@
         inset: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.2);
+        background: var(--peer-overlay);
         z-index: 10001;
         justify-content: center;
         align-items: center;
@@ -633,7 +673,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 1rem 1.2rem;
-        border-bottom: 1px solid rgba(164, 109, 255, 0.2);
+        border-bottom: 1px solid var(--peer-divider);
     }
 
     .session-main-modal-title {
@@ -654,7 +694,7 @@
 
     .session-main-modal-close:hover {
         color: var(--foreground);
-        background: rgba(164, 109, 255, 0.16);
+        background: var(--peer-tint-soft);
     }
 
     .session-main-modal-body {
@@ -683,7 +723,7 @@
 
     .session-main-divider {
         border: 0;
-        border-top: 1px solid rgba(164, 109, 255, 0.18);
+        border-top: 1px solid var(--peer-divider);
         margin: 0.25rem 0;
     }
 
@@ -712,10 +752,10 @@
         justify-content: space-between;
         align-items: center;
         gap: 1rem;
-        border: 1px solid rgba(164, 109, 255, 0.18);
+        border: 1px solid var(--peer-divider);
         border-radius: 0.75rem;
         padding: 0.8rem 0.9rem;
-        background: rgba(8, 8, 8, 0.45);
+        background: var(--peer-surface-soft);
     }
 
     .subscriber-name {
@@ -787,7 +827,7 @@
     }
 
     .subscriber-reject-btn {
-        background: #9f0505;
+        background: var(--peer-danger);
     }
 
     .session-main-subscriber-empty {
@@ -867,14 +907,14 @@
     .create-session-modal .form-textarea,
     .create-session-modal .form-select {
         padding: 0.75rem 1rem;
-        border: 1px solid rgba(0, 170, 255, 0.25);
+        border: 1px solid var(--peer-form-border);
         border-radius: 0.5rem;
         background: var(--key);
         color: var(--text);
         font-family: inherit;
         font-size: 0.95rem;
         transition: all 0.3s ease;
-        color-scheme: dark;
+        color-scheme: var(--peer-form-color-scheme);
     }
 
     .create-session-modal .form-input:focus,
@@ -882,18 +922,18 @@
     .create-session-modal .form-select:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 10px rgba(0, 170, 255, 0.3);
+        box-shadow: 0 0 10px var(--peer-focus-shadow);
     }
 
     .create-session-modal input[type="date"],
     .create-session-modal input[type="time"],
     .create-session-modal input[type="number"] {
-        color-scheme: dark;
+        color-scheme: var(--peer-form-color-scheme);
     }
 
     .create-session-modal input[type="date"]::-webkit-calendar-picker-indicator,
     .create-session-modal input[type="time"]::-webkit-calendar-picker-indicator {
-        filter: invert(1) brightness(1.8) sepia(1) saturate(4) hue-rotate(175deg);
+        filter: var(--peer-picker-filter);
         cursor: pointer;
         opacity: 1;
     }
@@ -901,7 +941,7 @@
     .create-session-modal input[type="number"]::-webkit-inner-spin-button,
     .create-session-modal input[type="number"]::-webkit-outer-spin-button {
         opacity: 1;
-        filter: invert(1) brightness(1.8) sepia(1) saturate(4) hue-rotate(175deg);
+        filter: var(--peer-picker-filter);
     }
 
     .create-session-modal .form-textarea {
@@ -986,7 +1026,7 @@
 
     .create-session-modal .btn-create {
         background: var(--gradient-primary);
-        color: rgb(0, 0, 0);
+        color: var(--peer-on-primary);
         flex: 1;
         max-width: 250px;
     }
@@ -1012,7 +1052,7 @@
     }
 
     .create-session-modal .btn-cancel:hover {
-        background: rgba(164, 109, 255, 0.1);
+        background: var(--peer-tint-soft);
         border-color: var(--primary);
         color: var(--primary);
     }
@@ -1024,7 +1064,7 @@
     }
 
     .create-session-modal .form-error {
-        color: #fc8181;
+        color: var(--peer-danger-soft);
         font-size: 0.85rem;
         margin-top: 0.25rem;
         display: none;
@@ -1037,13 +1077,13 @@
     .create-session-modal .form-input.error,
     .create-session-modal .form-textarea.error,
     .create-session-modal .form-select.error {
-        border-color: #fc8181;
-        box-shadow: 0 0 10px rgba(252, 129, 129, 0.2);
+        border-color: var(--peer-danger-soft);
+        box-shadow: 0 0 10px rgba(214, 69, 69, 0.24);
     }
 
     .create-session-modal-error {
         text-align: center;
-        color: #fc8181;
+        color: var(--peer-danger-soft);
         padding: 1.25rem 0.5rem;
     }
 
