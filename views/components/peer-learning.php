@@ -764,6 +764,17 @@
         font-size: 0.95rem;
     }
 
+    .subscriber-name-link {
+        color: var(--primary);
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .subscriber-name-link:hover {
+        text-decoration: underline;
+    }
+
     .subscriber-row-actions {
         display: flex;
         align-items: center;
@@ -2296,10 +2307,11 @@
             const fullName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'Unknown User';
             const approveDisabled = status === 'approved' ? 'disabled' : '';
             const rejectDisabled = status === 'rejected' ? 'disabled' : '';
+            const profileUrl = `${BASE_URL}/view/profile/${item.subscriber_id}`;
 
             return `
                 <div class="subscriber-row" data-subscriber-id="${item.subscriber_id}">
-                    <div class="subscriber-name">${escapeHtml(fullName)}</div>
+                    <div class="subscriber-name"><a href="${profileUrl}" class="subscriber-name-link" target="_blank">${escapeHtml(fullName)}</a></div>
                     <div class="subscriber-row-actions">
                         <span class="subscriber-status ${status}">${formatDecisionStatus(status)}</span>
                         <button
