@@ -481,9 +481,7 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        labels: {
-                            color: getComputedStyle(document.documentElement).getPropertyValue('--foreground') || '#d0d7de'
-                        }
+                        display: false
                     }
                 }
             }
@@ -523,9 +521,7 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        labels: {
-                            color: getComputedStyle(document.documentElement).getPropertyValue('--foreground') || '#d0d7de'
-                        }
+                        display: false
                     }
                 }
             }

@@ -11,7 +11,10 @@ if (($user->role ?? '') !== 'role-admin') {
             <h2 class="sys-overview-title">System Overview</h2>
             <p class="sys-overview-subtitle">Platform-wide analytics for users, content, sessions, connections, and notification subscriber activity.</p>
         </div>
-        <div class="sys-overview-state" id="sysOverviewState">Loading analytics...</div>
+        <div class="sys-overview-header-actions">
+            <div class="sys-overview-state" id="sysOverviewState">Loading analytics...</div>
+            <button type="button" id="sysOverallReportBtn" class="sys-btn">Generate Report</button>
+        </div>
     </header>
 
     <div class="sys-toolbar">
@@ -88,6 +91,12 @@ if (($user->role ?? '') !== 'role-admin') {
             <div class="sys-chart-head">
                 <h3>User Role Distribution</h3>
             </div>
+            <div class="sys-chart-legend" aria-hidden="true">
+                <button type="button" class="sys-legend-chip" disabled><span class="sys-legend-dot sys-legend-role-applicant"></span>Applicant</button>
+                <button type="button" class="sys-legend-chip" disabled><span class="sys-legend-dot sys-legend-role-undergrad"></span>Undergraduate</button>
+                <button type="button" class="sys-legend-chip" disabled><span class="sys-legend-dot sys-legend-role-profile"></span>Profile</button>
+                <button type="button" class="sys-legend-chip" disabled><span class="sys-legend-dot sys-legend-role-admin"></span>Administrator</button>
+            </div>
             <div class="sys-chart-wrap">
                 <canvas id="sysRoleChart" aria-label="User role distribution chart"></canvas>
             </div>
@@ -96,6 +105,14 @@ if (($user->role ?? '') !== 'role-admin') {
         <article class="sys-chart-card">
             <div class="sys-chart-head">
                 <h3>Activity Distribution</h3>
+            </div>
+            <div class="sys-chart-legend" aria-hidden="true">
+                <button type="button" class="sys-legend-chip" disabled><span class="sys-legend-dot sys-legend-activity-posts"></span>Feed Posts</button>
+                <button type="button" class="sys-legend-chip" disabled><span class="sys-legend-dot sys-legend-activity-questions"></span>Questions</button>
+                <button type="button" class="sys-legend-chip" disabled><span class="sys-legend-dot sys-legend-activity-answers"></span>Answers</button>
+                <button type="button" class="sys-legend-chip" disabled><span class="sys-legend-dot sys-legend-activity-sessions"></span>Sessions</button>
+                <button type="button" class="sys-legend-chip" disabled><span class="sys-legend-dot sys-legend-activity-connections"></span>Connections</button>
+                <button type="button" class="sys-legend-chip" disabled><span class="sys-legend-dot sys-legend-activity-notifications"></span>Notifications</button>
             </div>
             <div class="sys-chart-wrap">
                 <canvas id="sysActivityChart" aria-label="Activity distribution chart"></canvas>
@@ -168,7 +185,10 @@ if (($user->role ?? '') !== 'role-admin') {
                 <h3 id="sysDetailTitle">User Activity Detail</h3>
                 <p id="sysDetailSubtitle" class="sys-detail-subtitle"></p>
             </div>
-            <button type="button" id="sysDetailClose" class="sys-detail-close" aria-label="Close">&times;</button>
+            <div class="sys-detail-actions">
+                <button type="button" id="sysDetailReportBtn" class="sys-btn">Generate User Report</button>
+                <button type="button" id="sysDetailClose" class="sys-detail-close" aria-label="Close">&times;</button>
+            </div>
         </header>
 
         <div class="sys-detail-metrics" id="sysDetailMetrics"></div>
