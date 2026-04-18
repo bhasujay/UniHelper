@@ -63,6 +63,10 @@
         <button class="qa-answermodal-close" aria-label="Close">×</button>
         <h2 class="qa-answermodal-title">Submit an Answer</h2>
         <form class="qa-answer-form" id="qaAnswerForm">
+            <div class="qa-answer-context">
+                <h3 class="qa-answer-question-title"></h3>
+                <p class="qa-answer-target">Answer to <span class="answer-to-username"></span></p>
+            </div>
             <div class="qa-form-group">
                 <label for="qa-answer-body" class="qa-form-label">Your Answer</label>
                 <textarea 
@@ -218,7 +222,7 @@
                     </div>
                     
                     <span class="qa-answer-count">0 Answers</span>
-                    <button class="btn btn-primary btn-sm answer-btn">Answer</button>
+                    <button class="btn btn-outline btn-sm answer-btn">Answer</button>
                 </div>
             </div>
         </div>

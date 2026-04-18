@@ -144,8 +144,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (answerText.length < 1) {
-            showToast('Answer must be at least 1 character long', 'error');
+        if (answerText.length < 5) {
+            showToast('Answer must be at least 5 characters long', 'error');
             return;
         }
         
@@ -218,10 +218,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     ansAvatarImg.parentElement.style.cursor = 'pointer';
                     ansUsernameEl.onclick = function(e) { e.stopPropagation(); window.location.href = ansProfileUrl; };
                     ansUsernameEl.style.cursor = 'pointer';
-                    ansUsernameEl.style.textDecoration = 'underline';
-                    ansUsernameEl.style.textDecorationColor = 'transparent';
-                    ansUsernameEl.onmouseenter = () => ansUsernameEl.style.textDecorationColor = 'currentColor';
-                    ansUsernameEl.onmouseleave = () => ansUsernameEl.style.textDecorationColor = 'transparent';
                     // Badge hover panel — question view answer cards open above
                     bindBadgeHoverPanel(ansUsernameEl, userID, 'above');
 
