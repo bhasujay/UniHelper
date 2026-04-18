@@ -1,239 +1,188 @@
 <?php
-$formData = isset($formData) && is_array($formData) ? $formData : [];
-$errors = isset($errors) && is_array($errors) ? $errors : [];
+/**
+ * Session form component — used inside the create/edit modal.
+ * 
+ * Available variables from the including context:
+ *   $formData         — array of field values   (empty for new session)
+ *   $errors           — array of field => error  (empty on first load)
+ *   $majors           — array of [ id, name ]   (from getMajors())
+ *   $isEditMode       — bool
+ *   $editingSessionId — int
+ *   $isModalContext   — bool
+ *   $formId           — string
+ *   $formClass        — string
+ *   $formAction       — string
+ */
 
-$editingSessionId = isset($editingSessionId)
-    ? (int)$editingSessionId
-    : (int)($formData['session_id'] ?? 0);
+$formData   = $formData   ?? [];
+$errors     = $errors     ?? [];
+$majors     = $majors     ?? [];
+$isEditMode = $isEditMode ?? false;
+$editingSessionId = $editingSessionId ?? 0;
+$formId     = $formId     ?? 'sessionForm';
+$formClass  = $formClass  ?? 'session-form';
+$formAction = $formAction ?? '#';
 
-$isEditMode = isset($isEditMode)
-    ? (bool)$isEditMode
-    : ($editingSessionId > 0);
-
-$formAction = isset($formAction) && is_string($formAction)
-    ? $formAction
-    : '/UniHelper/api?controller=SessionController&action=' . ($isEditMode ? 'update' : 'store');
-
-$isModalContext = isset($isModalContext) ? (bool)$isModalContext : false;
-$formId = $isModalContext ? 'modalCreateSessionForm' : 'createSessionForm';
-$formClass = $isModalContext ? 'session-form js-modal-create-session-form' : 'session-form';
-
-$subjects = [
-    'Computer Science',
-    'Engineering',
-    'Medicine',
-    'Law',
-    'Business Administration',
-    'Biotechnology',
-    'Psychology',
-    'Mathematics',
-    'Physics',
-    'Economics',
-    'Biological Science',
-    'Physical Science',
-    'Software Engineering',
-    'Information Systems',
-    'Accounting',
-    'Finance',
-    'Architecture',
-    'Quantity Surveying',
-    'Management & Information Technology (MIT)',
-    'Agriculture',
-    'Nursing',
-    'Pharmacy',
-    'Dental Surgery',
-    'Human Resource Management',
-    'Marketing',
-];
-
-$selectedSubject = (string)($formData['subject'] ?? '');
+// Decompose scheduled_at into date + time for inputs
+$scheduledAt     = $formData['scheduled_at'] ?? '';
+$scheduledDate   = '';
+$scheduledTime   = '';
+if (!empty($scheduledAt)) {
+    $dt = new \DateTime($scheduledAt);
+    $scheduledDate = $dt->format('Y-m-d');
+    $scheduledTime = $dt->format('H:i');
+}
 ?>
 
-<div class="create-session-container">
-    <div class="session-form-header">
-        <h1 class="session-form-title"><?= $isEditMode ? 'Edit Study Session' : 'Create Study Session' ?></h1>
-        <p class="session-form-subtitle"><?= $isEditMode ? 'Update your study session details' : 'Set up a new study session for peer learning' ?></p>
-    </div>
+<form id="<?= htmlspecialchars($formId) ?>"
+      class="<?= htmlspecialchars($formClass) ?>"
+      method="post"
+      action="<?= htmlspecialchars($formAction) ?>"
+      onsubmit="return false;">
 
-    <?php if (isset($errors['form'])): ?>
-        <div class="form-error show" style="display:block; margin-bottom: 1rem;"><?= htmlspecialchars($errors['form']) ?></div>
+    <?php if ($isEditMode && $editingSessionId > 0): ?>
+        <input type="hidden" name="session_id" value="<?= (int)$editingSessionId ?>">
     <?php endif; ?>
 
-    <form class="<?= htmlspecialchars($formClass) ?>" id="<?= htmlspecialchars($formId) ?>" method="POST" action="<?= htmlspecialchars($formAction) ?>">
-        <?php if ($isEditMode): ?>
-            <input type="hidden" name="session_id" id="session_id" value="<?= (int)$editingSessionId ?>">
-        <?php endif; ?>
-
-        <div class="form-group">
-            <label for="title" class="form-label required">Session Title</label>
-            <input
-                type="text"
-                id="title"
-                name="title"
-                class="form-input"
-                placeholder="e.g., Data Structures Study Group"
-                maxlength="255"
-                value="<?= htmlspecialchars($formData['title'] ?? '') ?>"
-            >
-            <?php if (isset($errors['title'])): ?>
-                <div class="form-error show"><?= htmlspecialchars($errors['title']) ?></div>
-            <?php endif; ?>
-        </div>
-
-        <div class="form-group">
-            <label for="subject" class="form-label required">Subject</label>
-            <input
-                type="text"
-                id="subject"
-                name="subject"
-                class="form-input"
-                list="subjectSuggestions"
-                placeholder="Type to search subjects"
-                value="<?= htmlspecialchars($selectedSubject) ?>"
-            >
-            <datalist id="subjectSuggestions">
-                <?php foreach ($subjects as $subjectOption): ?>
-                    <option value="<?= htmlspecialchars($subjectOption) ?>"></option>
-                <?php endforeach; ?>
-            </datalist>
-            <p class="helper-text">Start typing to see suggestions.</p>
-            <?php if (isset($errors['subject'])): ?>
-                <div class="form-error show"><?= htmlspecialchars($errors['subject']) ?></div>
-            <?php endif; ?>
-        </div>
-
-        <div class="form-group">
-            <label for="description" class="form-label required">Description</label>
-            <textarea
-                id="description"
-                name="description"
-                class="form-textarea"
-                placeholder="Provide details about the session, topics to be covered, level of difficulty, etc."
-            ><?= htmlspecialchars($formData['description'] ?? '') ?></textarea>
-            <?php if (isset($errors['description'])): ?>
-                <div class="form-error show"><?= htmlspecialchars($errors['description']) ?></div>
-            <?php endif; ?>
-        </div>
-
-        <div class="form-row-three">
-            <div class="form-group">
-                <label for="date" class="form-label required">Date</label>
-                <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    class="form-input"
-                    value="<?= htmlspecialchars($formData['date'] ?? '') ?>"
-                >
-                <?php if (isset($errors['date'])): ?>
-                    <div class="form-error show"><?= htmlspecialchars($errors['date']) ?></div>
+    <div class="session-form-grid">
+        
+        <!-- ========================================== -->
+        <!-- LEFT COLUMN: Title, Description, Audience  -->
+        <!-- ========================================== -->
+        <div class="session-form-col">
+            
+            <!-- Title -->
+            <div class="session-form-group <?= isset($errors['title']) ? 'has-error' : '' ?>">
+                <label for="sf-title">Title <span class="required">*</span></label>
+                <input type="text" id="sf-title" name="title" maxlength="255" required
+                       value="<?= htmlspecialchars($formData['title'] ?? '') ?>"
+                       placeholder="e.g. Data Structures Study Session">
+                <?php if (isset($errors['title'])): ?>
+                    <span class="field-error"><?= htmlspecialchars($errors['title']) ?></span>
                 <?php endif; ?>
             </div>
 
-            <div class="form-group">
-                <label for="time" class="form-label required">Time</label>
-                <input
-                    type="time"
-                    id="time"
-                    name="time"
-                    class="form-input"
-                    value="<?= htmlspecialchars($formData['time'] ?? '') ?>"
-                >
-                <?php if (isset($errors['time'])): ?>
-                    <div class="form-error show"><?= htmlspecialchars($errors['time']) ?></div>
+            <!-- Description -->
+            <div class="session-form-group <?= isset($errors['description']) ? 'has-error' : '' ?>">
+                <label for="sf-desc">Description <span class="required">*</span></label>
+                <textarea id="sf-desc" name="description" rows="5" required
+                          placeholder="What will you cover in this session?"><?= htmlspecialchars($formData['description'] ?? '') ?></textarea>
+                <?php if (isset($errors['description'])): ?>
+                    <span class="field-error"><?= htmlspecialchars($errors['description']) ?></span>
                 <?php endif; ?>
             </div>
 
-            <div class="form-group">
-                <label for="duration" class="form-label required">Duration (hrs)</label>
-                <input
-                    type="number"
-                    id="duration"
-                    name="duration"
-                    class="form-input"
-                    placeholder="e.g., 2"
-                    min="0.5"
-                    step="0.5"
-                    value="<?= htmlspecialchars($formData['duration'] ?? '') ?>"
-                >
-                <?php if (isset($errors['duration'])): ?>
-                    <div class="form-error show"><?= htmlspecialchars($errors['duration']) ?></div>
+            <!-- Audience -->
+            <div class="session-form-group <?= isset($errors['audience']) ? 'has-error' : '' ?>">
+                <label>Audience <span class="required">*</span></label>
+                <div class="session-audience-radios">
+                    <?php
+                    $audiences = [
+                        'public'          => ['label' => 'Public',          'desc' => 'Open to everyone', 'icon' => '🌐'],
+                        'university_only' => ['label' => 'University',      'desc' => 'Same university students', 'icon' => '🏫'],
+                        'private'         => ['label' => 'Private',         'desc' => 'Requires your approval', 'icon' => '🔒'],
+                    ];
+                    $currentAudience = $formData['audience'] ?? 'public';
+                    foreach ($audiences as $val => $meta):
+                    ?>
+                        <label class="audience-option <?= $currentAudience === $val ? 'selected' : '' ?>">
+                            <input type="radio" name="audience" value="<?= $val ?>"
+                                   <?= $currentAudience === $val ? 'checked' : '' ?> required>
+                            <span class="audience-icon"><?= $meta['icon'] ?></span>
+                            <span class="audience-label"><?= $meta['label'] ?></span>
+                            <span class="audience-desc"><?= $meta['desc'] ?></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <?php if (isset($errors['audience'])): ?>
+                    <span class="field-error"><?= htmlspecialchars($errors['audience']) ?></span>
                 <?php endif; ?>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label for="sessionLink" class="form-label">Session Link</label>
-            <input
-                type="url"
-                id="sessionLink"
-                name="sessionLink"
-                class="form-input"
-                placeholder="e.g., https://meet.google.com/xyz or https://zoom.us/j/123456"
-                value="<?= htmlspecialchars($formData['sessionLink'] ?? '') ?>"
-            >
-            <p class="helper-text">Link to video conference (Zoom, Google Meet, etc.)</p>
-        </div>
+        </div> <!-- /LEFT COLUMN -->
 
-        <div class="form-group">
-            <label class="form-label required">Audience</label>
-            <div class="radio-group">
-                <div class="radio-item">
-                    <input
-                        type="radio"
-                        id="my-university"
-                        name="audience"
-                        value="my_university"
-                        <?= ($formData['audience'] ?? '') === 'my_university' ? 'checked' : '' ?>
-                    >
-                    <label for="my-university">My University</label>
+        <!-- ========================================== -->
+        <!-- RIGHT COLUMN: Major, Date/Time, More       -->
+        <!-- ========================================== -->
+        <div class="session-form-col">
+            
+            <!-- Major (dropdown from DB) -->
+            <div class="session-form-group">
+                <label for="sf-major">Subject / Major</label>
+                <select id="sf-major" name="major_id">
+                    <option value="">— Select a major —</option>
+                    <?php foreach ($majors as $major): ?>
+                        <option value="<?= (int)$major['id'] ?>"
+                            <?= ((int)($formData['major_id'] ?? 0) === (int)$major['id']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($major['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Date & Time row -->
+            <div class="session-form-row">
+                <div class="session-form-group <?= isset($errors['date']) ? 'has-error' : '' ?>">
+                    <label for="sf-date">Date <span class="required">*</span></label>
+                    <input type="date" id="sf-date" name="date" required
+                           value="<?= htmlspecialchars($scheduledDate) ?>"
+                           min="<?= date('Y-m-d') ?>">
+                    <?php if (isset($errors['date'])): ?>
+                        <span class="field-error"><?= htmlspecialchars($errors['date']) ?></span>
+                    <?php endif; ?>
                 </div>
-                <div class="radio-item">
-                    <input
-                        type="radio"
-                        id="all-universities"
-                        name="audience"
-                        value="all_universities"
-                        <?= ($formData['audience'] ?? '') === 'all_universities' ? 'checked' : '' ?>
-                    >
-                    <label for="all-universities">All Universities</label>
-                </div>
-                <div class="radio-item">
-                    <input
-                        type="radio"
-                        id="private"
-                        name="audience"
-                        value="private"
-                        <?= ($formData['audience'] ?? '') === 'private' ? 'checked' : '' ?>
-                    >
-                    <label for="private">Private</label>
+                <div class="session-form-group <?= isset($errors['time']) ? 'has-error' : '' ?>">
+                    <label for="sf-time">Time <span class="required">*</span></label>
+                    <input type="time" id="sf-time" name="time" required
+                           value="<?= htmlspecialchars($scheduledTime) ?>">
+                    <?php if (isset($errors['time'])): ?>
+                        <span class="field-error"><?= htmlspecialchars($errors['time']) ?></span>
+                    <?php endif; ?>
                 </div>
             </div>
-            <?php if (isset($errors['audience'])): ?>
-                <div class="form-error show"><?= htmlspecialchars($errors['audience']) ?></div>
-            <?php endif; ?>
-        </div>
 
-        <div class="form-group">
-            <label for="tags" class="form-label">Tags</label>
-            <input
-                type="text"
-                id="tags"
-                name="tags"
-                class="form-input"
-                placeholder="e.g., exam prep, beginner friendly, advanced (separate with commas)"
-                value="<?= htmlspecialchars($formData['tags'] ?? '') ?>"
-            >
-            <p class="helper-text">Add tags to help others find your session</p>
-        </div>
+            <!-- Duration -->
+            <div class="session-form-group <?= isset($errors['duration_minutes']) ? 'has-error' : '' ?>">
+                <label for="sf-duration">Duration <span class="required">*</span></label>
+                <select id="sf-duration" name="duration_minutes" required>
+                    <?php
+                    $durOptions = [15 => '15 min', 30 => '30 min', 45 => '45 min', 60 => '1 hour', 90 => '1.5 hours', 120 => '2 hours', 180 => '3 hours', 240 => '4 hours'];
+                    $currentDuration = (int)($formData['duration_minutes'] ?? 60);
+                    foreach ($durOptions as $val => $label):
+                    ?>
+                        <option value="<?= $val ?>" <?= $currentDuration === $val ? 'selected' : '' ?>><?= $label ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <?php if (isset($errors['duration_minutes'])): ?>
+                    <span class="field-error"><?= htmlspecialchars($errors['duration_minutes']) ?></span>
+                <?php endif; ?>
+            </div>
 
-        <div class="form-actions">
-            <?php if ($isModalContext): ?>
-                <button type="button" class="btn btn-cancel" data-action="close-create-session-modal">Cancel</button>
-            <?php else: ?>
-                <button type="button" class="btn btn-cancel" onclick="window.history.back()">Cancel</button>
-            <?php endif; ?>
-            <button type="submit" class="btn btn-create"><?= $isEditMode ? 'Update Session' : 'Create Session' ?></button>
-        </div>
-    </form>
-</div>
+            <!-- Session Link -->
+            <div class="session-form-group">
+                <label for="sf-link">Session Link <span class="hint">(Zoom, Meet, etc.)</span></label>
+                <input type="url" id="sf-link" name="session_link"
+                       value="<?= htmlspecialchars($formData['session_link'] ?? '') ?>"
+                       placeholder="https://meet.google.com/abc-defg-hij">
+            </div>
+
+            <!-- Tags -->
+            <div class="session-form-group">
+                <label for="sf-tags">Tags <span class="hint">(comma-separated)</span></label>
+                <input type="text" id="sf-tags" name="tags"
+                       value="<?= htmlspecialchars($formData['tags'] ?? '') ?>"
+                       placeholder="e.g. algorithms, midterm-prep">
+            </div>
+
+        </div> <!-- /RIGHT COLUMN -->
+
+    </div> <!-- /session-form-grid -->
+
+    <!-- Actions -->
+    <div class="session-form-actions">
+        <button type="button" class="btn btn-outline js-cancel-session-form">Cancel</button>
+        <button type="submit" class="btn btn-primary js-submit-session-form">
+            <?= $isEditMode ? 'Save Changes' : 'Create Session' ?>
+        </button>
+    </div>
+</form>

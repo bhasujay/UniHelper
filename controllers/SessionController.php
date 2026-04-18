@@ -2,8 +2,8 @@
 
 namespace app\controllers;
 
-require_once dirname(__DIR__, 1) . '/models/Session_model.php';
-require_once dirname(__DIR__, 1) . '/models/User.php';
+require_once dirname(__DIR__) . '/models/Session_model.php';
+require_once dirname(__DIR__) . '/models/User.php';
 
 use app\core\Application;
 use app\core\Request;
@@ -12,986 +12,367 @@ use app\models\User;
 
 class SessionController
 {
-    protected $sessionModel;
-    protected $user;
-    private const DEFAULT_DURATION_HOURS = 1.0;
+    private $model;
+    private $user;
 
     public function __construct()
     {
-        // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
             header('Location: /UniHelper/home');
             exit;
         }
-
-        // Get the user from database
         $userModel = new User();
         $this->user = $userModel->findById($_SESSION['user_id']);
-        
         if (!$this->user) {
             session_destroy();
             header('Location: /UniHelper/register');
             exit;
         }
-
-        $this->sessionModel = new Session_model();
+        $this->model = new Session_model();
+        // Auto-update session statuses on every controller instantiation
+        $this->model->autoUpdateStatuses();
     }
 
-    // GET /create-session - Display create session form
-    public function index()
+    private function json($data, int $status = 200): void
     {
-        $user = $this->user;
-        $userData = [
-            'userId' => $this->user->id,
-            'university' => $this->user->University ?? ''
-        ];
-        
-        include Application::$ROOT_DIR . '/views/components/create-session.php';
-    }
-
-    // POST /create-session - Handle form submission
-    public function store(Request $request)
-    {
-        [$errors, $formData, $sessionData] = $this->validateSessionPayload($request);
-
-        // If there are validation errors, reload the form with errors
-        if (!empty($errors)) {
-            $user = $this->user;
-            $userData = [
-                'userId' => $this->user->id,
-                'university' => $this->user->University ?? ''
-            ];
-            $isEditMode = false;
-            $editingSessionId = 0;
-
-            include Application::$ROOT_DIR . '/views/components/create-session.php';
-            return;
-        }
-
-        try {
-            // Create the session
-            $this->sessionModel->create($sessionData);
-            // Redirect to Peer Learning page with success
-            header('Location: /UniHelper/peer-learning');
-            exit;
-        } catch (\Exception $e) {
-            // Handle database error
-            $user = $this->user;
-            $userData = [
-                'userId' => $this->user->id,
-                'university' => $this->user->University ?? ''
-            ];
-            $isEditMode = false;
-            $editingSessionId = 0;
-            $errors['form'] = 'An error occurred while creating the session. Please try again.';
-
-            include Application::$ROOT_DIR . '/views/components/create-session.php';
-            return;
-        }
-    }
-
-    // GET /api?controller=SessionController&action=getSessionForEdit&id={id}
-    public function getSessionForEdit(Request $request)
-    {
+        http_response_code($status);
         header('Content-Type: application/json');
+        echo json_encode($data);
+    }
+
+    private function userId(): int
+    {
+        return (int)$this->user->id;
+    }
+
+    private function userUni(): ?int
+    {
+        $uni = $this->user->University ?? null;
+        return ($uni !== null && $uni !== '') ? (int)$uni : null;
+    }
+
+    // ─── GET  getAllSessions ────────────────────────────
+    public function getAllSessions(Request $request): void
+    {
+        $page   = max(1, (int)($request->get('page') ?? 1));
+        $limit  = 12;
+        $offset = ($page - 1) * $limit;
 
         try {
-            $sessionId = $request->get('id');
+            $sessions = $this->model->getAllSessions($this->userId(), $this->userUni(), $limit, $offset);
+            $this->json(['success' => true, 'data' => $sessions, 'page' => $page, 'count' => count($sessions)]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to fetch sessions.'], 500);
+        }
+    }
 
-            if (!$sessionId) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Session ID is required.'
-                ]);
-                return;
-            }
+    // ─── GET  getMySessions ────────────────────────────
+    public function getMySessions(Request $request): void
+    {
+        $page   = max(1, (int)($request->get('page') ?? 1));
+        $limit  = 12;
+        $offset = ($page - 1) * $limit;
 
-            $session = $this->sessionModel->find($sessionId);
+        try {
+            $sessions = $this->model->getMySessions($this->userId(), $limit, $offset);
+            $this->json(['success' => true, 'data' => $sessions, 'page' => $page, 'count' => count($sessions)]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to fetch your sessions.'], 500);
+        }
+    }
 
+    // ─── GET  getSubscribedSessions ────────────────────
+    public function getSubscribedSessions(Request $request): void
+    {
+        try {
+            $sessions = $this->model->getSubscribedSessions($this->userId());
+            $this->json(['success' => true, 'data' => $sessions]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to fetch subscribed sessions.'], 500);
+        }
+    }
+
+    // ─── GET  getSession ───────────────────────────────
+    public function getSession(Request $request): void
+    {
+        $id = (int)($request->get('id') ?? 0);
+        if ($id <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid session ID.'], 400);
+            return;
+        }
+
+        try {
+            $session = $this->model->getSessionById($id, $this->userId());
             if (!$session) {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Session not found.'
-                ]);
+                $this->json(['success' => false, 'message' => 'Session not found.'], 404);
                 return;
             }
-
-            if ((int)$session['user_id'] !== (int)$this->user->id) {
-                http_response_code(403);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'You are not authorized to edit this session.'
-                ]);
-                return;
-            }
-
-            echo json_encode([
-                'success' => true,
-                'data' => $session
-            ]);
+            $this->json(['success' => true, 'data' => $session]);
         } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Failed to fetch session details.'
-            ]);
+            $this->json(['success' => false, 'message' => 'Failed to load session.'], 500);
         }
     }
 
-    // GET /api?controller=SessionController&action=getSessionForView&session_id={id}
-    public function getSessionForView(Request $request)
+    // ─── GET  getSessionForm (returns rendered HTML) ───
+    public function getSessionForm(Request $request): void
     {
-        header('Content-Type: application/json');
-
-        try {
-            $sessionId = filter_var($request->get('session_id'), FILTER_VALIDATE_INT);
-
-            if ($sessionId === false || $sessionId <= 0) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Valid session ID is required.'
-                ]);
-                return;
-            }
-
-            $session = $this->sessionModel->findVisibleById(
-                (int)$sessionId,
-                (int)$this->user->id,
-                $this->user->University ?? null
-            );
-
-            if (!$session) {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Session not found or not accessible.'
-                ]);
-                return;
-            }
-
-            $sessionList = $this->addExpiredFlag([$session]);
-            $session = $sessionList[0] ?? $session;
-
-            echo json_encode([
-                'success' => true,
-                'data' => $session
-            ]);
-        } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Failed to load session view.'
-            ]);
-        }
-    }
-
-    // POST /api?controller=SessionController&action=update
-    public function update(Request $request)
-    {
-        $sessionId = $request->get('session_id');
-
-        if (!$sessionId) {
-            header('Location: /UniHelper/peer-learning');
-            exit;
-        }
-
-        $session = $this->sessionModel->find($sessionId);
-        if (!$session || (int)$session['user_id'] !== (int)$this->user->id) {
-            header('Location: /UniHelper/peer-learning');
-            exit;
-        }
-
-        [$errors, $formData, $sessionData] = $this->validateSessionPayload($request, (int)$sessionId);
-
-        if (!empty($errors)) {
-            $user = $this->user;
-            $userData = [
-                'userId' => $this->user->id,
-                'university' => $this->user->University ?? ''
-            ];
-            $isEditMode = true;
-            $editingSessionId = (int)$sessionId;
-
-            include Application::$ROOT_DIR . '/views/components/create-session.php';
-            return;
-        }
-
-        try {
-            $this->sessionModel->updateByOwner((int)$sessionId, (int)$this->user->id, $sessionData);
-            header('Location: /UniHelper/peer-learning');
-            exit;
-        } catch (\Exception $e) {
-            $user = $this->user;
-            $userData = [
-                'userId' => $this->user->id,
-                'university' => $this->user->University ?? ''
-            ];
-            $isEditMode = true;
-            $editingSessionId = (int)$sessionId;
-            $errors['form'] = 'An error occurred while updating the session. Please try again.';
-
-            include Application::$ROOT_DIR . '/views/components/create-session.php';
-            return;
-        }
-    }
-
-    // GET /api?controller=SessionController&action=getSessionFormModal&session_id={id?}
-    public function getSessionFormModal(Request $request)
-    {
-        header('Content-Type: application/json');
-
-        $rawSessionId = $request->get('session_id');
-        $sessionId = filter_var($rawSessionId, FILTER_VALIDATE_INT);
-        $editingSessionId = ($sessionId !== false && (int)$sessionId > 0) ? (int)$sessionId : 0;
-        $isEditMode = $editingSessionId > 0;
-
+        $sessionId = (int)($request->get('session_id') ?? 0);
+        $isEditMode = $sessionId > 0;
         $formData = [];
         $errors = [];
 
         if ($isEditMode) {
-            try {
-                $session = $this->sessionModel->find($editingSessionId);
-                if (!$session) {
-                    http_response_code(404);
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Session not found.'
-                    ]);
-                    return;
-                }
-
-                if ((int)$session['user_id'] !== (int)$this->user->id) {
-                    http_response_code(403);
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'You are not authorized to edit this session.'
-                    ]);
-                    return;
-                }
-
-                $formData = $this->mapSessionToFormData($session, $editingSessionId);
-            } catch (\Exception $e) {
-                http_response_code(500);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Failed to load the session form.'
-                ]);
+            $session = $this->model->getSessionById($sessionId, $this->userId());
+            if (!$session || (int)$session['user_id'] !== $this->userId()) {
+                $this->json(['success' => false, 'message' => 'Session not found or unauthorized.'], 404);
                 return;
             }
-        }
-
-        $html = $this->renderSessionFormHtml($formData, $errors, $isEditMode, $editingSessionId, true);
-
-        echo json_encode([
-            'success' => true,
-            'data' => [
-                'title' => $isEditMode ? 'Edit Study Session' : 'Create Study Session',
-                'html' => $html,
-                'is_edit_mode' => $isEditMode,
-                'session_id' => $editingSessionId
-            ]
-        ]);
-    }
-
-    // POST /api?controller=SessionController&action=submitSessionModal
-    public function submitSessionModal(Request $request)
-    {
-        header('Content-Type: application/json');
-
-        $rawSessionId = $request->get('session_id');
-        $sessionId = filter_var($rawSessionId, FILTER_VALIDATE_INT);
-        $editingSessionId = ($sessionId !== false && (int)$sessionId > 0) ? (int)$sessionId : 0;
-        $isEditMode = $editingSessionId > 0;
-
-        if ($isEditMode) {
-            $existingSession = $this->sessionModel->find($editingSessionId);
-
-            if (!$existingSession) {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Session not found.'
-                ]);
-                return;
-            }
-
-            if ((int)$existingSession['user_id'] !== (int)$this->user->id) {
-                http_response_code(403);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'You are not authorized to edit this session.'
-                ]);
-                return;
-            }
-        }
-
-        [$errors, $formData, $sessionData] = $this->validateSessionPayload(
-            $request,
-            $isEditMode ? $editingSessionId : null
-        );
-
-        if (!empty($errors)) {
-            http_response_code(422);
-            echo json_encode([
-                'success' => false,
-                'validation' => true,
-                'message' => 'Please fix the highlighted fields.',
-                'data' => [
-                    'html' => $this->renderSessionFormHtml($formData, $errors, $isEditMode, $editingSessionId, true)
-                ]
-            ]);
-            return;
+            $formData = [
+                'title'            => $session['title'] ?? '',
+                'description'      => $session['description'] ?? '',
+                'major_id'         => $session['major_id'] ?? '',
+                'audience'         => $session['audience'] ?? '',
+                'session_link'     => $session['session_link'] ?? '',
+                'tags'             => $session['tags'] ?? '',
+                'scheduled_at'     => $session['scheduled_at'] ?? '',
+                'duration_minutes' => $session['duration_minutes'] ?? 60,
+                'session_id'       => $sessionId,
+            ];
         }
 
         try {
-            $resultSessionId = $editingSessionId;
-
-            if ($isEditMode) {
-                $this->sessionModel->updateByOwner($editingSessionId, (int)$this->user->id, $sessionData);
-            } else {
-                $resultSessionId = (int)$this->sessionModel->create($sessionData);
-            }
-
-            $sessionView = $this->sessionModel->findVisibleById(
-                (int)$resultSessionId,
-                (int)$this->user->id,
-                $this->user->University ?? null
-            );
-
-            if ($sessionView) {
-                $sessionList = $this->addExpiredFlag([$sessionView]);
-                $sessionView = $sessionList[0] ?? $sessionView;
-            }
-
-            echo json_encode([
-                'success' => true,
-                'message' => $isEditMode ? 'Session updated successfully.' : 'Session created successfully.',
-                'data' => [
-                    'operation' => $isEditMode ? 'update' : 'create',
-                    'session_id' => (int)$resultSessionId,
-                    'session' => $sessionView
-                ]
-            ]);
+            $majors = $this->model->getMajors();
         } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => $isEditMode
-                    ? 'An error occurred while updating the session. Please try again.'
-                    : 'An error occurred while creating the session. Please try again.',
-                'data' => [
-                    'html' => $this->renderSessionFormHtml(
-                        $formData,
-                        ['form' => $isEditMode
-                            ? 'An error occurred while updating the session. Please try again.'
-                            : 'An error occurred while creating the session. Please try again.'],
-                        $isEditMode,
-                        $editingSessionId,
-                        true
-                    )
-                ]
-            ]);
-        }
-    }
-
-    // GET /api/sessions - Fetch all sessions with pagination (JSON)
-    public function getAllSessions(Request $request)
-    {
-        header('Content-Type: application/json');
-        
-        try {
-            $page = max(1, (int)($request->get('page') ?? 1));
-            $limit = 10;
-            $offset = ($page - 1) * $limit;
-            
-            $sessions = $this->sessionModel->findAll(
-                [],
-                $limit,
-                $offset,
-                (int)$this->user->id,
-                $this->user->University ?? null
-            );
-            
-            // Mark expired sessions
-            $sessions = $this->markExpiredSessions($sessions);
-            
-            echo json_encode([
-                'success' => true,
-                'data' => $sessions,
-                'count' => count($sessions),
-                'page' => $page,
-                'limit' => $limit
-            ]);
-        } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Failed to fetch sessions.'
-            ]);
-        }
-    }
-
-    // GET /api/sessions/my - Fetch user's sessions (JSON) - includes expired
-    public function getMyessions(Request $request)
-    {
-        header('Content-Type: application/json');
-        
-        try {
-            $page = max(1, (int)($request->get('page') ?? 1));
-            $limit = 10;
-            $offset = ($page - 1) * $limit;
-            
-            $sessions = $this->sessionModel->findByUserId($this->user->id, $limit, $offset, (int)$this->user->id);
-            
-            // Add expired flag
-            $sessions = $this->addExpiredFlag($sessions);
-            
-            echo json_encode([
-                'success' => true,
-                'data' => $sessions,
-                'count' => count($sessions),
-                'page' => $page,
-                'limit' => $limit
-            ]);
-        } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Failed to fetch your sessions.'
-            ]);
-        }
-    }
-
-    // GET /api?controller=SessionController&action=searchSessions&query=...&tab=my-sessions|all-sessions&page=1
-    public function searchSessions(Request $request)
-    {
-        header('Content-Type: application/json');
-
-        try {
-            $query = trim((string)($request->get('query') ?? ''));
-            $tab = trim((string)($request->get('tab') ?? 'my-sessions'));
-            $page = max(1, (int)($request->get('page') ?? 1));
-            $limit = 10;
-            $offset = ($page - 1) * $limit;
-
-            if (strlen($query) < 2) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Search query must be at least 2 characters long.'
-                ]);
-                return;
-            }
-
-            if (!in_array($tab, ['my-sessions', 'all-sessions'], true)) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Invalid tab selection.'
-                ]);
-                return;
-            }
-
-            if ($tab === 'my-sessions') {
-                $sessions = $this->sessionModel->searchMySessions(
-                    $query,
-                    (int)$this->user->id,
-                    $limit,
-                    $offset,
-                    (int)$this->user->id
-                );
-            } else {
-                $sessions = $this->sessionModel->searchVisibleSessions(
-                    $query,
-                    (int)$this->user->id,
-                    $this->user->University ?? null,
-                    $limit,
-                    $offset
-                );
-            }
-
-            foreach ($sessions as &$session) {
-                $session['is_expired'] = 0;
-            }
-
-            echo json_encode([
-                'success' => true,
-                'data' => $sessions,
-                'count' => count($sessions),
-                'page' => $page,
-                'limit' => $limit
-            ]);
-        } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Failed to search sessions.'
-            ]);
-        }
-    }
-
-    // POST /api?controller=SessionController&action=subscribeAction
-    public function subscribeAction(Request $request)
-    {
-        header('Content-Type: application/json');
-
-        if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => 'User not authenticated'
-            ]);
-            return;
+            $majors = [];
         }
 
-        $userId = (int)$_SESSION['user_id'];
-        $sessionId = filter_var($request->get('session_id'), FILTER_VALIDATE_INT);
-
-        if ($sessionId === false || $sessionId <= 0) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Invalid session ID'
-            ]);
-            return;
-        }
-
-        try {
-            $state = $this->sessionModel->subscribe($userId, (int)$sessionId);
-
-            echo json_encode([
-                'success' => true,
-                'message' => 'Subscription updated successfully',
-                'data' => $state
-            ]);
-        } catch (\Exception $e) {
-            $statusCode = str_contains($e->getMessage(), 'only subscribe to sessions from your university') ? 403 : 500;
-            http_response_code($statusCode);
-            echo json_encode([
-                'success' => false,
-                'message' => $statusCode === 403 ? $e->getMessage() : 'Failed to subscribe'
-            ]);
-        }
-    }
-
-    // POST /api?controller=SessionController&action=unsubscribeAction
-    public function unsubscribeAction(Request $request)
-    {
-        header('Content-Type: application/json');
-
-        if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => 'User not authenticated'
-            ]);
-            return;
-        }
-
-        $userId = (int)$_SESSION['user_id'];
-        $sessionId = filter_var($request->get('session_id'), FILTER_VALIDATE_INT);
-
-        if ($sessionId === false || $sessionId <= 0) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Invalid session ID'
-            ]);
-            return;
-        }
-
-        try {
-            $state = $this->sessionModel->unsubscribe($userId, (int)$sessionId);
-
-            echo json_encode([
-                'success' => true,
-                'message' => 'Unsubscribed successfully',
-                'data' => $state
-            ]);
-        } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Failed to unsubscribe'
-            ]);
-        }
-    }
-
-    // POST /api/sessions/delete - Delete a session (JSON)
-    public function deleteSession(Request $request)
-    {
-        header('Content-Type: application/json');
-        
-        try {
-            $sessionId = $request->get('id');
-            
-            if (!$sessionId) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Session ID is required.'
-                ]);
-                return;
-            }
-            
-            // Get the session
-            $session = $this->sessionModel->find($sessionId);
-            
-            if (!$session) {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Session not found.'
-                ]);
-                return;
-            }
-            
-            // Check if user is the creator
-            if ($session['user_id'] != $this->user->id) {
-                http_response_code(403);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'You are not authorized to delete this session.'
-                ]);
-                return;
-            }
-            
-            // Delete the session
-            $deleted = $this->sessionModel->softDelete((int)$sessionId);
-            if (!$deleted) {
-                throw new \Exception('Failed to delete session.');
-            }
-
-            // Notify all non-rejected subscribers.
-            $this->sessionModel->notifyDeletedSessionToSubscribers((int)$sessionId, (int)$this->user->id);
-            
-            echo json_encode([
-                'success' => true,
-                'message' => 'Session deleted successfully.'
-            ]);
-        } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Failed to delete session.'
-            ]);
-        }
-    }
-
-    // GET /api?controller=SessionController&action=getSubscriberList&session_id={id}
-    public function getSubscriberList(Request $request)
-    {
-        header('Content-Type: application/json');
-
-        $sessionId = filter_var($request->get('session_id'), FILTER_VALIDATE_INT);
-
-        if ($sessionId === false || $sessionId <= 0) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Invalid session ID'
-            ]);
-            return;
-        }
-
-        try {
-            if (!$this->sessionModel->isPrivateSessionOwnedBy((int)$sessionId, (int)$this->user->id)) {
-                http_response_code(403);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'You are not authorized to view this subscriber list.'
-                ]);
-                return;
-            }
-
-            $subscribers = $this->sessionModel->getSubscriberList((int)$sessionId, (int)$this->user->id);
-
-            echo json_encode([
-                'success' => true,
-                'data' => $subscribers
-            ]);
-        } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Failed to fetch subscriber list.'
-            ]);
-        }
-    }
-
-    // POST /api?controller=SessionController&action=approveSubscriberAction
-    public function approveSubscriberAction(Request $request)
-    {
-        $this->handleSubscriberDecision($request, 'approved');
-    }
-
-    // POST /api?controller=SessionController&action=rejectSubscriberAction
-    public function rejectSubscriberAction(Request $request)
-    {
-        $this->handleSubscriberDecision($request, 'rejected');
-    }
-
-    // GET /api?controller=SessionController&action=getSubscribedSessions
-    public function getSubscribedSessions(Request $request)
-    {
-        header('Content-Type: application/json');
-
-        $userId = $request->session('user_id');
-
-        try {
-            $sessions = $this->sessionModel->findSubscribedSessions((int)$userId);
-
-            $sessions = $this->addExpiredFlag($sessions);
-
-            echo json_encode([
-                'success' => true,
-                'data' => $sessions
-            ]);
-        } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Failed to fetch subscribed sessions.'
-            ]);
-        }
-    }
-
-    /**
-     * Helper method to mark expired sessions
-     * Checks if session end time has passed and auto-expires them
-     */
-    private function markExpiredSessions($sessions)
-    {
-        $now = new \DateTime();
-        
-        foreach ($sessions as &$session) {
-            $sessionEndDateTime = $this->getSessionEndDateTime($session);
-            
-            // Expire only after the computed end time is in the past.
-            if ($sessionEndDateTime < $now && is_null($session['deleted_at'])) {
-                $this->sessionModel->markAsExpired($session['id']);
-                $session['deleted_at'] = date('Y-m-d H:i:s');
-            }
-        }
-        
-        return $sessions;
-    }
-
-    /**
-     * Helper method to add expired flag to sessions
-     * Used for "My Sessions" to show expired label
-     */
-    private function addExpiredFlag($sessions)
-    {
-        $now = new \DateTime();
-        
-        foreach ($sessions as &$session) {
-            $sessionEndDateTime = $this->getSessionEndDateTime($session);
-            $session['is_expired'] = $sessionEndDateTime < $now ? 1 : 0;
-            
-            // If expired and not already marked, mark it now
-            if ($session['is_expired'] && is_null($session['deleted_at'])) {
-                $this->sessionModel->markAsExpired($session['id']);
-                $session['deleted_at'] = date('Y-m-d H:i:s');
-            }
-        }
-        
-        return $sessions;
-    }
-
-    private function getSessionEndDateTime(array $session): \DateTime
-    {
-        $startDateTime = new \DateTime((string)$session['date'] . ' ' . (string)$session['time']);
-        $durationHours = $this->normalizeDurationHours($session['duration'] ?? null);
-        $durationSeconds = (int)round($durationHours * 3600);
-
-        if ($durationSeconds > 0) {
-            $startDateTime->modify('+' . $durationSeconds . ' seconds');
-        }
-
-        return $startDateTime;
-    }
-
-    private function normalizeDurationHours($duration): float
-    {
-        if (!is_numeric($duration)) {
-            return self::DEFAULT_DURATION_HOURS;
-        }
-
-        $durationHours = (float)$duration;
-        if ($durationHours <= 0) {
-            return self::DEFAULT_DURATION_HOURS;
-        }
-
-        return $durationHours;
-    }
-
-    /**
-     * Validate create/update payload and return [errors, formData, sessionData]
-     */
-    private function validateSessionPayload(Request $request, ?int $sessionId = null): array
-    {
-        $errors = [];
-
-        $title = trim((string)($request->get('title') ?? ''));
-        $subject = trim((string)($request->get('subject') ?? ''));
-        $description = trim((string)($request->get('description') ?? ''));
-        $date = trim((string)($request->get('date') ?? ''));
-        $time = trim((string)($request->get('time') ?? ''));
-        $duration = trim((string)($request->get('duration') ?? ''));
-        $sessionLink = trim((string)($request->get('sessionLink') ?? ''));
-        $audience = trim((string)($request->get('audience') ?? ''));
-        $tags = trim((string)($request->get('tags') ?? ''));
-
-        if ($title === '') {
-            $errors['title'] = 'Session title is required.';
-        } elseif (strlen($title) > 255) {
-            $errors['title'] = 'Session title must not exceed 255 characters.';
-        }
-
-        if ($subject === '') {
-            $errors['subject'] = 'Subject is required.';
-        }
-
-        if ($description === '') {
-            $errors['description'] = 'Description is required.';
-        }
-
-        if ($date === '') {
-            $errors['date'] = 'Date is required.';
-        } else {
-            $selectedDate = strtotime($date);
-            $today = strtotime(date('Y-m-d'));
-            if ($selectedDate < $today) {
-                $errors['date'] = 'Date must be today or in the future.';
-            }
-        }
-
-        if ($time === '') {
-            $errors['time'] = 'Time is required.';
-        }
-
-        if ($duration === '') {
-            $errors['duration'] = 'Duration is required.';
-        } elseif (!is_numeric($duration) || (float)$duration <= 0) {
-            $errors['duration'] = 'Duration must be a positive number.';
-        }
-
-        if ($audience === '' || !in_array($audience, ['my_university', 'all_universities', 'private'], true)) {
-            $errors['audience'] = 'Please select a valid audience option.';
-        }
-
-        $formData = [
-            'title' => $title,
-            'subject' => $subject,
-            'description' => $description,
-            'date' => $date,
-            'time' => $time,
-            'duration' => $duration,
-            'sessionLink' => $sessionLink,
-            'audience' => $audience,
-            'tags' => $tags,
-            'session_id' => $sessionId
-        ];
-
-        $sessionData = [
-            'user_id' => $this->user->id,
-            'title' => $title,
-            'subject' => $subject,
-            'description' => $description,
-            'date' => $date,
-            'time' => $time,
-            'duration' => $duration,
-            'session_link' => $sessionLink !== '' ? $sessionLink : null,
-            'audience' => $audience,
-            'university' => $this->user->University ?? '',
-            'tags' => $tags !== '' ? $tags : null
-        ];
-
-        return [$errors, $formData, $sessionData];
-    }
-
-    private function mapSessionToFormData(array $session, int $sessionId): array
-    {
-        return [
-            'title' => (string)($session['title'] ?? ''),
-            'subject' => (string)($session['subject'] ?? ''),
-            'description' => (string)($session['description'] ?? ''),
-            'date' => (string)($session['date'] ?? ''),
-            'time' => (string)($session['time'] ?? ''),
-            'duration' => (string)($session['duration'] ?? ''),
-            'sessionLink' => (string)($session['session_link'] ?? ''),
-            'audience' => (string)($session['audience'] ?? ''),
-            'tags' => (string)($session['tags'] ?? ''),
-            'session_id' => $sessionId
-        ];
-    }
-
-    private function renderSessionFormHtml(
-        array $formData = [],
-        array $errors = [],
-        bool $isEditMode = false,
-        int $editingSessionId = 0,
-        bool $isModalContext = false
-    ): string {
-        $formAction = '/UniHelper/api?controller=SessionController&action=' . (
-            $isModalContext
-                ? 'submitSessionModal'
-                : ($isEditMode ? 'update' : 'store')
-        );
+        $editingSessionId = $sessionId;
+        $isModalContext = true;
+        $formId = 'modalCreateSessionForm';
+        $formClass = 'session-form js-modal-create-session-form';
+        $formAction = '/UniHelper/api?controller=SessionController&action=submitSession';
 
         ob_start();
         include Application::$ROOT_DIR . '/views/components/session-form.php';
-        return ob_get_clean();
+        $html = ob_get_clean();
+
+        $this->json([
+            'success' => true,
+            'data'    => [
+                'title' => $isEditMode ? 'Edit Session' : 'Create Session',
+                'html'  => $html,
+            ],
+        ]);
     }
 
-    private function handleSubscriberDecision(Request $request, string $status): void
+    // ─── POST  submitSession (create or update) ────────
+    public function submitSession(Request $request): void
     {
-        header('Content-Type: application/json');
+        $sessionId = (int)($request->get('session_id') ?? 0);
+        $isEdit = $sessionId > 0;
 
-        $sessionId = filter_var($request->get('session_id'), FILTER_VALIDATE_INT);
-        $subscriberId = filter_var($request->get('subscriber_id'), FILTER_VALIDATE_INT);
+        // Validate
+        $title       = trim((string)($request->get('title') ?? ''));
+        $description = trim((string)($request->get('description') ?? ''));
+        $majorId     = (int)($request->get('major_id') ?? 0);
+        $audience    = trim((string)($request->get('audience') ?? ''));
+        $link        = trim((string)($request->get('session_link') ?? ''));
+        $tags        = trim((string)($request->get('tags') ?? ''));
+        $date        = trim((string)($request->get('date') ?? ''));
+        $time        = trim((string)($request->get('time') ?? ''));
+        $duration    = (int)($request->get('duration_minutes') ?? 60);
 
-        if ($sessionId === false || $sessionId <= 0 || $subscriberId === false || $subscriberId <= 0) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Invalid session_id or subscriber_id.'
-            ]);
+        $errors = [];
+        if ($title === '') $errors['title'] = 'Title is required.';
+        if ($description === '') $errors['description'] = 'Description is required.';
+        if (!in_array($audience, ['public', 'university_only', 'private'], true)) $errors['audience'] = 'Invalid audience.';
+        if ($date === '') $errors['date'] = 'Date is required.';
+        if ($time === '') $errors['time'] = 'Time is required.';
+        if ($duration < 15 || $duration > 480) $errors['duration_minutes'] = 'Duration must be 15–480 minutes.';
+
+        if (!empty($errors)) {
+            $this->json(['success' => false, 'message' => 'Validation failed.', 'errors' => $errors], 422);
+            return;
+        }
+
+        $scheduledAt = $date . ' ' . $time . ':00';
+        $data = [
+            'user_id'          => $this->userId(),
+            'title'            => $title,
+            'description'      => $description,
+            'major_id'         => $majorId > 0 ? $majorId : null,
+            'university_id'    => $this->userUni(),
+            'audience'         => $audience,
+            'session_link'     => $link !== '' ? $link : null,
+            'tags'             => $tags !== '' ? $tags : null,
+            'scheduled_at'     => $scheduledAt,
+            'duration_minutes' => $duration,
+        ];
+
+        try {
+            if ($isEdit) {
+                $ok = $this->model->updateSession($sessionId, $this->userId(), $data);
+                if (!$ok) {
+                    $this->json(['success' => false, 'message' => 'Session not found or unauthorized.'], 404);
+                    return;
+                }
+                $session = $this->model->getSessionById($sessionId, $this->userId());
+                $this->json(['success' => true, 'message' => 'Session updated.', 'data' => ['operation' => 'update', 'session' => $session]]);
+            } else {
+                $newId = $this->model->createSession($data);
+                $session = $this->model->getSessionById($newId, $this->userId());
+                $this->json(['success' => true, 'message' => 'Session created.', 'data' => ['operation' => 'create', 'session' => $session]]);
+            }
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to save session.'], 500);
+        }
+    }
+
+    // ─── POST  deleteSession ───────────────────────────
+    public function deleteSession(Request $request): void
+    {
+        $id = (int)($request->get('id') ?? 0);
+        if ($id <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid session ID.'], 400);
             return;
         }
 
         try {
-            $result = $this->sessionModel->updateSubscriberStatus(
-                (int)$sessionId,
-                (int)$this->user->id,
-                (int)$subscriberId,
-                $status
-            );
-
-            if (!$result) {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Subscriber or session not found.'
-                ]);
+            $ok = $this->model->deleteSession($id, $this->userId());
+            if (!$ok) {
+                $this->json(['success' => false, 'message' => 'Session not found or unauthorized.'], 404);
                 return;
             }
-
-            echo json_encode([
-                'success' => true,
-                'message' => $status === 'approved' ? 'Subscriber approved.' : 'Subscriber rejected.',
-                'data' => $result
-            ]);
+            $this->json(['success' => true, 'message' => 'Session cancelled.']);
         } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Failed to update subscriber status.'
-            ]);
+            $this->json(['success' => false, 'message' => 'Failed to delete session.'], 500);
+        }
+    }
+
+    // ─── POST  subscribe ───────────────────────────────
+    public function subscribe(Request $request): void
+    {
+        $sessionId = (int)($request->get('session_id') ?? 0);
+        if ($sessionId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid session ID.'], 400);
+            return;
+        }
+
+        try {
+            $result = $this->model->subscribe($this->userId(), $sessionId);
+            $this->json(['success' => true, 'message' => 'Subscribed.', 'data' => $result]);
+        } catch (\Exception $e) {
+            $code = str_contains($e->getMessage(), 'your university') ? 403 : 400;
+            $this->json(['success' => false, 'message' => $e->getMessage()], $code);
+        }
+    }
+
+    // ─── POST  unsubscribe ─────────────────────────────
+    public function unsubscribe(Request $request): void
+    {
+        $sessionId = (int)($request->get('session_id') ?? 0);
+        if ($sessionId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid session ID.'], 400);
+            return;
+        }
+
+        try {
+            $result = $this->model->unsubscribe($this->userId(), $sessionId);
+            $this->json(['success' => true, 'message' => 'Unsubscribed.', 'data' => $result]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to unsubscribe.'], 500);
+        }
+    }
+
+    // ─── GET  getSubscribers ───────────────────────────
+    public function getSubscribers(Request $request): void
+    {
+        $sessionId = (int)($request->get('session_id') ?? 0);
+        if ($sessionId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid session ID.'], 400);
+            return;
+        }
+
+        try {
+            $subs = $this->model->getSubscribers($sessionId, $this->userId());
+            $this->json(['success' => true, 'data' => $subs]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to fetch subscribers.'], 500);
+        }
+    }
+
+    // ─── POST  approveSubscriber ───────────────────────
+    public function approveSubscriber(Request $request): void
+    {
+        $sessionId    = (int)($request->get('session_id') ?? 0);
+        $subscriberId = (int)($request->get('subscriber_id') ?? 0);
+
+        if ($sessionId <= 0 || $subscriberId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid IDs.'], 400);
+            return;
+        }
+
+        try {
+            $ok = $this->model->updateSubscriptionStatus($sessionId, $this->userId(), $subscriberId, 'approved');
+            $this->json($ok
+                ? ['success' => true, 'message' => 'Subscriber approved.']
+                : ['success' => false, 'message' => 'Not found or unauthorized.'], $ok ? 200 : 404);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed.'], 500);
+        }
+    }
+
+    // ─── POST  rejectSubscriber ────────────────────────
+    public function rejectSubscriber(Request $request): void
+    {
+        $sessionId    = (int)($request->get('session_id') ?? 0);
+        $subscriberId = (int)($request->get('subscriber_id') ?? 0);
+
+        if ($sessionId <= 0 || $subscriberId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid IDs.'], 400);
+            return;
+        }
+
+        try {
+            $ok = $this->model->updateSubscriptionStatus($sessionId, $this->userId(), $subscriberId, 'rejected');
+            $this->json($ok
+                ? ['success' => true, 'message' => 'Subscriber rejected.']
+                : ['success' => false, 'message' => 'Not found or unauthorized.'], $ok ? 200 : 404);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed.'], 500);
+        }
+    }
+
+    // ─── GET  searchSessions ───────────────────────────
+    public function searchSessions(Request $request): void
+    {
+        $query = trim((string)($request->get('query') ?? ''));
+        $tab   = trim((string)($request->get('tab') ?? 'all-sessions'));
+        $page  = max(1, (int)($request->get('page') ?? 1));
+        $limit = 12;
+        $offset = ($page - 1) * $limit;
+
+        if (strlen($query) < 2) {
+            $this->json(['success' => false, 'message' => 'Query must be at least 2 characters.'], 400);
+            return;
+        }
+
+        try {
+            $sessions = $this->model->searchSessions($query, $this->userId(), $this->userUni(), $tab, $limit, $offset);
+            $this->json(['success' => true, 'data' => $sessions, 'page' => $page, 'count' => count($sessions)]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Search failed.'], 500);
+        }
+    }
+
+    // ─── GET  getMajors ────────────────────────────────
+    public function getMajors(Request $request): void
+    {
+        try {
+            $majors = $this->model->getMajors();
+            $this->json(['success' => true, 'data' => $majors]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to fetch majors.'], 500);
         }
     }
 }

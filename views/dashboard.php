@@ -473,18 +473,6 @@
 
     <script src="/unihelper/views/js/notification.js"></script>
 
-    <!-- Subscriber Management Modal (from Peer Learning Component) -->
-    <div class="subscriber-modal" id="subscriberModal">
-        <div class="subscriber-modal-content">
-            <div class="subscriber-modal-header">
-                <h3 class="subscriber-modal-title" id="subscriberModalTitle">Subscribe List</h3>
-                <button type="button" class="subscriber-modal-close" aria-label="Close"
-                    onclick="closeSubscriberModal()">✕</button>
-            </div>
-            <div class="subscriber-modal-body" id="subscriberModalBody"></div>
-        </div>
-    </div>
-
     <!-- Error Modal Script -->
     <?php if (isset($error) && !empty($error)): ?>
     <style>
