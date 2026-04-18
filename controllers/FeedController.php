@@ -17,6 +17,7 @@ class FeedController
 {
     private const VALID_ROLES = ['role-applicant', 'role-undergrad', 'role-profile', 'role-admin'];
     private const SELECTABLE_AUDIENCE_ROLES = ['role-applicant', 'role-undergrad'];
+    private const PUBLISHER_ROLES = ['role-profile', 'role-admin'];
     private const VALID_TYPES = ['announcement', 'event', 'general'];
     private const MAX_IMAGE_BYTES = 5242880;
     private const IMAGE_MIME_TO_EXT = [
@@ -119,6 +120,14 @@ class FeedController
 
     public function createPost(Request $request): void
     {
+        if (!$this->canPublishPost()) {
+            $this->json([
+                'success' => false,
+                'message' => 'You are not allowed to publish posts.',
+            ], 403);
+            return;
+        }
+
         $title = trim((string)($request->get('title') ?? ''));
         $body = trim((string)($request->get('body') ?? ''));
         $postType = trim((string)($request->get('post_type') ?? 'announcement'));
@@ -723,6 +732,12 @@ class FeedController
         $isAdmin = (string)($this->viewer->role ?? '') === 'role-admin';
         $isOwner = (int)($post['user_id'] ?? 0) === (int)($this->viewer->id ?? 0);
         return $isAdmin || $isOwner;
+    }
+
+    private function canPublishPost(): bool
+    {
+        $viewerRole = (string)($this->viewer->role ?? '');
+        return in_array($viewerRole, self::PUBLISHER_ROLES, true);
     }
 
     private function toBool($value): bool

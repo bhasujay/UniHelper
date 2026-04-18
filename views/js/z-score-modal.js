@@ -629,20 +629,36 @@ function renderEligibleProgramCards(programs, programsList) {
 
     programs.forEach(function (program, index) {
         const eligibility = String(program.eligibility || 'noc').toLowerCase();
-        const badge = getEligibilityBadge(eligibility);
-        const probabilityValue = getProbabilityValue(program.probability_percent, eligibility);
-        const probabilityText = Number.isFinite(Number(program.probability_percent))
-            ? zScoreClamp(Number(program.probability_percent), 0, 100).toFixed(1) + '%'
-            : (eligibility === 'noc' ? 'Open Entry' : 'N/A');
+        const noCutoffHistory = hasNoCutoffHistory(program);
+        const badge = noCutoffHistory
+            ? { label: 'No Cutoff History', className: 'is-warning' }
+            : getEligibilityBadge(eligibility);
+        const probabilityValue = noCutoffHistory
+            ? 0
+            : getProbabilityValue(program.probability_percent, eligibility);
+        const probabilityText = noCutoffHistory
+            ? 'N/A'
+            : (Number.isFinite(Number(program.probability_percent))
+                ? zScoreClamp(Number(program.probability_percent), 0, 100).toFixed(1) + '%'
+                : (eligibility === 'noc' ? 'Open Entry' : 'N/A'));
 
         const predictedCutoff = formatCutoffValue(program.predicted);
         const minCutoff = formatCutoffValue(program.min_cutoff);
         const maxCutoff = formatCutoffValue(program.max_cutoff);
-        const cutoffInsight = eligibility === 'noc'
-            ? 'No cutoff required for this intake'
-            : (predictedCutoff !== 'N/A'
-                ? 'Predicted cutoff for your district: ' + predictedCutoff
-                : 'Lowest known cutoff for your district: ' + minCutoff);
+        const warningMessage = String(
+            program.warning_message ||
+            'This program does not have previous cutoff marks for your district. Eligibility cannot be estimated reliably.'
+        );
+        const cutoffInsight = noCutoffHistory
+            ? warningMessage
+            : (eligibility === 'noc'
+                ? 'No cutoff required for this intake'
+                : (predictedCutoff !== 'N/A'
+                    ? 'Predicted cutoff for your district: ' + predictedCutoff
+                    : 'Lowest known cutoff for your district: ' + minCutoff));
+        const cutoffInsightClass = noCutoffHistory
+            ? 'zscore-cutoff-insight zscore-cutoff-warning'
+            : 'zscore-cutoff-insight';
 
         const card = document.createElement('div');
         card.className = 'degree-program-card';
@@ -667,7 +683,7 @@ function renderEligibleProgramCards(programs, programsList) {
                 <p>${zScoreEscapeHtml(program.university || 'Unknown University')}</p>
             </div>
 
-            <p class="zscore-cutoff-insight">${zScoreEscapeHtml(cutoffInsight)}</p>
+            <p class="${cutoffInsightClass}">${zScoreEscapeHtml(cutoffInsight)}</p>
 
             <div class="zscore-probability-wrap">
                 <div class="zscore-probability-meta">
@@ -753,7 +769,7 @@ function closeEligibleProgramsModal() {
 }
 
 function compareEligiblePrograms(a, b) {
-    const probabilityDiff = getProbabilityValue(b.probability_percent, b.eligibility) - getProbabilityValue(a.probability_percent, a.eligibility);
+    const probabilityDiff = getSortableProbability(b) - getSortableProbability(a);
     if (probabilityDiff !== 0) {
         return probabilityDiff;
     }
@@ -764,6 +780,30 @@ function compareEligiblePrograms(a, b) {
     }
 
     return String(a.name || '').localeCompare(String(b.name || ''));
+}
+
+function getSortableProbability(program) {
+    if (hasNoCutoffHistory(program)) {
+        return -1;
+    }
+
+    return getProbabilityValue(program.probability_percent, program.eligibility);
+}
+
+function hasNoCutoffHistory(program) {
+    if (!program || typeof program !== 'object') {
+        return false;
+    }
+
+    if (typeof program.no_cutoff_history !== 'undefined') {
+        return Boolean(program.no_cutoff_history);
+    }
+
+    const predicted = Number(program.predicted);
+    const minimum = Number(program.min_cutoff);
+    const maximum = Number(program.max_cutoff);
+
+    return !Number.isFinite(predicted) && !Number.isFinite(minimum) && !Number.isFinite(maximum);
 }
 
 function getEligibilityBadge(eligibilityKey) {

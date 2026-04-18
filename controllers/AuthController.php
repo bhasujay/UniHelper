@@ -6,7 +6,7 @@ require_once dirname(__DIR__, 1) . '/models/University.php';
 require_once dirname(__DIR__, 1) . '/models/Major.php';
 require_once dirname(__DIR__, 1) . '/models/User.php';
 require_once dirname(__DIR__, 1) . '/models/userManagement.php';
-require_once dirname(__DIR__, 1) . '/models/Notify.php';
+require_once dirname(__DIR__, 1) . '/models/notify.php';
 require_once dirname(__DIR__, 1) . '/models/user-stat.php';
 
 use app\core\Application;

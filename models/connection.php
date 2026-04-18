@@ -8,7 +8,7 @@ use PDOException;
 use Exception;
 
 require_once dirname(__DIR__) . '/models/base-model.php';
-require_once dirname(__DIR__) . '\models\notify.php';
+require_once dirname(__DIR__) . '/models/notify.php';
 
 Class Connection extends BaseModel
 {

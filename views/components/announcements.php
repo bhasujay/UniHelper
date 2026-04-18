@@ -5,11 +5,12 @@ $defaultPostType = $defaultPostType ?? 'announcement';
 $composerActionLabel = $composerActionLabel
     ?? ($defaultPostType === 'event' ? 'Publish Event' : ($defaultPostType === 'general' ? 'Create Post' : 'Create Announcement'));
 $currentRole = isset($user->role) ? (string)$user->role : '';
+$hideCreateButton = in_array($currentRole, ['role-applicant', 'role-undergrad'], true);
 ?>
 <link rel="stylesheet" href="/unihelper/views/css/components/announcement.css">
 
 <section class="feed-shell" data-user-role="<?= htmlspecialchars($currentRole) ?>" data-default-post-type="<?= htmlspecialchars($defaultPostType) ?>">
-    <div class="feed-launcher">
+    <div class="feed-launcher"<?= $hideCreateButton ? ' style="display:none !important;"' : '' ?>>
         <button type="button" id="feedOpenComposerBtn" class="feed-open-btn" aria-expanded="false" aria-controls="feedComposer">
             <span class="feed-open-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -32,7 +32,7 @@ def get_eligible_programs(cursor, stream, subjects):
     placeholders = ', '.join(['%s'] * len(subjects))
     
     query = f"""
-        SELECT DISTINCT dp.program_id, dp.name, u.name as university_name
+        SELECT DISTINCT dp.program_id, dp.name, dp.unicode, dp.major_id, u.name as university_name
         FROM degree_program dp
         JOIN universities u ON dp.university_id = u.id
         LEFT JOIN program_entry_paths pep ON dp.program_id = pep.program_id
@@ -110,9 +110,27 @@ def process_and_output():
             cutoff = cursor.fetchone()
             
             # 3. Calculate Eligibility Level Probability
-            if not cutoff or cutoff['is_noc']:
-                eligibility_level = "noc"                  # Open Entry / No History
-                prob_percent = 100.0
+            has_cutoff_values = bool(
+                cutoff and (
+                    cutoff.get('min_cutoff') is not None or
+                    cutoff.get('max_cutoff') is not None or
+                    cutoff.get('predicted') is not None
+                )
+            )
+            no_cutoff_history = (
+                not cutoff or
+                bool(cutoff.get('is_noc')) or
+                not has_cutoff_values
+            )
+            warning_message = None
+
+            if no_cutoff_history:
+                eligibility_level = "noc"
+                prob_percent = None
+                warning_message = (
+                    "No previous cutoff marks are available for this program and district. "
+                    "Eligibility may change when official cutoff data is published."
+                )
             else:
                 if cutoff['max_cutoff'] and user_zscore >= float(cutoff['max_cutoff']):
                     eligibility_level = "very_likely"
@@ -134,11 +152,16 @@ def process_and_output():
                 "program_id": program_id,
                 "name": prog['name'],
                 "university": prog['university_name'],
+                "university_name": prog['university_name'],
+                "unicode": prog['unicode'],
+                "major_id": int(prog['major_id']) if prog['major_id'] is not None else None,
                 "eligibility": eligibility_level,
                 "probability_percent": prob_percent,
                 "predicted": float(cutoff['predicted']) if (cutoff and cutoff['predicted']) else None,
                 "min_cutoff": float(cutoff['min_cutoff']) if (cutoff and cutoff['min_cutoff']) else None,
-                "max_cutoff": float(cutoff['max_cutoff']) if (cutoff and cutoff['max_cutoff']) else None
+                "max_cutoff": float(cutoff['max_cutoff']) if (cutoff and cutoff['max_cutoff']) else None,
+                "no_cutoff_history": no_cutoff_history,
+                "warning_message": warning_message
             })
             
         # 4. Print the final JSON for PHP!

@@ -63,6 +63,42 @@ class ZScoreModel extends BaseModel {
             throw new Exception("Failed to delete Z-Score by user ID: " . $e->getMessage());
         }
     }
+
+    /**
+     * Get user's interest profile for ranking boosts.
+     * Returns null-major values when no preference is set.
+     */
+    public function getUserInterestProfile($userId) {
+        $sql = "SELECT u.major AS major_id, m.name AS major_name
+                FROM users u
+                LEFT JOIN majors m ON u.major = m.id
+                WHERE u.id = :user_id
+                LIMIT 1";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute(['user_id' => $userId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$result || $result['major_id'] === null || $result['major_id'] === '') {
+                return [
+                    'major_id' => null,
+                    'major_name' => null
+                ];
+            }
+
+            return [
+                'major_id' => (int) $result['major_id'],
+                'major_name' => $result['major_name'] ?? null
+            ];
+        } catch (PDOException $e) {
+            error_log('Failed to fetch user interest profile: ' . $e->getMessage());
+            return [
+                'major_id' => null,
+                'major_name' => null
+            ];
+        }
+    }
     
     /**
      * Create or update Z-Score (upsert functionality)
