@@ -2,7 +2,7 @@
 
 namespace app\controllers;
 
-require_once dirname(__DIR__) . '\\models\\userManagement.php';
+require_once dirname(__DIR__) . '/models/userManagement.php';
 
 use app\core\Request;
 use app\models\UserManagement;

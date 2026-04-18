@@ -284,9 +284,9 @@ class FeedPost extends BaseModel
     public function getVisiblePostsForRole(string $viewerRole, int $limit = 100): array
     {
         $limit = max(1, min($limit, 200));
-        $isAdmin = $viewerRole === 'role-admin';
+        $canViewAllPosts = in_array($viewerRole, ['role-profile', 'role-admin'], true);
 
-        $visibilityClause = $isAdmin
+        $visibilityClause = $canViewAllPosts
             ? '1 = 1'
             : "(
                     p.audience_mode = 'all_roles'
@@ -318,7 +318,7 @@ class FeedPost extends BaseModel
             $stmt = $this->db->prepare($sql);
 
             $params = [];
-            if (!$isAdmin) {
+            if (!$canViewAllPosts) {
                 $rolePattern = '%,' . trim((string)$viewerRole) . ',%';
                 if (trim((string)$viewerRole) === '') {
                     $rolePattern = ',,,';

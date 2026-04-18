@@ -266,8 +266,7 @@
         meta.className = 'unicode-meta';
         meta.innerHTML = [
             '<span>' + escapeHtml(program.university) + '</span>',
-            '<span>Unicode: <strong>' + escapeHtml(program.unicode || '-') + '</strong></span>',
-            '<span>Score: <strong>' + program.recommendation_score.toFixed(2) + '</strong></span>'
+            '<span>Unicode: <strong>' + escapeHtml(program.unicode || '-') + '</strong></span>'
         ].join('');
 
         const probabilityRow = document.createElement('div');

@@ -290,9 +290,9 @@ class search extends BaseModel
         $offset = $page * $limit;
         $viewerRole = trim((string)$viewerRole);
         $viewerId = (int)$viewerId;
-        $isAdmin = $viewerRole === 'role-admin';
+        $canViewAllPosts = in_array($viewerRole, ['role-profile', 'role-admin'], true);
 
-        $visibilityClause = $isAdmin
+        $visibilityClause = $canViewAllPosts
             ? '1 = 1'
             : "(
                         p.audience_mode = 'all_roles'
@@ -325,7 +325,7 @@ class search extends BaseModel
                 LIMIT {$limit} OFFSET {$offset}";
 
         $stmt = $this->db->prepare($sql);
-                if (!$isAdmin) {
+        if (!$canViewAllPosts) {
                         $rolePattern = '%,' . $viewerRole . ',%';
                         if ($viewerRole === '') {
                                 $rolePattern = ',,,';
@@ -365,7 +365,7 @@ class search extends BaseModel
                 'author_id' => (int)($row['user_id'] ?? 0),
                 'author_name' => $authorName,
                 'author_role_label' => $this->roleLabel((string)($row['author_role'] ?? '')),
-                'can_manage' => $isAdmin || ($viewerId > 0 && (int)$row['user_id'] === $viewerId),
+                'can_manage' => ($viewerRole === 'role-admin') || ($viewerId > 0 && (int)$row['user_id'] === $viewerId),
                 'like_count' => $likeCount,
                 'liked_by_viewer' => $likedByViewer,
                 'meta' => [

@@ -897,6 +897,12 @@
     border-color: rgba(139, 92, 246, 0.34);
 }
 
+#eligibleProgramsSection .zscore-eligibility-badge.is-warning {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.12);
+    border-color: rgba(220, 38, 38, 0.35);
+}
+
 #eligibleProgramsSection .degree-program-card .card-header {
     display: grid;
     gap: 0.25rem;
@@ -925,6 +931,13 @@
     color: var(--muted-foreground);
     font-size: 0.82rem;
     line-height: 1.45;
+}
+
+#eligibleProgramsSection .zscore-cutoff-insight.zscore-cutoff-warning {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.35);
+    font-weight: 600;
 }
 
 #eligibleProgramsSection .zscore-probability-wrap {
@@ -983,6 +996,10 @@
 
 #eligibleProgramsSection .zscore-probability-fill.is-noc {
     background: linear-gradient(90deg, #7c3aed, #8b5cf6);
+}
+
+#eligibleProgramsSection .zscore-probability-fill.is-warning {
+    background: linear-gradient(90deg, #b91c1c, #ef4444);
 }
 
 #eligibleProgramsSection .zscore-stat-grid {

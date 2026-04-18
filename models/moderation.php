@@ -4,7 +4,7 @@ namespace app\models;
 
 use app\core\Database;
 
-require_once dirname(__DIR__) . '\\models\\notify.php';
+require_once dirname(__DIR__) . '/models/notify.php';
 
 class QaReport
 {
