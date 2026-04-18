@@ -12,7 +12,7 @@
             <button type="button" id="unicodeRefreshBtn" class="btn btn-outline">Refresh Eligible</button>
             <button type="button" id="unicodeAutoSortBtn" class="btn btn-outline">Auto Sort</button>
             <button type="button" id="unicodeResetSuggestedBtn" class="btn btn-outline">Reset Suggested</button>
-            <button type="button" id="unicodeSaveBtn" class="btn btn-primary">Save Order</button>
+            <button type="button" id="unicodeSaveBtn" class="btn btn-outline">Save Order</button>
             <button type="button" id="unicodeClearSavedBtn" class="btn btn-outline">Clear Saved</button>
             <button type="button" id="unicodePdfBtn" class="btn btn-outline">Print / Save PDF</button>
         </div>
