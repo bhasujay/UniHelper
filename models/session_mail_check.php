@@ -15,15 +15,22 @@ class session_mail_check
 
     public function get_sessions_for_next_hour()
     {
-        // basically what this function does is to get all sessions that are starting in the next hour, and return their ids and names
-        // 'deleted_at' is the actual time that the session is starting, so we can use it to filter the sessions that are starting in the next hour
-        // 'duration' is the duration of the session, afte the session is starting, the 'deleted_at' will be updated to the time that the session is ending, so we can use it to filter the sessions that are starting in the next hour
+        // Get sessions scheduled for today that start within the next hour (inclusive).
         $current_time = date('Y-m-d H:i:s');
         $next_hour_time = date('Y-m-d H:i:s', strtotime('+1 hour'));
-        $sql = "SELECT id, name FROM sessions WHERE deleted_at > :current_time AND deleted_at <= :next_hour_time";
+        $today_date = date('Y-m-d');
+
+        $sql = "SELECT id, title AS name
+            FROM sessions
+            WHERE is_deleted = 0
+              AND date = :today_date
+              AND TIMESTAMP(date, time) >= :current_time
+              AND TIMESTAMP(date, time) <= :next_hour_time
+            ORDER BY time ASC";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
+            ':today_date' => $today_date,
             ':current_time' => $current_time,
             ':next_hour_time' => $next_hour_time,
         ]);
