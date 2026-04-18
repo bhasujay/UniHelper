@@ -110,13 +110,23 @@ body::after {
     left: 0;
     right: 0;
     z-index: 20;
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     backdrop-filter: blur(18px);
     background: rgba(5, 16, 34, 0.45);
     border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-decoration: none;
+    background: linear-gradient(135deg, #26b1fc, #32a6ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .brand {
@@ -138,6 +148,18 @@ body::after {
     display: flex;
     align-items: center;
     gap: 0.85rem;
+}
+
+.page-header .btn {
+    font-size: 0.9rem;
+}
+
+.page-header .btn-outline {
+    padding: 0.6rem 1.4rem;
+}
+
+.page-header .btn-primary {
+    padding: 0.65rem 1.6rem;
 }
 
 .btn {
@@ -374,13 +396,13 @@ body::after {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 120px;
+    min-width: 134px;
 }
 
 .university-marquee-item img {
-    height: 70px;
+    height: 84px;
     width: auto;
-    max-width: 140px;
+    max-width: 168px;
     object-fit: contain;
     opacity: 0.92;
     filter: grayscale(1);
@@ -402,10 +424,11 @@ body::after {
 }
 
 .testimonials-section {
-    width: min(100%, 1080px);
-    margin: 4rem auto 0;
+    width: 100vw;
+    margin: 4rem calc(50% - 50vw) 0;
     position: relative;
     z-index: 1;
+    overflow: hidden;
 }
 
 .testimonials-title {
@@ -418,53 +441,47 @@ body::after {
 }
 
 .testimonials-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    align-items: stretch;
     gap: 22px;
+    padding-right: 22px;
+    flex-shrink: 0;
 }
 
 .testimonials-marquee {
-    height: 420px;
+    width: 100%;
     overflow: hidden;
     position: relative;
-    padding: 0.25rem 0;
+    padding: 0.25rem 0.5rem;
 }
 
 .testimonials-marquee::before,
 .testimonials-marquee::after {
     content: "";
     position: absolute;
-    left: 0;
-    right: 0;
-    height: 48px;
+    top: 0;
+    bottom: 0;
+    width: 96px;
     z-index: 2;
     pointer-events: none;
 }
 
 .testimonials-marquee::before {
-    top: 0;
-    background: linear-gradient(180deg, rgba(5, 8, 22, 0.98), rgba(5, 8, 22, 0));
+    left: 0;
+    background: linear-gradient(90deg, rgba(5, 8, 22, 0.98), rgba(5, 8, 22, 0));
 }
 
 .testimonials-marquee::after {
-    bottom: 0;
-    background: linear-gradient(0deg, rgba(5, 8, 22, 0.98), rgba(5, 8, 22, 0));
+    right: 0;
+    background: linear-gradient(270deg, rgba(5, 8, 22, 0.98), rgba(5, 8, 22, 0));
 }
 
 .testimonials-track {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
-    animation: scrollTestimonials 18s linear infinite;
+    align-items: stretch;
+    width: max-content;
+    animation: scrollTestimonialsHorizontal 34s linear infinite;
     will-change: transform;
-}
-
-.testimonials-track.delay-slow {
-    animation-duration: 20s;
-}
-
-.testimonials-track.delay-fast {
-    animation-duration: 16s;
 }
 
 .testimonials-marquee:hover .testimonials-track {
@@ -483,6 +500,7 @@ body::after {
     gap: 0.85rem;
     justify-items: center;
     text-align: center;
+    width: min(320px, calc(100vw - 2.5rem));
     transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -528,12 +546,12 @@ body::after {
     color: rgba(226, 232, 240, 0.86);
 }
 
-@keyframes scrollTestimonials {
+@keyframes scrollTestimonialsHorizontal {
     from {
-        transform: translateY(0);
+        transform: translateX(0);
     }
     to {
-        transform: translateY(calc(-50% - 10px));
+        transform: translateX(-50%);
     }
 }
 
@@ -563,24 +581,30 @@ body::after {
     }
 
     .university-marquee-item {
-        min-width: 92px;
+        min-width: 108px;
     }
 
     .university-marquee-item img {
-        height: 60px;
-        max-width: 120px;
+        height: 68px;
+        max-width: 136px;
     }
 
     .testimonials-section {
-        width: min(100%, 520px);
+        margin-top: 3.2rem;
+    }
+
+    .testimonials-marquee::before,
+    .testimonials-marquee::after {
+        width: 54px;
     }
 
     .testimonials-grid {
-        grid-template-columns: 1fr;
+        gap: 16px;
+        padding-right: 16px;
     }
 
-    .testimonials-marquee {
-        height: 300px;
+    .testimonial-card {
+        width: min(280px, calc(100vw - 2rem));
     }
 }
 

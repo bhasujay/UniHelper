@@ -739,6 +739,7 @@ class UserManagement
 			SET first_name = 'Banned',
 				last_name = 'User',
 				profile_picture = :profile_picture,
+				phone = :phone,
 				password_hash = :password_hash,
 				public = 0,
 				moderator = 0
@@ -748,6 +749,7 @@ class UserManagement
 		$stmt = $this->db->prepare($sql);
 		$stmt->execute([
 			'profile_picture' => self::BANNED_PROFILE_PICTURE,
+			'phone' => '0000000000',
 			'password_hash' => $this->generateBannedPasswordHash($userId),
 			'id' => $userId,
 		]);

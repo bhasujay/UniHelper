@@ -810,3 +810,42 @@
     transform: translateY(0);
     pointer-events: auto;
 }
+
+/* ===== Auth page navbar (home-style buttons, shorter height) ===== */
+.nav {
+  padding: 0.75rem 0;
+}
+
+.nav .btn {
+  border-radius: 999px;
+  font-weight: 600;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  padding: 0.6rem 1.35rem;
+}
+
+.nav .btn:hover {
+  transform: translateY(-1px);
+}
+
+.nav .btn-outline {
+  color: #e2e8f0;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(14px);
+}
+
+.nav .btn-outline:hover {
+  background: rgba(255,255,255,0.10);
+  box-shadow: 0 16px 40px rgba(255,255,255,0.08);
+}
+
+.nav .btn-primary {
+  padding: 0.65rem 1.5rem;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.95), rgba(59, 130, 246, 0.95));
+  color: #06152b;
+  box-shadow: 0 20px 70px rgba(34, 211, 238, 0.24);
+}
+
+.nav .btn-primary:hover {
+  box-shadow: 0 24px 82px rgba(34, 211, 238, 0.34);
+}

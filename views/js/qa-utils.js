@@ -1614,12 +1614,12 @@ function createSearchResultCard(result, questionTemplate, answerTemplate) {
     card.setAttribute('role', 'link');
     card.setAttribute('tabindex', '0');
     card.addEventListener('click', function() {
-        window.open(link, '_blank');
+        window.location.href = link;
     });
     card.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            window.open(link, '_blank');
+            window.location.href = link;
         }
     });
 

@@ -1,9 +1,3 @@
-/**
- * User Management Component Logic
- * Backend-integrated behavior for admin moderation actions,
- * with paginated list loading and server-side search.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
     const API_BASE = '/unihelper/api';
     const API_CONTROLLER = 'userManagementController';
@@ -11,41 +5,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const PAGE_SIZE = 25;
     const SEARCH_DEBOUNCE_MS = 350;
 
-    const tableBody = document.getElementById('um-table-body');
-    const searchInput = document.getElementById('um-search-input');
-    const slidePanel = document.getElementById('um-slide-panel');
-    const closePanelBtn = document.getElementById('um-close-panel');
-    const slideBodyContent = document.getElementById('um-slide-body-content');
-    const usersView = document.getElementById('um-users-view');
-    const reportsView = document.getElementById('um-reports-view');
-    const reportsList = document.getElementById('um-reports-list');
-    const listHeading = document.querySelector('.um-list-heading');
-    const listTitle = document.getElementById('um-list-title');
-    const dateColumnTitle = document.getElementById('um-date-column-title');
-    const moderationBtn = document.getElementById('um-moderation-btn');
-    const loadMoreWrap = document.getElementById('um-load-more-wrap');
-    const loadMoreBtn = document.getElementById('um-load-more-btn');
+    const els = {
+        tableBody: document.getElementById('um-table-body'),
+        searchInput: document.getElementById('um-search-input'),
+        slidePanel: document.getElementById('um-slide-panel'),
+        closePanelBtn: document.getElementById('um-close-panel'),
+        slideBodyContent: document.getElementById('um-slide-body-content'),
+        usersView: document.getElementById('um-users-view'),
+        reportsView: document.getElementById('um-reports-view'),
+        reportsList: document.getElementById('um-reports-list'),
+        listHeading: document.querySelector('.um-list-heading'),
+        listTitle: document.getElementById('um-list-title'),
+        dateColumnTitle: document.getElementById('um-date-column-title'),
+        moderationBtn: document.getElementById('um-moderation-btn'),
+        loadMoreWrap: document.getElementById('um-load-more-wrap'),
+        loadMoreBtn: document.getElementById('um-load-more-btn')
+    };
 
-    if (!tableBody || !searchInput || !slidePanel || !usersView || !reportsView || !reportsList) {
+    if (!els.tableBody || !els.searchInput || !els.slidePanel || !els.usersView || !els.reportsView || !els.reportsList) {
         return;
     }
 
-    const panelOverlay = slidePanel.querySelector('.um-slide-panel-overlay');
+    const panelOverlay = els.slidePanel.querySelector('.um-slide-panel-overlay');
     const kpiTabs = Array.from(document.querySelectorAll('.um-kpi-tab[data-filter]'));
-
-    function createTabState() {
-        return {
-            items: [],
-            total: 0,
-            limit: PAGE_SIZE,
-            offset: 0,
-            nextOffset: 0,
-            hasMore: false,
-            initialized: false,
-            loading: false,
-            searchQuery: ''
-        };
-    }
+    const kpiEls = {
+        total: document.getElementById('kpi-total-users'),
+        reports: document.getElementById('kpi-pending-reports'),
+        banned: document.getElementById('kpi-banned-accounts'),
+        deleted: document.getElementById('kpi-deleted-users')
+    };
 
     const roleLabelMap = {
         'role-admin': 'Admin',
@@ -61,6 +49,18 @@ document.addEventListener('DOMContentLoaded', () => {
         fake_account: 'Fake account',
         other: 'Other'
     };
+
+    const createTabState = () => ({
+        items: [],
+        total: 0,
+        limit: PAGE_SIZE,
+        offset: 0,
+        nextOffset: 0,
+        hasMore: false,
+        initialized: false,
+        loading: false,
+        searchQuery: ''
+    });
 
     const state = {
         activeFilter: 'all',
@@ -80,66 +80,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    function showMessage(message, type = 'success') {
+    const showMessage = (message, type = 'success') => {
         if (typeof showToast === 'function') {
             showToast(message, type);
             return;
         }
         console.log(message);
-    }
+    };
 
-    function escapeHtml(value) {
-        const text = String(value ?? '');
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/\"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
+    const escapeHtml = (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 
-    function fullName(user) {
-        return `${user.firstName || ''} ${user.lastName || ''}`.trim() || `User #${user.id}`;
-    }
+    const fullName = (user) => `${user.firstName || ''} ${user.lastName || ''}`.trim() || `User #${user.id}`;
 
-    function userRoleLabel(user) {
+    const getRoleInfo = (user) => {
         if (user.role === 'role-admin') {
-            return 'Admin';
+            return { label: 'Admin', className: 'um-badge-admin' };
         }
+
         if (Number(user.moderator) === 1) {
-            return 'Moderator';
+            return { label: 'Moderator', className: 'um-badge-mod' };
         }
-        return roleLabelMap[user.role] || 'User';
-    }
 
-    function roleClass(roleLabel) {
-        const key = String(roleLabel).toLowerCase();
-        if (key === 'admin') {
-            return 'um-badge-admin';
-        }
-        if (key === 'moderator') {
-            return 'um-badge-mod';
-        }
-        return 'um-badge-user';
-    }
+        return {
+            label: roleLabelMap[user.role] || 'User',
+            className: 'um-badge-user'
+        };
+    };
 
-    function formatDate(input, options = { year: 'numeric', month: 'short', day: 'numeric' }) {
+    const formatDate = (input, options = { year: 'numeric', month: 'short', day: 'numeric' }) => {
         const date = new Date(input);
         if (Number.isNaN(date.getTime())) {
             return '-';
         }
         return date.toLocaleDateString('en-US', options);
-    }
+    };
 
-    function profileUrl(userId) {
+    const profileUrl = (userId) => {
         const numericId = Number.parseInt(String(userId), 10);
         if (Number.isNaN(numericId)) {
             return '/unihelper/view/profile';
         }
         return `/unihelper/view/profile/${numericId}`;
-    }
+    };
 
-    function imgPath(path) {
+    const imgPath = (path) => {
         if (!path) {
             return DEFAULT_AVATAR;
         }
@@ -150,92 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `/unihelper/public${path}`;
         }
         return path;
-    }
-
-    function reportReasonLabel(reason) {
-        return reportReasonLabelMap[String(reason || '').toLowerCase()] || 'Other';
-    }
-
-    function accountStateLabel(user) {
-        if (user.source === 'banned') {
-            return 'Banned';
-        }
-        if (user.source === 'deleted') {
-            return 'Deleted';
-        }
-        return 'Active';
-    }
-
-    function normalizeUserList(list, source) {
-        if (!Array.isArray(list)) {
-            return [];
-        }
-
-        return list.map((raw) => ({
-            id: Number.parseInt(raw.id, 10),
-            firstName: raw.firstName || '',
-            lastName: raw.lastName || '',
-            email: raw.email || '',
-            phone: raw.phone || '',
-            role: raw.role || 'role-applicant',
-            alYear: raw.alYear || null,
-            university: raw.university || null,
-            universityName: raw.universityName || 'Not set',
-            major: raw.major || null,
-            profileRole: raw.profileRole || null,
-            profilePicture: raw.profilePicture || '/uploads/profilePictures/default-pfp.png',
-            createdAt: raw.createdAt || null,
-            archivedAt: raw.archivedAt || null,
-            public: Number(raw.public) || 0,
-            moderator: Number(raw.moderator) || 0,
-            source
-        })).filter((user) => Number.isInteger(user.id) && user.id > 0);
-    }
-
-    function normalizeReportList(list) {
-        if (!Array.isArray(list)) {
-            return [];
-        }
-
-        return list.map((raw) => ({
-            reportId: Number.parseInt(raw.reportId, 10),
-            reporterUserId: Number.parseInt(raw.reporterUserId, 10),
-            reportedUserId: Number.parseInt(raw.reportedUserId, 10),
-            reporterName: raw.reporterName || '',
-            reporterAvatar: raw.reporterAvatar || '/uploads/profilePictures/default-pfp.png',
-            reportedName: raw.reportedName || '',
-            reportedAvatar: raw.reportedAvatar || '/uploads/profilePictures/default-pfp.png',
-            reason: raw.reason || 'other',
-            details: raw.details || '',
-            createdAt: raw.createdAt || null
-        })).filter((report) => Number.isInteger(report.reportId) && report.reportId > 0);
-    }
-
-    function mapSummary(rawSummary) {
-        return {
-            totalUsers: Number(rawSummary?.totalUsers) || 0,
-            pendingReports: Number(rawSummary?.pendingReports) || 0,
-            bannedAccounts: Number(rawSummary?.bannedAccounts) || 0,
-            deletedUsers: Number(rawSummary?.deletedUsers) || 0
-        };
-    }
-
-    function normalizePaginationPayload(rawPayload) {
-        const items = Array.isArray(rawPayload?.items) ? rawPayload.items : [];
-        const total = Number(rawPayload?.total) || 0;
-        const limit = Number(rawPayload?.limit) || PAGE_SIZE;
-        const offset = Number(rawPayload?.offset) || 0;
-        const nextOffset = Number(rawPayload?.nextOffset);
-
-        return {
-            items,
-            total,
-            limit,
-            offset,
-            nextOffset: Number.isNaN(nextOffset) ? offset + items.length : nextOffset,
-            hasMore: Boolean(rawPayload?.hasMore)
-        };
-    }
+    };
 
     async function apiRequest(action, method = 'GET', payload = null) {
         const query = new URLSearchParams({
@@ -284,39 +188,90 @@ document.addEventListener('DOMContentLoaded', () => {
         return result.data ?? null;
     }
 
-    async function loadSummary() {
-        const summary = await apiRequest('getSummary', 'GET');
-        state.summary = mapSummary(summary);
+    function normalizeUsers(list, source) {
+        if (!Array.isArray(list)) {
+            return [];
+        }
+
+        return list
+            .map((raw) => ({
+                id: Number.parseInt(raw.id, 10),
+                firstName: raw.firstName || '',
+                lastName: raw.lastName || '',
+                email: raw.email || '',
+                phone: raw.phone || '',
+                role: raw.role || 'role-applicant',
+                alYear: raw.alYear || null,
+                university: raw.university || null,
+                universityName: raw.universityName || 'Not set',
+                major: raw.major || null,
+                profileRole: raw.profileRole || null,
+                profilePicture: raw.profilePicture || '/uploads/profilePictures/default-pfp.png',
+                createdAt: raw.createdAt || null,
+                archivedAt: raw.archivedAt || null,
+                public: Number(raw.public) || 0,
+                moderator: Number(raw.moderator) || 0,
+                source
+            }))
+            .filter((user) => Number.isInteger(user.id) && user.id > 0);
     }
 
-    function getListAction(filter, isSearch) {
+    function normalizeReports(list) {
+        if (!Array.isArray(list)) {
+            return [];
+        }
+
+        return list
+            .map((raw) => ({
+                reportId: Number.parseInt(raw.reportId, 10),
+                reporterUserId: Number.parseInt(raw.reporterUserId, 10),
+                reportedUserId: Number.parseInt(raw.reportedUserId, 10),
+                reporterName: raw.reporterName || '',
+                reporterAvatar: raw.reporterAvatar || '/uploads/profilePictures/default-pfp.png',
+                reportedName: raw.reportedName || '',
+                reportedAvatar: raw.reportedAvatar || '/uploads/profilePictures/default-pfp.png',
+                reason: raw.reason || 'other',
+                details: raw.details || '',
+                createdAt: raw.createdAt || null
+            }))
+            .filter((report) => Number.isInteger(report.reportId) && report.reportId > 0);
+    }
+
+    function getListAction(filter, hasSearch) {
         if (filter === 'all') {
-            return isSearch ? 'searchUsers' : 'getAllUsers';
+            return hasSearch ? 'searchUsers' : 'getAllUsers';
         }
-
         if (filter === 'reports') {
-            return isSearch ? 'searchPendingReports' : 'getPendingReports';
+            return hasSearch ? 'searchPendingReports' : 'getPendingReports';
         }
-
         if (filter === 'banned') {
-            return isSearch ? 'searchBannedUsers' : 'getBannedUsers';
+            return hasSearch ? 'searchBannedUsers' : 'getBannedUsers';
         }
-
-        return isSearch ? 'searchDeletedUsers' : 'getDeletedUsers';
+        return hasSearch ? 'searchDeletedUsers' : 'getDeletedUsers';
     }
 
-    function resetTabState(filter) {
+    function resetTab(filter) {
         if (!state.tabs[filter]) {
             return;
         }
         state.tabs[filter] = createTabState();
     }
 
-    function invalidateAllTabStates() {
-        resetTabState('all');
-        resetTabState('reports');
-        resetTabState('banned');
-        resetTabState('deleted');
+    function resetAllTabs() {
+        resetTab('all');
+        resetTab('reports');
+        resetTab('banned');
+        resetTab('deleted');
+    }
+
+    async function loadSummary() {
+        const summary = await apiRequest('getSummary', 'GET');
+        state.summary = {
+            totalUsers: Number(summary?.totalUsers) || 0,
+            pendingReports: Number(summary?.pendingReports) || 0,
+            bannedAccounts: Number(summary?.bannedAccounts) || 0,
+            deletedUsers: Number(summary?.deletedUsers) || 0
+        };
     }
 
     async function loadTabData(filter, options = { reset: false }) {
@@ -326,70 +281,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const shouldReset = Boolean(options.reset);
-
         if (shouldReset) {
-            resetTabState(filter);
+            resetTab(filter);
         }
 
-        const activeTab = state.tabs[filter];
-        if (!shouldReset && activeTab.initialized && !activeTab.hasMore && activeTab.searchQuery === state.searchQuery) {
+        const tab = state.tabs[filter];
+        if (!shouldReset && tab.initialized && !tab.hasMore && tab.searchQuery === state.searchQuery) {
             return;
         }
 
-        activeTab.loading = true;
+        tab.loading = true;
         updateLoadMoreUI();
 
         try {
-            const hasSearch = state.searchQuery.length > 0;
-            const action = getListAction(filter, hasSearch);
+            const action = getListAction(filter, state.searchQuery.length > 0);
             const payload = {
                 limit: PAGE_SIZE,
-                offset: shouldReset ? 0 : activeTab.nextOffset,
+                offset: shouldReset ? 0 : tab.nextOffset,
                 q: state.searchQuery
             };
 
             const rawData = await apiRequest(action, 'GET', payload);
-            const page = normalizePaginationPayload(rawData);
+            const rawItems = Array.isArray(rawData?.items) ? rawData.items : [];
+            const total = Number(rawData?.total) || 0;
+            const limit = Number(rawData?.limit) || PAGE_SIZE;
+            const offset = Number(rawData?.offset) || 0;
+            const nextOffsetRaw = Number(rawData?.nextOffset);
+            const nextOffset = Number.isNaN(nextOffsetRaw) ? offset + rawItems.length : nextOffsetRaw;
+            const hasMore = Boolean(rawData?.hasMore);
 
-            if (filter === 'reports') {
-                const reportItems = normalizeReportList(page.items);
-                activeTab.items = shouldReset ? reportItems : activeTab.items.concat(reportItems);
-            } else {
-                const source = filter === 'all' ? 'all' : filter;
-                const userItems = normalizeUserList(page.items, source);
-                activeTab.items = shouldReset ? userItems : activeTab.items.concat(userItems);
-            }
+            const items = filter === 'reports'
+                ? normalizeReports(rawItems)
+                : normalizeUsers(rawItems, filter === 'all' ? 'all' : filter);
 
-            activeTab.total = page.total;
-            activeTab.limit = page.limit;
-            activeTab.offset = page.offset;
-            activeTab.nextOffset = page.nextOffset;
-            activeTab.hasMore = page.hasMore;
-            activeTab.initialized = true;
-            activeTab.searchQuery = state.searchQuery;
+            tab.items = shouldReset ? items : tab.items.concat(items);
+            tab.total = total;
+            tab.limit = limit;
+            tab.offset = offset;
+            tab.nextOffset = nextOffset;
+            tab.hasMore = hasMore;
+            tab.initialized = true;
+            tab.searchQuery = state.searchQuery;
         } finally {
-            activeTab.loading = false;
+            tab.loading = false;
             updateLoadMoreUI();
         }
     }
 
-    function activeTabItems() {
-        const tabState = state.tabs[state.activeFilter];
-        if (!tabState) {
-            return [];
-        }
-        return tabState.items;
+    function getActiveItems() {
+        const tab = state.tabs[state.activeFilter];
+        return tab ? tab.items : [];
     }
 
-    function findUserById(userId) {
-        const numericId = Number.parseInt(String(userId), 10);
-        if (Number.isNaN(numericId)) {
+    function findUserById(rawUserId) {
+        const userId = Number.parseInt(String(rawUserId), 10);
+        if (Number.isNaN(userId)) {
             return null;
         }
 
         const lists = [state.tabs.all.items, state.tabs.banned.items, state.tabs.deleted.items];
         for (const list of lists) {
-            const found = list.find((user) => Number(user.id) === numericId);
+            const found = list.find((user) => Number(user.id) === userId);
             if (found) {
                 return found;
             }
@@ -399,22 +351,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateKpis() {
-        const totalEl = document.getElementById('kpi-total-users');
-        const reportEl = document.getElementById('kpi-pending-reports');
-        const bannedEl = document.getElementById('kpi-banned-accounts');
-        const deletedEl = document.getElementById('kpi-deleted-users');
+        if (kpiEls.total) {
+            kpiEls.total.textContent = String(state.summary.totalUsers);
+        }
+        if (kpiEls.reports) {
+            kpiEls.reports.textContent = String(state.summary.pendingReports);
+        }
+        if (kpiEls.banned) {
+            kpiEls.banned.textContent = String(state.summary.bannedAccounts);
+        }
+        if (kpiEls.deleted) {
+            kpiEls.deleted.textContent = String(state.summary.deletedUsers);
+        }
+    }
 
-        if (totalEl) {
-            totalEl.textContent = String(state.summary.totalUsers);
+    function updateTabsUI() {
+        kpiTabs.forEach((tab) => {
+            const isActive = tab.dataset.filter === state.activeFilter;
+            tab.classList.toggle('active', isActive);
+            tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+    }
+
+    function updateLoadMoreUI() {
+        if (!els.loadMoreWrap || !els.loadMoreBtn) {
+            return;
         }
-        if (reportEl) {
-            reportEl.textContent = String(state.summary.pendingReports);
+
+        const tab = state.tabs[state.activeFilter];
+        if (!tab) {
+            els.loadMoreWrap.hidden = true;
+            return;
         }
-        if (bannedEl) {
-            bannedEl.textContent = String(state.summary.bannedAccounts);
-        }
-        if (deletedEl) {
-            deletedEl.textContent = String(state.summary.deletedUsers);
+
+        const show = tab.initialized && tab.hasMore;
+        els.loadMoreWrap.hidden = !show;
+
+        if (show) {
+            els.loadMoreBtn.disabled = tab.loading;
+            els.loadMoreBtn.textContent = tab.loading ? 'Loading...' : 'Load more';
         }
     }
 
@@ -461,10 +436,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderTable(userList) {
-        tableBody.innerHTML = '';
+        els.tableBody.innerHTML = '';
 
         if (userList.length === 0) {
-            tableBody.innerHTML = `
+            els.tableBody.innerHTML = `
                 <tr>
                     <td colspan="5">
                         <div class="um-empty-state">
@@ -481,8 +456,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        tableBody.innerHTML = userList.map((user) => {
-            const roleLabel = userRoleLabel(user);
+        els.tableBody.innerHTML = userList.map((user) => {
+            const role = getRoleInfo(user);
             const displayDate = state.activeFilter === 'all'
                 ? formatDate(user.createdAt)
                 : formatDate(user.archivedAt || user.createdAt);
@@ -504,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </td>
                     <td><span style="font-weight:500; color: var(--foreground);">${safeUniversity}</span></td>
-                    <td><span class="um-badge ${roleClass(roleLabel)}">${escapeHtml(roleLabel)}</span></td>
+                    <td><span class="um-badge ${role.className}">${escapeHtml(role.label)}</span></td>
                     <td style="color: var(--muted-foreground); font-weight: 500;">${displayDate}</td>
                     <td>
                         <div class="um-actions">
@@ -518,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderReports(reportList) {
         if (reportList.length === 0) {
-            reportsList.innerHTML = `
+            els.reportsList.innerHTML = `
                 <div class="um-empty-state">
                     <svg class="um-empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
@@ -531,10 +506,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        reportsList.innerHTML = reportList.map((report) => {
+        els.reportsList.innerHTML = reportList.map((report) => {
             const reporterName = escapeHtml(report.reporterName || `User #${report.reporterUserId}`);
             const reportedName = escapeHtml(report.reportedName || `User #${report.reportedUserId}`);
-            const reasonLabel = escapeHtml(reportReasonLabel(report.reason));
+            const reasonKey = String(report.reason || '').toLowerCase();
+            const reasonLabel = escapeHtml(reportReasonLabelMap[reasonKey] || 'Other');
             const details = escapeHtml((report.details || '').trim() || '-');
 
             return `
@@ -565,99 +541,71 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    function refreshTabsUI() {
-        kpiTabs.forEach((tab) => {
-            const isActive = tab.dataset.filter === state.activeFilter;
-            tab.classList.toggle('active', isActive);
-            tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-        });
-    }
-
-    function updateLoadMoreUI() {
-        if (!loadMoreWrap || !loadMoreBtn) {
-            return;
-        }
-
-        const tabState = state.tabs[state.activeFilter];
-        if (!tabState) {
-            loadMoreWrap.hidden = true;
-            return;
-        }
-
-        const show = tabState.initialized && tabState.hasMore;
-        loadMoreWrap.hidden = !show;
-
-        if (show) {
-            loadMoreBtn.disabled = tabState.loading;
-            loadMoreBtn.textContent = tabState.loading ? 'Loading...' : 'Load more';
-        }
-    }
-
-    function syncView() {
-        refreshTabsUI();
+    function render() {
+        updateTabsUI();
         updateKpis();
         updateLoadMoreUI();
 
         if (state.activeFilter === 'reports') {
-            usersView.hidden = true;
-            reportsView.hidden = false;
-            if (listHeading) {
-                listHeading.hidden = true;
+            els.usersView.hidden = true;
+            els.reportsView.hidden = false;
+            if (els.listHeading) {
+                els.listHeading.hidden = true;
             }
-            renderReports(activeTabItems());
+            renderReports(getActiveItems());
             return;
         }
 
-        usersView.hidden = false;
-        reportsView.hidden = true;
+        els.usersView.hidden = false;
+        els.reportsView.hidden = true;
 
-        if (listHeading) {
-            listHeading.hidden = false;
+        if (els.listHeading) {
+            els.listHeading.hidden = false;
         }
 
-        if (listTitle) {
+        if (els.listTitle) {
             if (state.activeFilter === 'banned') {
-                listTitle.textContent = 'Banned Users';
+                els.listTitle.textContent = 'Banned Users';
             } else if (state.activeFilter === 'deleted') {
-                listTitle.textContent = 'Deleted Users';
+                els.listTitle.textContent = 'Deleted Users';
             } else {
-                listTitle.textContent = 'All Users';
+                els.listTitle.textContent = 'All Users';
             }
         }
 
-        if (dateColumnTitle) {
+        if (els.dateColumnTitle) {
             if (state.activeFilter === 'banned') {
-                dateColumnTitle.textContent = 'Banned Date';
+                els.dateColumnTitle.textContent = 'Banned Date';
             } else if (state.activeFilter === 'deleted') {
-                dateColumnTitle.textContent = 'Deleted Date';
+                els.dateColumnTitle.textContent = 'Deleted Date';
             } else {
-                dateColumnTitle.textContent = 'Joined Date';
+                els.dateColumnTitle.textContent = 'Joined Date';
             }
         }
 
-        renderTable(activeTabItems());
+        renderTable(getActiveItems());
     }
 
     async function refreshAfterMutation(nextFilter = state.activeFilter) {
         state.activeFilter = nextFilter;
-        invalidateAllTabStates();
+        resetAllTabs();
 
         await Promise.all([
             loadSummary(),
             loadTabData(nextFilter, { reset: true })
         ]);
 
-        syncView();
+        render();
     }
 
-    async function handleUserAction(action, userId) {
-        const numericUserId = Number.parseInt(String(userId), 10);
-        if (Number.isNaN(numericUserId)) {
+    async function handleUserAction(action, rawUserId) {
+        const userId = Number.parseInt(String(rawUserId), 10);
+        if (Number.isNaN(userId)) {
             return;
         }
 
-        const user = findUserById(numericUserId);
-        const userName = user ? fullName(user) : `User #${numericUserId}`;
+        const user = findUserById(userId);
+        const userName = user ? fullName(user) : `User #${userId}`;
 
         if (action === 'ban') {
             const confirmed = await window.confirm(`Ban ${userName}? This will archive the user and lock login access.`);
@@ -665,7 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            await apiRequest('banUser', 'POST', { user_id: numericUserId });
+            await apiRequest('banUser', 'POST', { user_id: userId });
             showMessage('User banned successfully.', 'success');
             await refreshAfterMutation('banned');
             return;
@@ -677,7 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            await apiRequest('deleteUser', 'POST', { user_id: numericUserId });
+            await apiRequest('deleteUser', 'POST', { user_id: userId });
             showMessage('User moved to deleted accounts.', 'success');
             await refreshAfterMutation('deleted');
             return;
@@ -689,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            await apiRequest('unbanUser', 'POST', { user_id: numericUserId });
+            await apiRequest('unbanUser', 'POST', { user_id: userId });
             showMessage('User unbanned successfully.', 'success');
             await refreshAfterMutation('all');
             return;
@@ -701,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            await apiRequest('restoreDeletedUser', 'POST', { user_id: numericUserId });
+            await apiRequest('restoreDeletedUser', 'POST', { user_id: userId });
             showMessage('Deleted user restored successfully.', 'success');
             await refreshAfterMutation('all');
         }
@@ -734,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function runServerSideSearch() {
         try {
             await loadTabData(state.activeFilter, { reset: true });
-            syncView();
+            render();
         } catch (error) {
             showMessage(error.message || 'Failed to search users.', 'error');
         }
@@ -750,128 +698,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }, SEARCH_DEBOUNCE_MS);
     }
 
-    tableBody.addEventListener('click', async (event) => {
-        const actionBtn = event.target.closest('.um-btn-icon[data-action]');
-        if (actionBtn) {
-            event.stopPropagation();
-            const action = actionBtn.dataset.action;
-            const userId = Number.parseInt(actionBtn.dataset.userId || '', 10);
-            if (!action || Number.isNaN(userId)) {
-                return;
-            }
-
-            try {
-                await handleUserAction(action, userId);
-            } catch (error) {
-                showMessage(error.message || 'Failed to perform user action.', 'error');
-            }
-            return;
-        }
-
-        if (event.target.closest('a')) {
-            return;
-        }
-
-        const row = event.target.closest('tr[data-user-id]');
-        if (!row) {
-            return;
-        }
-
-        const userId = Number.parseInt(row.dataset.userId || '', 10);
-        if (Number.isNaN(userId)) {
-            return;
-        }
-
-        const user = findUserById(userId);
-        if (user) {
-            openPanel(user);
-        }
-    });
-
-    reportsList.addEventListener('click', async (event) => {
-        if (event.target.closest('a')) {
-            return;
-        }
-
-        const actionBtn = event.target.closest('.um-report-action-btn');
-        if (!actionBtn) {
-            return;
-        }
-
-        const action = actionBtn.dataset.action;
-        const reportId = Number.parseInt(actionBtn.dataset.reportId || '', 10);
-        if (!action || Number.isNaN(reportId)) {
-            return;
-        }
-
-        try {
-            if (action === 'ignore') {
-                await ignoreReport(reportId);
-                return;
-            }
-
-            if (action === 'ban') {
-                const userId = Number.parseInt(actionBtn.dataset.userId || '', 10);
-                if (!Number.isNaN(userId)) {
-                    await banFromReport(reportId, userId);
-                }
-            }
-        } catch (error) {
-            showMessage(error.message || 'Failed to process report action.', 'error');
-        }
-    });
-
-    searchInput.addEventListener('input', (event) => {
-        state.searchQuery = String(event.target.value || '').trim();
-        scheduleServerSideSearch();
-    });
-
-    kpiTabs.forEach((tab) => {
-        tab.addEventListener('click', async () => {
-            const nextFilter = tab.dataset.filter || 'all';
-            state.activeFilter = nextFilter;
-            refreshTabsUI();
-
-            const tabState = state.tabs[nextFilter];
-            const shouldReset = !tabState.initialized || tabState.searchQuery !== state.searchQuery;
-
-            try {
-                if (shouldReset) {
-                    await loadTabData(nextFilter, { reset: true });
-                }
-            } catch (error) {
-                showMessage(error.message || 'Failed to load tab data.', 'error');
-            }
-
-            syncView();
-        });
-    });
-
-    loadMoreBtn?.addEventListener('click', async () => {
-        try {
-            await loadTabData(state.activeFilter, { reset: false });
-            syncView();
-        } catch (error) {
-            showMessage(error.message || 'Failed to load more records.', 'error');
-        }
-    });
-
-    if (moderationBtn) {
-        moderationBtn.addEventListener('click', () => {
-            window.location.href = '/unihelper/moderation';
-        });
-    }
-
     function openPanel(user) {
-        const roleLabel = userRoleLabel(user);
+        const role = getRoleInfo(user);
         const profilePic = imgPath(user.profilePicture);
         const joined = formatDate(user.createdAt, { year: 'numeric', month: 'long', day: 'numeric' });
-        const accountState = accountStateLabel(user);
+        const accountState = user.source === 'banned' ? 'Banned' : (user.source === 'deleted' ? 'Deleted' : 'Active');
         const archiveDate = user.archivedAt
             ? formatDate(user.archivedAt, { year: 'numeric', month: 'long', day: 'numeric' })
             : '-';
 
-        slideBodyContent.innerHTML = `
+        els.slideBodyContent.innerHTML = `
             <div style="text-align: center; margin-bottom: 1rem;">
                 <div style="position: relative; display: inline-block; margin-bottom: 1rem;">
                     <a href="${profileUrl(user.id)}" target="_blank" rel="noopener noreferrer" style="display: inline-block;">
@@ -881,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <h2 style="margin: 0 0 0.5rem 0; color: var(--foreground); font-size: 1.6rem; font-weight: 700;">${escapeHtml(fullName(user))}</h2>
                 <div style="display: flex; gap: 0.75rem; justify-content: center; align-items: center; flex-wrap: wrap;">
-                    <span class="um-badge ${roleClass(roleLabel)}">${escapeHtml(roleLabel)}</span>
+                    <span class="um-badge ${role.className}">${escapeHtml(role.label)}</span>
                     <span class="um-badge um-badge-user">${escapeHtml(accountState)}</span>
                 </div>
             </div>
@@ -923,27 +759,139 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        slidePanel.classList.add('open');
+        els.slidePanel.classList.add('open');
         document.body.style.overflow = 'hidden';
     }
 
     function closePanel() {
-        slidePanel.classList.remove('open');
+        els.slidePanel.classList.remove('open');
         document.body.style.overflow = '';
     }
 
-    closePanelBtn?.addEventListener('click', closePanel);
+    els.tableBody.addEventListener('click', async (event) => {
+        const actionBtn = event.target.closest('.um-btn-icon[data-action]');
+        if (actionBtn) {
+            event.stopPropagation();
+            const action = actionBtn.dataset.action;
+            const userId = Number.parseInt(actionBtn.dataset.userId || '', 10);
+            if (!action || Number.isNaN(userId)) {
+                return;
+            }
+
+            try {
+                await handleUserAction(action, userId);
+            } catch (error) {
+                showMessage(error.message || 'Failed to perform user action.', 'error');
+            }
+            return;
+        }
+
+        if (event.target.closest('a')) {
+            return;
+        }
+
+        const row = event.target.closest('tr[data-user-id]');
+        if (!row) {
+            return;
+        }
+
+        const userId = Number.parseInt(row.dataset.userId || '', 10);
+        if (Number.isNaN(userId)) {
+            return;
+        }
+
+        const user = findUserById(userId);
+        if (user) {
+            openPanel(user);
+        }
+    });
+
+    els.reportsList.addEventListener('click', async (event) => {
+        if (event.target.closest('a')) {
+            return;
+        }
+
+        const actionBtn = event.target.closest('.um-report-action-btn');
+        if (!actionBtn) {
+            return;
+        }
+
+        const action = actionBtn.dataset.action;
+        const reportId = Number.parseInt(actionBtn.dataset.reportId || '', 10);
+        if (!action || Number.isNaN(reportId)) {
+            return;
+        }
+
+        try {
+            if (action === 'ignore') {
+                await ignoreReport(reportId);
+                return;
+            }
+
+            if (action === 'ban') {
+                const userId = Number.parseInt(actionBtn.dataset.userId || '', 10);
+                if (!Number.isNaN(userId)) {
+                    await banFromReport(reportId, userId);
+                }
+            }
+        } catch (error) {
+            showMessage(error.message || 'Failed to process report action.', 'error');
+        }
+    });
+
+    els.searchInput.addEventListener('input', (event) => {
+        state.searchQuery = String(event.target.value || '').trim();
+        scheduleServerSideSearch();
+    });
+
+    kpiTabs.forEach((tab) => {
+        tab.addEventListener('click', async () => {
+            const nextFilter = tab.dataset.filter || 'all';
+            state.activeFilter = nextFilter;
+            updateTabsUI();
+
+            const tabState = state.tabs[nextFilter];
+            const shouldReset = !tabState.initialized || tabState.searchQuery !== state.searchQuery;
+
+            try {
+                if (shouldReset) {
+                    await loadTabData(nextFilter, { reset: true });
+                }
+            } catch (error) {
+                showMessage(error.message || 'Failed to load tab data.', 'error');
+            }
+
+            render();
+        });
+    });
+
+    els.loadMoreBtn?.addEventListener('click', async () => {
+        try {
+            await loadTabData(state.activeFilter, { reset: false });
+            render();
+        } catch (error) {
+            showMessage(error.message || 'Failed to load more records.', 'error');
+        }
+    });
+
+    if (els.moderationBtn) {
+        els.moderationBtn.addEventListener('click', () => {
+            window.location.href = '/unihelper/moderation';
+        });
+    }
+
+    els.closePanelBtn?.addEventListener('click', closePanel);
     panelOverlay?.addEventListener('click', closePanel);
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && slidePanel.classList.contains('open')) {
+        if (event.key === 'Escape' && els.slidePanel.classList.contains('open')) {
             closePanel();
         }
     });
 
     async function initialize() {
         updateKpis();
-        syncView();
+        render();
 
         try {
             await Promise.all([
@@ -954,7 +902,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showMessage(error.message || 'Failed to load user management data.', 'error');
         }
 
-        syncView();
+        render();
     }
 
     void initialize();
