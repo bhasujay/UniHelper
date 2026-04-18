@@ -301,6 +301,17 @@
         border-radius: 0.3rem;
     }
 
+    .session-ongoing-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 0.35rem 0.7rem;
+        background: #48bb78;
+        color: #ffffff;
+        border-radius: 0.3rem;
+    }
+
     .session-subject {
         display: inline-block;
         font-size: 0.8rem;
@@ -1556,6 +1567,52 @@
             .filter(Boolean);
     }
 
+    function normalizeSessionDurationHours(rawDuration) {
+        const parsed = Number(rawDuration);
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+            return 1;
+        }
+
+        return parsed;
+    }
+
+    function getSessionStartDateTime(session) {
+        const datePart = String(session && session.date ? session.date : '').trim();
+        const rawTimePart = String(session && session.time ? session.time : '00:00:00').trim();
+        if (!datePart) {
+            return null;
+        }
+
+        const hasSimpleTimeFormat = /^\d{2}:\d{2}(:\d{2})?$/.test(rawTimePart);
+        const normalizedTime = hasSimpleTimeFormat
+            ? (rawTimePart.length === 5 ? `${rawTimePart}:00` : rawTimePart)
+            : '00:00:00';
+
+        const startDateTime = new Date(`${datePart}T${normalizedTime}`);
+        if (Number.isNaN(startDateTime.getTime())) {
+            return null;
+        }
+
+        return startDateTime;
+    }
+
+    function isSessionOngoing(session) {
+        if (!session || Number(session.is_deleted || 0) === 1 || session.deleted_at) {
+            return false;
+        }
+
+        const startDateTime = getSessionStartDateTime(session);
+        if (!startDateTime) {
+            return false;
+        }
+
+        const durationHours = normalizeSessionDurationHours(session.duration);
+        const endDateTime = new Date(startDateTime.getTime() + Math.round(durationHours * 3600 * 1000));
+        const now = new Date();
+
+        return now > startDateTime && now < endDateTime;
+    }
+
     function buildSessionTagMarkup(rawTags) {
         return parseSessionTags(rawTags)
             .map(tag => `<span class="session-tag">${escapeHtml(tag)}</span>`)
@@ -1642,6 +1699,7 @@
     function createSessionCard(session) {
         const safeSession = upsertSessionCache(session) || session;
         const isExpired = Number(safeSession.is_expired || 0) === 1 || (safeSession.deleted_at && !safeSession.is_deleted);
+        const isOngoing = !isExpired && isSessionOngoing(safeSession);
         const audienceLabel = getAudienceLabel(safeSession.audience);
         const tags = buildSessionTagMarkup(safeSession.tags);
         const subscriberCount = Math.max(0, Number(safeSession.sub_count || 0));
@@ -1655,6 +1713,7 @@
         const authorUniversity = escapeHtml(safeSession.creator_university || safeSession.university || 'Unknown University');
         const authorAvatarUrl = escapeAttribute(getProfileImageUrl(safeSession.creator_profile_picture));
         const expiredBadge = isExpired ? '<span class="session-expired-badge">Expired</span>' : '';
+        const ongoingBadge = isOngoing ? '<span class="session-ongoing-badge">Ongoing</span>' : '';
         const sessionId = Number(safeSession.id || 0);
 
         return `
@@ -1667,7 +1726,7 @@
                             <span class="session-subject">${escapeHtml(safeSession.subject || 'General')}</span>
                         </div>
                     </div>
-                    <div class="session-status-badges">${expiredBadge}</div>
+                    <div class="session-status-badges">${ongoingBadge}${expiredBadge}</div>
                 </div>
                 <h3 class="session-title">${escapeHtml(safeSession.title || 'Untitled Session')}</h3>
                 <p class="session-description">${escapeHtml(safeSession.description || 'No description available.')}</p>
