@@ -6,6 +6,7 @@ use PDO;
 
 require_once dirname(__DIR__) . '/models/base-model.php';
 
+// Model for managing notifications
 
 class Notification extends BaseModel
 {
@@ -148,39 +149,6 @@ class Notification extends BaseModel
         }
 
         return $inserted;
-    }
-
-    public function createPostLikeNotification(int $postOwnerId, int $actorUserId, string $actorName, int $postId, string $postTitle = ''): int
-    {
-        if ($postOwnerId <= 0 || $actorUserId <= 0 || $postId <= 0) {
-            return 0;
-        }
-
-        if ($postOwnerId === $actorUserId) {
-            return 0;
-        }
-
-        $safeActorName = trim($actorName);
-        if ($safeActorName === '') {
-            $safeActorName = 'Someone';
-        }
-
-        $safeTitle = trim($postTitle);
-        if ($safeTitle !== '') {
-            $safeTitle = preg_replace('/\s+/', ' ', $safeTitle);
-            if (mb_strlen($safeTitle) > 80) {
-                $safeTitle = mb_substr($safeTitle, 0, 77) . '...';
-            }
-        }
-
-        $message = $safeTitle !== ''
-            ? $safeActorName . ' liked your post: "' . $safeTitle . '"'
-            : $safeActorName . ' liked your post.';
-
-        // Link includes source and item id so the feed page can focus the specific card.
-        $deepLink = '/unihelper/announcements?source=post&post=' . $postId;
-
-        return $this->createMany([$postOwnerId], $message, 'other', $deepLink);
     }
 
     public function delete($notificationId)

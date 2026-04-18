@@ -3,13 +3,11 @@
 namespace app\controllers;
 
 require_once dirname(__DIR__, 1) . '/models/FeedPost.php';
-require_once dirname(__DIR__, 1) . '/models/FeedLike.php';
 require_once dirname(__DIR__, 1) . '/models/Session_model.php';
 require_once dirname(__DIR__, 1) . '/models/User.php';
 require_once dirname(__DIR__, 1) . '/models/notification.php';
 
 use app\core\Request;
-use app\models\FeedLike;
 use app\models\FeedPost;
 use app\models\Session_model;
 use app\models\User;
@@ -30,7 +28,6 @@ class FeedController
     private const FEED_UPLOAD_DIR_RELATIVE = 'public/uploads/feedPosts';
 
     private $feedPostModel;
-    private $feedLikeModel;
     private $sessionModel;
     private $viewer;
     private $notificationModel;
@@ -52,7 +49,6 @@ class FeedController
         }
 
         $this->feedPostModel = new FeedPost();
-        $this->feedLikeModel = new FeedLike();
         $this->sessionModel = new Session_model();
         $this->notificationModel = new Notification();
     }
@@ -384,7 +380,7 @@ class FeedController
             }
 
             try {
-                $this->feedLikeModel->deleteLikesForSource('post', $postId);
+                $this->feedPostModel->deleteLikesForSource('post', $postId);
             } catch (\Throwable $likeCleanupError) {
                 error_log('FeedController: Failed to cleanup likes for post ' . $postId . ' - ' . $likeCleanupError->getMessage());
             }
@@ -411,7 +407,7 @@ class FeedController
         $source = strtolower(trim((string)($request->get('source') ?? '')));
         $sourceId = (int)($request->get('source_id') ?? 0);
 
-        if (!$this->feedLikeModel->isValidSourceType($source)) {
+        if (!$this->feedPostModel->isValidSourceType($source)) {
             $this->json([
                 'success' => false,
                 'message' => 'Invalid like source.',
@@ -436,7 +432,7 @@ class FeedController
         }
 
         try {
-            $result = $this->feedLikeModel->toggleLike((int)$this->viewer->id, $source, $sourceId);
+            $result = $this->feedPostModel->toggleLike((int)$this->viewer->id, $source, $sourceId);
 
             if ($source === 'post' && !empty($result['liked_by_viewer'])) {
                 try {
@@ -445,7 +441,7 @@ class FeedController
                         $postOwnerId = (int)($post['user_id'] ?? 0);
                         $actorName = trim(((string)($this->viewer->firstName ?? '')) . ' ' . ((string)($this->viewer->lastName ?? '')));
 
-                        $this->feedLikeModel->createPostLikeNotification(
+                        $this->feedPostModel->createPostLikeNotification(
                             $postOwnerId,
                             (int)$this->viewer->id,
                             $actorName,
@@ -691,7 +687,7 @@ class FeedController
         }
 
         try {
-            $stats = $this->feedLikeModel->getLikeStatsForItems($items, (int)($this->viewer->id ?? 0));
+            $stats = $this->feedPostModel->getLikeStatsForItems($items, (int)($this->viewer->id ?? 0));
             foreach ($items as &$item) {
                 $key = (string)($item['source'] ?? '') . '-' . (int)($item['source_id'] ?? 0);
                 $item['like_count'] = (int)($stats[$key]['like_count'] ?? ($item['like_count'] ?? 0));

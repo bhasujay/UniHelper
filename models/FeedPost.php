@@ -16,6 +16,8 @@ class FeedPost extends BaseModel
 
     private const VALID_TYPES = ['announcement', 'event', 'general'];
     private const VALID_AUDIENCE_MODES = ['all_roles', 'selected_roles'];
+    private const VALID_SOURCE_TYPES = ['post', 'session'];
+    private const LIKES_TABLE = 'feed_likes';
 
     public function __construct()
     {
@@ -58,6 +60,225 @@ class FeedPost extends BaseModel
         }
 
         return $sentCount;
+    }
+
+    public function isValidSourceType(string $sourceType): bool
+    {
+        return in_array($sourceType, self::VALID_SOURCE_TYPES, true);
+    }
+
+    public function toggleLike(int $userId, string $sourceType, int $sourceId): array
+    {
+        if (!$this->isValidSourceType($sourceType)) {
+            throw new Exception('Invalid like source type.');
+        }
+
+        if ($sourceId <= 0) {
+            throw new Exception('Invalid source ID.');
+        }
+
+        try {
+            $selectSql = "SELECT id
+                          FROM " . self::LIKES_TABLE . "
+                          WHERE user_id = :user_id
+                            AND source_type = :source_type
+                            AND source_id = :source_id
+                          LIMIT 1";
+            $selectStmt = $this->db->prepare($selectSql);
+            $selectStmt->execute([
+                'user_id' => $userId,
+                'source_type' => $sourceType,
+                'source_id' => $sourceId,
+            ]);
+
+            $existingId = $selectStmt->fetchColumn();
+            $likedByViewer = false;
+
+            if ($existingId !== false) {
+                $deleteSql = "DELETE FROM " . self::LIKES_TABLE . "
+                              WHERE id = :id";
+                $deleteStmt = $this->db->prepare($deleteSql);
+                $deleteStmt->execute(['id' => (int)$existingId]);
+                $likedByViewer = false;
+            } else {
+                $insertSql = "INSERT INTO " . self::LIKES_TABLE . " (user_id, source_type, source_id)
+                              VALUES (:user_id, :source_type, :source_id)";
+                $insertStmt = $this->db->prepare($insertSql);
+                $insertStmt->execute([
+                    'user_id' => $userId,
+                    'source_type' => $sourceType,
+                    'source_id' => $sourceId,
+                ]);
+                $likedByViewer = true;
+            }
+
+            return [
+                'liked_by_viewer' => $likedByViewer,
+                'like_count' => $this->getLikeCount($sourceType, $sourceId),
+            ];
+        } catch (PDOException $e) {
+            throw new Exception('Failed to toggle like: ' . $e->getMessage());
+        }
+    }
+
+    public function getLikeCount(string $sourceType, int $sourceId): int
+    {
+        if (!$this->isValidSourceType($sourceType) || $sourceId <= 0) {
+            return 0;
+        }
+
+        try {
+            $sql = "SELECT COUNT(*)
+                    FROM " . self::LIKES_TABLE . "
+                    WHERE source_type = :source_type
+                      AND source_id = :source_id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'source_type' => $sourceType,
+                'source_id' => $sourceId,
+            ]);
+
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            throw new Exception('Failed to fetch like count: ' . $e->getMessage());
+        }
+    }
+
+    public function deleteLikesForSource(string $sourceType, int $sourceId): bool
+    {
+        if (!$this->isValidSourceType($sourceType) || $sourceId <= 0) {
+            return false;
+        }
+
+        try {
+            $sql = "DELETE FROM " . self::LIKES_TABLE . "
+                    WHERE source_type = :source_type
+                      AND source_id = :source_id";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                'source_type' => $sourceType,
+                'source_id' => $sourceId,
+            ]);
+        } catch (PDOException $e) {
+            throw new Exception('Failed to delete likes: ' . $e->getMessage());
+        }
+    }
+
+    public function getLikeStatsForItems(array $items, int $viewerId): array
+    {
+        $indexedItems = [];
+        foreach ($items as $item) {
+            $sourceType = strtolower(trim((string)($item['source'] ?? '')));
+            $sourceId = (int)($item['source_id'] ?? 0);
+            if (!$this->isValidSourceType($sourceType) || $sourceId <= 0) {
+                continue;
+            }
+
+            $key = $this->makeLikeKey($sourceType, $sourceId);
+            $indexedItems[$key] = [
+                'source_type' => $sourceType,
+                'source_id' => $sourceId,
+            ];
+        }
+
+        if (empty($indexedItems)) {
+            return [];
+        }
+
+        $entries = array_values($indexedItems);
+        $stats = [];
+        foreach ($entries as $entry) {
+            $stats[$this->makeLikeKey($entry['source_type'], $entry['source_id'])] = [
+                'like_count' => 0,
+                'liked_by_viewer' => false,
+            ];
+        }
+
+        try {
+            $whereParts = [];
+            $params = [];
+            foreach ($entries as $index => $entry) {
+                $whereParts[] = "(source_type = :source_type_{$index} AND source_id = :source_id_{$index})";
+                $params['source_type_' . $index] = $entry['source_type'];
+                $params['source_id_' . $index] = $entry['source_id'];
+            }
+
+            $whereClause = implode(' OR ', $whereParts);
+
+            $countSql = "SELECT source_type, source_id, COUNT(*) AS like_count
+                         FROM " . self::LIKES_TABLE . "
+                         WHERE {$whereClause}
+                         GROUP BY source_type, source_id";
+            $countStmt = $this->db->prepare($countSql);
+            $countStmt->execute($params);
+            $countRows = $countStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($countRows as $row) {
+                $key = $this->makeLikeKey((string)$row['source_type'], (int)$row['source_id']);
+                if (isset($stats[$key])) {
+                    $stats[$key]['like_count'] = (int)$row['like_count'];
+                }
+            }
+
+            if ($viewerId > 0) {
+                $viewerSql = "SELECT source_type, source_id
+                              FROM " . self::LIKES_TABLE . "
+                              WHERE user_id = :viewer_id
+                                AND ({$whereClause})";
+                $viewerStmt = $this->db->prepare($viewerSql);
+                $viewerParams = array_merge(['viewer_id' => $viewerId], $params);
+                $viewerStmt->execute($viewerParams);
+                $viewerRows = $viewerStmt->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($viewerRows as $row) {
+                    $key = $this->makeLikeKey((string)$row['source_type'], (int)$row['source_id']);
+                    if (isset($stats[$key])) {
+                        $stats[$key]['liked_by_viewer'] = true;
+                    }
+                }
+            }
+
+            return $stats;
+        } catch (PDOException $e) {
+            throw new Exception('Failed to fetch like stats: ' . $e->getMessage());
+        }
+    }
+
+    private function makeLikeKey(string $sourceType, int $sourceId): string
+    {
+        return $sourceType . '-' . $sourceId;
+    }
+
+    public function createPostLikeNotification(int $postOwnerId, int $actorUserId, string $actorName, int $postId, string $postTitle = ''): int
+    {
+        if ($postOwnerId <= 0 || $actorUserId <= 0 || $postId <= 0) {
+            return 0;
+        }
+
+        if ($postOwnerId === $actorUserId) {
+            return 0;
+        }
+
+        $safeActorName = trim($actorName);
+        if ($safeActorName === '') {
+            $safeActorName = 'Someone';
+        }
+
+        $safeTitle = trim($postTitle);
+        if ($safeTitle !== '') {
+            $safeTitle = preg_replace('/\s+/', ' ', $safeTitle);
+            if (mb_strlen($safeTitle) > 80) {
+                $safeTitle = mb_substr($safeTitle, 0, 77) . '...';
+            }
+        }
+
+        $message = $safeTitle !== ''
+            ? $safeActorName . ' liked your post: "' . $safeTitle . '"'
+            : $safeActorName . ' liked your post.';
+
+        $deepLink = '/unihelper/announcements?source=post&post=' . $postId;
+
+        return $this->notifyModel->insertNotification($postOwnerId, $message, 'other', $deepLink);
     }
 
     public function getVisiblePostsForRole(string $viewerRole, int $limit = 100): array
