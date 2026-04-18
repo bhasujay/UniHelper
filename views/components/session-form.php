@@ -17,6 +17,36 @@ $formAction = isset($formAction) && is_string($formAction)
 $isModalContext = isset($isModalContext) ? (bool)$isModalContext : false;
 $formId = $isModalContext ? 'modalCreateSessionForm' : 'createSessionForm';
 $formClass = $isModalContext ? 'session-form js-modal-create-session-form' : 'session-form';
+
+$subjects = [
+    'Computer Science',
+    'Engineering',
+    'Medicine',
+    'Law',
+    'Business Administration',
+    'Biotechnology',
+    'Psychology',
+    'Mathematics',
+    'Physics',
+    'Economics',
+    'Biological Science',
+    'Physical Science',
+    'Software Engineering',
+    'Information Systems',
+    'Accounting',
+    'Finance',
+    'Architecture',
+    'Quantity Surveying',
+    'Management & Information Technology (MIT)',
+    'Agriculture',
+    'Nursing',
+    'Pharmacy',
+    'Dental Surgery',
+    'Human Resource Management',
+    'Marketing',
+];
+
+$selectedSubject = (string)($formData['subject'] ?? '');
 ?>
 
 <div class="create-session-container">
@@ -52,15 +82,21 @@ $formClass = $isModalContext ? 'session-form js-modal-create-session-form' : 'se
 
         <div class="form-group">
             <label for="subject" class="form-label required">Subject</label>
-            <div class="form-select-group">
-                <select id="subject" name="subject" class="form-select">
-                    <option value="" disabled <?= empty($formData['subject'] ?? '') ? 'selected' : '' ?>>Select Subject</option>
-                    <option value="Computer Science" <?= ($formData['subject'] ?? '') === 'Computer Science' ? 'selected' : '' ?>>Computer Science</option>
-                    <option value="Mathematics" <?= ($formData['subject'] ?? '') === 'Mathematics' ? 'selected' : '' ?>>Mathematics</option>
-                    <option value="Physical Science" <?= ($formData['subject'] ?? '') === 'Physical Science' ? 'selected' : '' ?>>Physical Science</option>
-                </select>
-                <span class="form-select-arrow">▼</span>
-            </div>
+            <input
+                type="text"
+                id="subject"
+                name="subject"
+                class="form-input"
+                list="subjectSuggestions"
+                placeholder="Type to search subjects"
+                value="<?= htmlspecialchars($selectedSubject) ?>"
+            >
+            <datalist id="subjectSuggestions">
+                <?php foreach ($subjects as $subjectOption): ?>
+                    <option value="<?= htmlspecialchars($subjectOption) ?>"></option>
+                <?php endforeach; ?>
+            </datalist>
+            <p class="helper-text">Start typing to see suggestions.</p>
             <?php if (isset($errors['subject'])): ?>
                 <div class="form-error show"><?= htmlspecialchars($errors['subject']) ?></div>
             <?php endif; ?>
