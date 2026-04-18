@@ -1544,6 +1544,24 @@
         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
     }
 
+    function parseSessionTags(rawTags) {
+        const source = String(rawTags || '').trim();
+        if (!source) {
+            return [];
+        }
+
+        return source
+            .split(/[#,]+/)
+            .map(tag => tag.trim().replace(/^#+/, ''))
+            .filter(Boolean);
+    }
+
+    function buildSessionTagMarkup(rawTags) {
+        return parseSessionTags(rawTags)
+            .map(tag => `<span class="session-tag">${escapeHtml(tag)}</span>`)
+            .join('');
+    }
+
     function createEmptyState(title, text) {
         return `
             <div class="empty-state">
@@ -1625,12 +1643,7 @@
         const safeSession = upsertSessionCache(session) || session;
         const isExpired = Number(safeSession.is_expired || 0) === 1 || (safeSession.deleted_at && !safeSession.is_deleted);
         const audienceLabel = getAudienceLabel(safeSession.audience);
-        const tags = String(safeSession.tags || '')
-            .split(',')
-            .map(tag => tag.trim())
-            .filter(Boolean)
-            .map(tag => `<span class="session-tag">${escapeHtml(tag)}</span>`)
-            .join('');
+        const tags = buildSessionTagMarkup(safeSession.tags);
         const subscriberCount = Math.max(0, Number(safeSession.sub_count || 0));
         const authorName = getAuthorFullName(safeSession);
         const authorNameHtml = escapeHtml(authorName);
@@ -1705,12 +1718,7 @@
         const subscribeBtnClass = subscriptionStatus === 'approved'
             ? 'session-subscribe-btn subscribed'
             : (subscriptionStatus === 'pending' ? 'session-subscribe-btn pending' : 'session-subscribe-btn');
-        const tags = String(session.tags || '')
-            .split(',')
-            .map(tag => tag.trim())
-            .filter(Boolean)
-            .map(tag => `<span class="session-tag">${escapeHtml(tag)}</span>`)
-            .join('');
+        const tags = buildSessionTagMarkup(session.tags);
         const isExpired = Number(session.is_expired || 0) === 1 || (session.deleted_at && !session.is_deleted);
 
         const actionButtons = [];
