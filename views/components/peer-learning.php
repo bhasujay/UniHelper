@@ -9,22 +9,21 @@
         overflow: hidden;
     }
 
-    body.peer-modal-open > :not(.session-main-modal):not(.delete-modal) {
+    body.peer-modal-open > :not(.session-main-modal):not(.confirmation-modal) {
         filter: blur(6px);
         transition: filter 0.2s ease;
         pointer-events: none;
     }
 
     body.peer-modal-open > .session-main-modal,
-    body.peer-modal-open > .delete-modal {
+    body.peer-modal-open > .confirmation-modal {
         filter: none;
         pointer-events: auto;
     }
 
     /* Peer Learning Component Styles */
     .peer-learning-container,
-    .session-main-modal,
-    .delete-modal {
+    .session-main-modal {
         --peer-surface: var(--card);
         --peer-surface-soft: var(--text_background);
         --peer-border: var(--border);
@@ -51,8 +50,7 @@
     }
 
     [data-theme="light"] .peer-learning-container,
-    [data-theme="light"] .session-main-modal,
-    [data-theme="light"] .delete-modal {
+    [data-theme="light"] .session-main-modal {
         --peer-surface: #ffffff;
         --peer-surface-soft: #f7f9fd;
         --peer-border-strong: rgba(0, 95, 189, 0.35);
@@ -1101,90 +1099,6 @@
         padding: 1.25rem 0.5rem;
     }
 
-    /* Delete Confirmation Modal */
-    .delete-modal {
-        display: none;
-        position: fixed;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        background: var(--peer-overlay);
-        z-index: 10004;
-        justify-content: center;
-        align-items: center;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        padding: 1rem;
-    }
-
-    .delete-modal.show {
-        display: flex;
-    }
-
-    .delete-modal-content {
-        background: var(--peer-surface);
-        border: 1px solid var(--peer-divider);
-        border-radius: 1rem;
-        width: min(520px, 96vw);
-        padding: 1.4rem 1.3rem;
-        box-shadow: 0 20px 56px rgba(0, 0, 0, 0.5);
-    }
-
-    .delete-modal-title {
-        margin: 0 0 0.5rem;
-        color: var(--foreground);
-        font-size: 1.2rem;
-        font-weight: 700;
-    }
-
-    .delete-modal-text {
-        margin: 0;
-        color: var(--muted-foreground);
-        line-height: 1.55;
-    }
-
-    .delete-modal-actions {
-        margin-top: 1.2rem;
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.7rem;
-    }
-
-    .delete-modal-btn {
-        border: none;
-        border-radius: 0.55rem;
-        padding: 0.62rem 1.05rem;
-        font-weight: 700;
-        font-size: 0.88rem;
-        cursor: pointer;
-        transition: all 0.25s ease;
-    }
-
-    .delete-modal-cancel {
-        background: transparent;
-        color: var(--foreground);
-        border: 1px solid var(--peer-divider);
-    }
-
-    .delete-modal-cancel:hover {
-        background: var(--peer-tint-soft);
-        border-color: var(--peer-border-strong);
-    }
-
-    .delete-modal-confirm {
-        background: var(--peer-danger);
-        color: #ffffff;
-    }
-
-    .delete-modal-confirm:hover {
-        background: var(--peer-danger-hover);
-    }
-
-    .delete-modal-btn:disabled {
-        opacity: 0.65;
-        cursor: not-allowed;
-    }
-
     @media (max-width: 768px) {
         .sessions-grid {
             grid-template-columns: 1fr;
@@ -1261,14 +1175,6 @@
             justify-content: flex-start;
         }
 
-        .delete-modal-content {
-            padding: 1.1rem 1rem;
-        }
-
-        .delete-modal-actions {
-            flex-direction: column;
-            align-items: stretch;
-        }
     }
 </style>
 
@@ -1349,17 +1255,6 @@
     </div>
 </div>
 
-<div class="delete-modal" id="deleteModal" aria-hidden="true">
-    <div class="delete-modal-content" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
-        <h3 class="delete-modal-title" id="deleteModalTitle">Delete Session?</h3>
-        <p class="delete-modal-text">Are you sure you want to delete this session? This action cannot be undone.</p>
-        <div class="delete-modal-actions">
-            <button type="button" class="delete-modal-btn delete-modal-cancel" data-action="close-delete-modal">Cancel</button>
-            <button type="button" class="delete-modal-btn delete-modal-confirm" id="confirmDeleteBtn">Delete</button>
-        </div>
-    </div>
-</div>
-
 <script>
     const BASE_URL = '/UniHelper';
     const CURRENT_USER_ID = <?= (int)($user->id ?? 0) ?>;
@@ -1372,7 +1267,6 @@
     let activeCreateSessionId = 0;
     let createSessionSubmitInFlight = false;
     let deleteSubmitInFlight = false;
-    let pendingDeleteSessionId = 0;
 
     const sessionSearchState = {
         'my-sessions': { query: '', page: 1 },
@@ -1383,8 +1277,6 @@
     const pageParams = getPageParams();
     const sessionMainModalElement = document.getElementById('sessionMainModal');
     const createSessionModalElement = document.getElementById('createSessionModal');
-    const deleteModalElement = document.getElementById('deleteModal');
-    const confirmDeleteButtonElement = document.getElementById('confirmDeleteBtn');
     const createSessionModalTitleElement = document.getElementById('createSessionModalTitle');
     const createSessionModalBodyElement = document.getElementById('createSessionModalBody');
     const sessionSearchForm = document.getElementById('peer-session-search-form');
@@ -1403,13 +1295,26 @@
         document.body.appendChild(createSessionModalElement);
     }
 
-    if (deleteModalElement && deleteModalElement.parentElement !== document.body) {
-        document.body.appendChild(deleteModalElement);
+    function updateBodyModalState() {
+        const hasVisibleModal = document.querySelector('.session-main-modal.show') !== null;
+        document.body.classList.toggle('peer-modal-open', hasVisibleModal);
     }
 
-    function updateBodyModalState() {
-        const hasVisibleModal = document.querySelector('.session-main-modal.show, .delete-modal.show') !== null;
-        document.body.classList.toggle('peer-modal-open', hasVisibleModal);
+    function requestConfirmation(message) {
+        if (typeof window.confirm !== 'function') {
+            return Promise.resolve(false);
+        }
+
+        try {
+            const result = window.confirm(message);
+            if (result && typeof result.then === 'function') {
+                return result.then(Boolean).catch(() => false);
+            }
+            return Promise.resolve(Boolean(result));
+        } catch (error) {
+            console.error('Confirmation dialog failed:', error);
+            return Promise.resolve(false);
+        }
     }
 
     function getPageParams() {
@@ -1934,43 +1839,6 @@
         sessionForSubscribersId = null;
         updateBodyModalState();
         resetPeerLearningUrl();
-    }
-
-    function openDeleteModal(sessionId) {
-        const normalizedSessionId = Number(sessionId || 0);
-        if (!normalizedSessionId || !deleteModalElement) {
-            alert('Invalid session ID.');
-            return;
-        }
-
-        pendingDeleteSessionId = normalizedSessionId;
-        deleteModalElement.classList.add('show');
-        deleteModalElement.setAttribute('aria-hidden', 'false');
-
-        if (confirmDeleteButtonElement) {
-            confirmDeleteButtonElement.disabled = false;
-            confirmDeleteButtonElement.textContent = 'Delete';
-        }
-
-        updateBodyModalState();
-    }
-
-    function closeDeleteModal() {
-        if (!deleteModalElement) {
-            return;
-        }
-
-        deleteModalElement.classList.remove('show');
-        deleteModalElement.setAttribute('aria-hidden', 'true');
-        pendingDeleteSessionId = 0;
-        deleteSubmitInFlight = false;
-
-        if (confirmDeleteButtonElement) {
-            confirmDeleteButtonElement.disabled = false;
-            confirmDeleteButtonElement.textContent = 'Delete';
-        }
-
-        updateBodyModalState();
     }
 
     function showCreateSessionModalLoading() {
@@ -2593,61 +2461,58 @@
             });
     }
 
-    function deleteSession(sessionId, triggerButton, skipConfirm = false) {
+    function deleteSession(sessionId, triggerButton) {
         const normalizedSessionId = Number(sessionId || 0);
         if (!normalizedSessionId) {
             alert('Invalid session ID.');
             return;
         }
 
-        if (!skipConfirm) {
-            openDeleteModal(normalizedSessionId);
-            return;
-        }
-
-        if (deleteSubmitInFlight) {
-            return;
-        }
-
-        deleteSubmitInFlight = true;
-
-        if (triggerButton) {
-            triggerButton.disabled = true;
-            triggerButton.textContent = 'Deleting...';
-        }
-
-        fetch(`${BASE_URL}/api?controller=SessionController&action=deleteSession`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: `id=${normalizedSessionId}`
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.error || 'Failed to delete session');
+        requestConfirmation('Are you sure you want to delete this session? This action cannot be undone.')
+            .then(confirmed => {
+                if (!confirmed || deleteSubmitInFlight) {
+                    return;
                 }
 
-                sessionCache.delete(normalizedSessionId);
-                closeDeleteModal();
-                closeSessionModal();
-                loadTabData('my-sessions', 1);
+                deleteSubmitInFlight = true;
 
-                if (document.getElementById('all-sessions-container').innerHTML) {
-                    loadTabData('all-sessions', 1);
-                }
-            })
-            .catch(error => {
-                console.error('Error deleting session:', error);
-                alert(error.message || 'Failed to delete session. Please try again.');
-            })
-            .finally(() => {
-                deleteSubmitInFlight = false;
                 if (triggerButton) {
-                    triggerButton.disabled = false;
-                    triggerButton.textContent = 'Delete';
+                    triggerButton.disabled = true;
+                    triggerButton.textContent = 'Deleting...';
                 }
+
+                return fetch(`${BASE_URL}/api?controller=SessionController&action=deleteSession`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `id=${normalizedSessionId}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.error || 'Failed to delete session');
+                        }
+
+                        sessionCache.delete(normalizedSessionId);
+                        closeSessionModal();
+                        loadTabData('my-sessions', 1);
+
+                        if (document.getElementById('all-sessions-container').innerHTML) {
+                            loadTabData('all-sessions', 1);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting session:', error);
+                        alert(error.message || 'Failed to delete session. Please try again.');
+                    })
+                    .finally(() => {
+                        deleteSubmitInFlight = false;
+                        if (triggerButton) {
+                            triggerButton.disabled = false;
+                            triggerButton.textContent = 'Delete';
+                        }
+                    });
             });
     }
 
@@ -2763,7 +2628,6 @@
     document.addEventListener('click', function (event) {
         const sessionModal = document.getElementById('sessionMainModal');
         const createModal = document.getElementById('createSessionModal');
-        const deleteModal = document.getElementById('deleteModal');
 
         if (event.target === createModal) {
             closeCreateSessionModal();
@@ -2775,20 +2639,9 @@
             return;
         }
 
-        if (event.target === deleteModal) {
-            closeDeleteModal();
-            return;
-        }
-
         const createModalCloseButton = event.target.closest('[data-action="close-create-session-modal"]');
         if (createModalCloseButton) {
             closeCreateSessionModal();
-            return;
-        }
-
-        const deleteModalCloseButton = event.target.closest('[data-action="close-delete-modal"]');
-        if (deleteModalCloseButton) {
-            closeDeleteModal();
             return;
         }
 
@@ -2853,11 +2706,6 @@
 
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
-            if (deleteModalElement && deleteModalElement.classList.contains('show')) {
-                closeDeleteModal();
-                return;
-            }
-
             if (createSessionModalElement && createSessionModalElement.classList.contains('show')) {
                 closeCreateSessionModal();
                 return;
@@ -2885,16 +2733,6 @@
             showPeerLearningError(error.message || 'Unable to open this session view.');
         });
     });
-
-    if (confirmDeleteButtonElement) {
-        confirmDeleteButtonElement.addEventListener('click', function () {
-            if (!pendingDeleteSessionId) {
-                return;
-            }
-
-            deleteSession(pendingDeleteSessionId, confirmDeleteButtonElement, true);
-        });
-    }
 
     window.addEventListener('load', function () {
         syncSearchUiToCurrentTab();
