@@ -43,6 +43,11 @@ if ($currentUser) {
     padding: 1.15rem;
 }
 
+.feedback-form-section {
+    position: sticky;
+    top: 1rem;
+}
+
 .feedback-panel-header {
     display: flex;
     justify-content: space-between;
@@ -110,6 +115,38 @@ if ($currentUser) {
     resize: vertical;
 }
 
+.feedback-rating-input {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 0.2rem;
+}
+
+.feedback-rating-input input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.feedback-rating-input label {
+    font-size: 1.8rem;
+    line-height: 1;
+    color: rgba(148, 163, 184, 0.55);
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.feedback-rating-input label:hover,
+.feedback-rating-input label:hover ~ label,
+.feedback-rating-input input[type="radio"]:checked ~ label {
+    color: #facc15;
+}
+
+.feedback-rating-input label:active {
+    transform: scale(0.96);
+}
+
 .feedback-form-actions {
     display: flex;
     flex-wrap: wrap;
@@ -124,6 +161,9 @@ if ($currentUser) {
 .feedback-list {
     display: grid;
     gap: 0.85rem;
+    max-height: 72vh;
+    overflow-y: auto;
+    padding-right: 0.2rem;
 }
 
 .feedback-item {
@@ -155,6 +195,22 @@ if ($currentUser) {
     gap: 0.75rem;
     font-size: 0.86rem;
     color: var(--muted-foreground);
+}
+
+.feedback-item-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.feedback-item-rating span {
+    font-size: 0.98rem;
+    line-height: 1;
+    color: #facc15;
+}
+
+.feedback-item-rating .feedback-star-empty {
+    color: rgba(148, 163, 184, 0.65);
 }
 
 .feedback-item-content {
@@ -201,6 +257,16 @@ if ($currentUser) {
 @media (max-width: 980px) {
     .feedback-layout {
         grid-template-columns: 1fr;
+    }
+
+    .feedback-form-section {
+        position: static;
+    }
+
+    .feedback-list {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
     }
 }
 
@@ -263,6 +329,26 @@ if ($currentUser) {
                             placeholder="Summarize the feedback clearly"
                             required
                         >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rating5">Your Rating</label>
+                        <div class="feedback-rating-input" role="radiogroup" aria-label="Rate UniHelper from 1 to 5 stars">
+                            <input type="radio" id="rating5" name="rating" value="5" checked required>
+                            <label for="rating5" title="5 stars">&#9733;</label>
+
+                            <input type="radio" id="rating4" name="rating" value="4">
+                            <label for="rating4" title="4 stars">&#9733;</label>
+
+                            <input type="radio" id="rating3" name="rating" value="3">
+                            <label for="rating3" title="3 stars">&#9733;</label>
+
+                            <input type="radio" id="rating2" name="rating" value="2">
+                            <label for="rating2" title="2 stars">&#9733;</label>
+
+                            <input type="radio" id="rating1" name="rating" value="1">
+                            <label for="rating1" title="1 star">&#9733;</label>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -370,6 +456,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const name = (formData.name || '').trim();
         const title = (formData.title || '').trim();
         const message = (formData.message || '').trim();
+        const rating = Number(formData.rating);
 
         if (!name) {
             errors.push('Name is required');
@@ -395,6 +482,10 @@ document.addEventListener('DOMContentLoaded', function () {
             errors.push('Feedback message must not exceed 5000 characters');
         }
 
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+            errors.push('Please select a rating between 1 and 5 stars');
+        }
+
         return errors;
     }
 
@@ -406,6 +497,45 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         return parsedDate.toLocaleDateString();
+    }
+
+    function normalizeRating(rawValue) {
+        const parsed = Number(rawValue);
+
+        if (!Number.isFinite(parsed)) {
+            return 0;
+        }
+
+        const rounded = Math.round(parsed);
+        if (rounded < 1) {
+            return 0;
+        }
+
+        if (rounded > 5) {
+            return 5;
+        }
+
+        return rounded;
+    }
+
+    function createRatingElement(ratingValue) {
+        const rating = normalizeRating(ratingValue);
+        const ratingElement = document.createElement('div');
+        ratingElement.className = 'feedback-item-rating';
+        ratingElement.setAttribute('aria-label', rating > 0 ? `Rating ${rating} out of 5` : 'No rating');
+
+        for (let starIndex = 1; starIndex <= 5; starIndex += 1) {
+            const star = document.createElement('span');
+            star.textContent = '\u2605';
+
+            if (starIndex > rating) {
+                star.className = 'feedback-star-empty';
+            }
+
+            ratingElement.appendChild(star);
+        }
+
+        return ratingElement;
     }
 
     function createFeedbackItem(feedback) {
@@ -449,12 +579,15 @@ document.addEventListener('DOMContentLoaded', function () {
         meta.appendChild(author);
         meta.appendChild(date);
 
+        const rating = createRatingElement(feedback.rating);
+
         const content = document.createElement('p');
         content.className = 'feedback-item-content';
         content.textContent = feedback.message || '';
 
         item.appendChild(header);
         item.appendChild(meta);
+        item.appendChild(rating);
         item.appendChild(content);
 
         return item;
@@ -500,7 +633,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const filtered = feedbackCache.filter(function (feedback) {
-            return [feedback.name, feedback.title, feedback.message].some(function (value) {
+            return [feedback.name, feedback.title, feedback.message, feedback.rating].some(function (value) {
                 return String(value || '').toLowerCase().includes(searchTerm);
             });
         });
@@ -619,7 +752,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({
                     name: feedbackData.name,
                     title: feedbackData.title,
-                    message: feedbackData.message
+                    message: feedbackData.message,
+                    rating: feedbackData.rating
                 })
             });
 
@@ -633,6 +767,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             feedbackForm.reset();
+            const defaultRatingInput = feedbackForm.querySelector('input[name="rating"][value="5"]');
+            if (defaultRatingInput) {
+                defaultRatingInput.checked = true;
+            }
             notify('Feedback submitted successfully!', 'success');
             await loadFeedback();
         } catch (error) {
@@ -657,11 +795,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const nameInput = document.getElementById('yourName');
             const titleInput = document.getElementById('postTitle');
             const messageInput = document.getElementById('feedbackMessage');
+            const ratingInput = feedbackForm.querySelector('input[name="rating"]:checked');
 
             const formData = {
                 name: nameInput ? nameInput.value : '',
                 title: titleInput ? titleInput.value : '',
-                message: messageInput ? messageInput.value : ''
+                message: messageInput ? messageInput.value : '',
+                rating: ratingInput ? ratingInput.value : ''
             };
 
             const validationErrors = validateFeedbackForm(formData);

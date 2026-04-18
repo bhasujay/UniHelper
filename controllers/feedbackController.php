@@ -83,9 +83,10 @@ class FeedbackController
             $name = $input['name'] ?? '';
             $title = $input['title'] ?? '';
             $message = $input['message'] ?? '';
+            $rating = $input['rating'] ?? null;
             
             // STEP 2: Server-side validation (additional layer of security)
-            $validationErrors = $this->validateFeedback($name, $title, $message);
+            $validationErrors = $this->validateFeedback($name, $title, $message, $rating);
             if (!empty($validationErrors)) {
                 http_response_code(400);
                 return json_encode([
@@ -101,13 +102,15 @@ class FeedbackController
             $sanitizedName = $this->sanitizeInput($name);
             $sanitizedTitle = $this->sanitizeInput($title);
             $sanitizedMessage = $this->sanitizeInput($message);
+            $normalizedRating = (int) $rating;
             
             // STEP 4: Insert into database using prepared statements (prevents SQL injection)
             $feedbackModel = new Feedback();
             $insertResult = $feedbackModel->insertFeedback(
                 $sanitizedName,
                 $sanitizedTitle,
-                $sanitizedMessage
+                $sanitizedMessage,
+                $normalizedRating
             );
             
             if ($insertResult['success']) {
@@ -120,6 +123,7 @@ class FeedbackController
                         'name' => $sanitizedName,
                         'title' => $sanitizedTitle,
                         'message' => $sanitizedMessage,
+                        'rating' => $normalizedRating,
                         'created_at' => $insertResult['created_at']
                     ]
                 ]);
@@ -155,13 +159,15 @@ class FeedbackController
      * - Name: not empty, minimum 2 characters, maximum 100 characters
      * - Title: not empty, minimum 5 characters, maximum 255 characters
      * - Message: not empty, minimum 10 characters, maximum 5000 characters
+     * - Rating: required, integer between 1 and 5
      * 
      * @param string $name User's name
      * @param string $title Feedback title
      * @param string $message Feedback message
+     * @param mixed $rating Feedback rating
      * @return array Array of validation error messages (empty if valid)
      */
-    private function validateFeedback($name, $title, $message)
+    private function validateFeedback($name, $title, $message, $rating)
     {
         $errors = [];
         
@@ -190,6 +196,18 @@ class FeedbackController
             $errors[] = 'Message must be at least 10 characters';
         } else if (strlen(trim($message)) > 5000) {
             $errors[] = 'Message must not exceed 5000 characters';
+        }
+
+        // Validate rating
+        if ($rating === null || $rating === '') {
+            $errors[] = 'Rating is required';
+        } else if (!is_numeric($rating)) {
+            $errors[] = 'Rating must be a number';
+        } else {
+            $normalizedRating = (int) $rating;
+            if ($normalizedRating < 1 || $normalizedRating > 5) {
+                $errors[] = 'Rating must be between 1 and 5';
+            }
         }
         
         return $errors;
@@ -297,6 +315,7 @@ class FeedbackController
             $name = $input['name'] ?? '';
             $title = $input['title'] ?? '';
             $message = $input['message'] ?? '';
+            $rating = $input['rating'] ?? null;
             
             // Validate ID
             if (!$id || !is_numeric($id)) {
@@ -308,7 +327,7 @@ class FeedbackController
             }
             
             // Validate feedback data
-            $validationErrors = $this->validateFeedback($name, $title, $message);
+            $validationErrors = $this->validateFeedback($name, $title, $message, $rating);
             if (!empty($validationErrors)) {
                 http_response_code(400);
                 return json_encode([
@@ -322,6 +341,7 @@ class FeedbackController
             $sanitizedName = $this->sanitizeInput($name);
             $sanitizedTitle = $this->sanitizeInput($title);
             $sanitizedMessage = $this->sanitizeInput($message);
+            $normalizedRating = (int) $rating;
             
             // Update in database
             $feedbackModel = new Feedback();
@@ -329,7 +349,8 @@ class FeedbackController
                 $id,
                 $sanitizedName,
                 $sanitizedTitle,
-                $sanitizedMessage
+                $sanitizedMessage,
+                $normalizedRating
             );
             
             if ($updateResult['success']) {
@@ -341,7 +362,8 @@ class FeedbackController
                         'id' => $id,
                         'name' => $sanitizedName,
                         'title' => $sanitizedTitle,
-                        'message' => $sanitizedMessage
+                        'message' => $sanitizedMessage,
+                        'rating' => $normalizedRating
                     ]
                 ]);
             } else {

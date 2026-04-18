@@ -17,6 +17,7 @@ use \PDO;
  * - id (INT, PRIMARY KEY, AUTO INCREMENT)
  * - name (VARCHAR(100))
  * - title (VARCHAR(255))
+ * - rating (TINYINT)
  * - message (TEXT)
  * - created_at (TIMESTAMP, DEFAULT CURRENT_TIMESTAMP)
  * - updated_at (TIMESTAMP, DEFAULT CURRENT_TIMESTAMP, ON UPDATE CURRENT_TIMESTAMP)
@@ -57,6 +58,7 @@ class Feedback
      * @param string $name User's name
      * @param string $title Feedback title
      * @param string $message Feedback message content
+     * @param int $rating Rating between 1 and 5
      * 
      * @return array {
      *     'success' => bool,
@@ -65,12 +67,12 @@ class Feedback
      *     'error' => string (only if failed)
      * }
      */
-    public function insertFeedback($name, $title, $message)
+    public function insertFeedback($name, $title, $message, $rating)
     {
         try {
             // STEP 1: Prepare SQL statement with placeholders
             // Placeholders (?) prevent SQL injection by separating data from SQL code
-            $sql = "INSERT INTO {$this->tableName} (name, title, message) VALUES (?, ?, ?)";
+            $sql = "INSERT INTO {$this->tableName} (name, title, message, rating) VALUES (?, ?, ?, ?)";
             
             // STEP 2: Prepare the statement (compile and validate SQL)
             $stmt = $this->db->prepare($sql);
@@ -85,9 +87,11 @@ class Feedback
             // STEP 3: Bind parameters to the prepared statement
             // This ensures data is properly escaped and cannot interfere with SQL logic
             // PDO::PARAM_STR: treats parameters as strings
-            $bindResult = $stmt->bindParam(1, $name, PDO::PARAM_STR);
-            $bindResult = $stmt->bindParam(2, $title, PDO::PARAM_STR);
-            $bindResult = $stmt->bindParam(3, $message, PDO::PARAM_STR);
+            $normalizedRating = (int) $rating;
+            $bindResult = $stmt->bindParam(1, $name, PDO::PARAM_STR)
+                && $stmt->bindParam(2, $title, PDO::PARAM_STR)
+                && $stmt->bindParam(3, $message, PDO::PARAM_STR)
+                && $stmt->bindParam(4, $normalizedRating, PDO::PARAM_INT);
             
             if (!$bindResult) {
                 return [
@@ -250,17 +254,18 @@ class Feedback
      * @param string $name User's name
      * @param string $title Feedback title
      * @param string $message Feedback message
+     * @param int $rating Rating between 1 and 5
      * 
      * @return array {
      *     'success' => bool,
      *     'error' => string (only if failed)
      * }
      */
-    public function updateFeedback($id, $name, $title, $message)
+    public function updateFeedback($id, $name, $title, $message, $rating)
     {
         try {
             // Prepare UPDATE statement with placeholders
-            $sql = "UPDATE {$this->tableName} SET name = ?, title = ?, message = ? WHERE id = ?";
+            $sql = "UPDATE {$this->tableName} SET name = ?, title = ?, message = ?, rating = ? WHERE id = ?";
             
             $stmt = $this->db->prepare($sql);
             
@@ -272,10 +277,12 @@ class Feedback
             }
             
             // Bind parameters to the prepared statement
+            $normalizedRating = (int) $rating;
             $stmt->bindParam(1, $name, PDO::PARAM_STR);
             $stmt->bindParam(2, $title, PDO::PARAM_STR);
             $stmt->bindParam(3, $message, PDO::PARAM_STR);
-            $stmt->bindParam(4, $id, PDO::PARAM_INT);
+            $stmt->bindParam(4, $normalizedRating, PDO::PARAM_INT);
+            $stmt->bindParam(5, $id, PDO::PARAM_INT);
             
             // Execute the update
             $execResult = $stmt->execute();

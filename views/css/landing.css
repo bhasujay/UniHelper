@@ -539,6 +539,24 @@ body::after {
     color: #67e8f9;
 }
 
+.testimonial-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.18rem;
+    margin-top: -0.15rem;
+}
+
+.testimonial-star {
+    font-size: 1rem;
+    line-height: 1;
+    color: rgba(148, 163, 184, 0.72);
+}
+
+.testimonial-star.is-filled {
+    color: #facc15;
+    text-shadow: 0 0 12px rgba(250, 204, 21, 0.34);
+}
+
 .testimonial-text {
     margin: 0;
     font-size: 0.97rem;

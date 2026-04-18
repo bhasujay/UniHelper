@@ -153,7 +153,7 @@
         <div class="sidebar-footer">
             <div class="sidebar-footer-logo">UniHelper</div>
             <a href="feedback-forum" class="sidebar-footer-link">Feedback Us</a><br>
-            <a href="mailto:unihelper@gmail.com" class="sidebar-footer-link">Support: unihelper@gmail.com</a>
+            <a href="mailto:project.unihelper@gmail.com" class="sidebar-footer-link">Support: project.unihelper@gmail.com</a>
             <div class="sidebar-footer-copy">&copy; <?= date('Y') ?> UniHelper</div>
         </div>
     </aside>
