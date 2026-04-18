@@ -281,6 +281,34 @@
 }
 .peer-card-subs svg { width: 14px; height: 14px; }
 
+.peer-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.2rem;
+}
+
+.peer-card-delete-btn {
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    background: transparent;
+    color: #ef4444;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.3rem 0.7rem;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.peer-card-delete-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.6);
+}
+
+.peer-card-delete-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* ── LOADING / EMPTY ───────────────────────────────── */
 .peer-loading {
     display: flex;

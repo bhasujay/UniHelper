@@ -131,6 +131,7 @@ class SessionController
                 'title'            => $session['title'] ?? '',
                 'description'      => $session['description'] ?? '',
                 'major_id'         => $session['major_id'] ?? '',
+                'major_name'       => $session['major_name'] ?? '',
                 'audience'         => $session['audience'] ?? '',
                 'session_link'     => $session['session_link'] ?? '',
                 'tags'             => $session['tags'] ?? '',
@@ -175,6 +176,7 @@ class SessionController
         $title       = trim((string)($request->get('title') ?? ''));
         $description = trim((string)($request->get('description') ?? ''));
         $majorId     = (int)($request->get('major_id') ?? 0);
+        $majorName   = trim((string)($request->get('major_name') ?? ''));
         $audience    = trim((string)($request->get('audience') ?? ''));
         $link        = trim((string)($request->get('session_link') ?? ''));
         $tags        = trim((string)($request->get('tags') ?? ''));
@@ -184,7 +186,11 @@ class SessionController
 
         $errors = [];
         if ($title === '') $errors['title'] = 'Title is required.';
+        if ($title !== '' && strlen($title) < 5) $errors['title'] = 'Title must be at least 5 characters.';
         if ($description === '') $errors['description'] = 'Description is required.';
+        if ($description !== '' && strlen($description) < 10) $errors['description'] = 'Description must be at least 10 characters.';
+        if ($majorName !== '' && $majorId <= 0) $errors['major_id'] = 'Please choose a valid major from suggestions.';
+        if ($majorId > 0 && !$this->model->majorExists($majorId)) $errors['major_id'] = 'Selected major is invalid.';
         if (!in_array($audience, ['public', 'university_only', 'private'], true)) $errors['audience'] = 'Invalid audience.';
         if ($date === '') $errors['date'] = 'Date is required.';
         if ($time === '') $errors['time'] = 'Time is required.';
@@ -246,6 +252,27 @@ class SessionController
             $this->json(['success' => true, 'message' => 'Session cancelled.']);
         } catch (\Exception $e) {
             $this->json(['success' => false, 'message' => 'Failed to delete session.'], 500);
+        }
+    }
+
+    // ─── POST  deleteCompletedSession ────────────────
+    public function deleteCompletedSession(Request $request): void
+    {
+        $id = (int)($request->get('id') ?? 0);
+        if ($id <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid session ID.'], 400);
+            return;
+        }
+
+        try {
+            $ok = $this->model->deleteCompletedSession($id, $this->userId());
+            if (!$ok) {
+                $this->json(['success' => false, 'message' => 'Completed or cancelled session not found or unauthorized.'], 404);
+                return;
+            }
+            $this->json(['success' => true, 'message' => 'Completed or cancelled session deleted.']);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to delete completed session.'], 500);
         }
     }
 
@@ -362,6 +389,89 @@ class SessionController
             $this->json(['success' => true, 'data' => $sessions, 'page' => $page, 'count' => count($sessions)]);
         } catch (\Exception $e) {
             $this->json(['success' => false, 'message' => 'Search failed.'], 500);
+        }
+    }
+
+    // ─── GET  searchAllSessions ──────────────────────
+    public function searchAllSessions(Request $request): void
+    {
+        $query = trim((string)($request->get('query') ?? ''));
+        $page  = max(1, (int)($request->get('page') ?? 1));
+        $limit = 12;
+        $offset = ($page - 1) * $limit;
+
+        if (strlen($query) < 2) {
+            $this->json(['success' => false, 'message' => 'Query must be at least 2 characters.'], 400);
+            return;
+        }
+
+        try {
+            $sessions = $this->model->searchAllSessions($query, $this->userId(), $this->userUni(), $limit, $offset);
+            $this->json(['success' => true, 'data' => $sessions, 'page' => $page, 'count' => count($sessions)]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Search failed.'], 500);
+        }
+    }
+
+    // ─── GET  searchMySessions ───────────────────────
+    public function searchMySessions(Request $request): void
+    {
+        $query = trim((string)($request->get('query') ?? ''));
+        $page  = max(1, (int)($request->get('page') ?? 1));
+        $limit = 12;
+        $offset = ($page - 1) * $limit;
+
+        if (strlen($query) < 2) {
+            $this->json(['success' => false, 'message' => 'Query must be at least 2 characters.'], 400);
+            return;
+        }
+
+        try {
+            $sessions = $this->model->searchMySessions($query, $this->userId(), $limit, $offset);
+            $this->json(['success' => true, 'data' => $sessions, 'page' => $page, 'count' => count($sessions)]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Search failed.'], 500);
+        }
+    }
+
+    // ─── GET  searchSubscribedSessions ───────────────
+    public function searchSubscribedSessions(Request $request): void
+    {
+        $query = trim((string)($request->get('query') ?? ''));
+        $page  = max(1, (int)($request->get('page') ?? 1));
+        $limit = 12;
+        $offset = ($page - 1) * $limit;
+
+        if (strlen($query) < 2) {
+            $this->json(['success' => false, 'message' => 'Query must be at least 2 characters.'], 400);
+            return;
+        }
+
+        try {
+            $sessions = $this->model->searchSubscribedSessions($query, $this->userId(), $limit, $offset);
+            $this->json(['success' => true, 'data' => $sessions, 'page' => $page, 'count' => count($sessions)]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Search failed.'], 500);
+        }
+    }
+
+    // ─── GET  searchMajors ───────────────────────────
+    public function searchMajors(Request $request): void
+    {
+        $query = trim((string)($request->get('query') ?? ''));
+        $limit = (int)($request->get('limit') ?? 12);
+        $limit = max(1, min(20, $limit));
+
+        if ($query === '') {
+            $this->json(['success' => true, 'data' => []]);
+            return;
+        }
+
+        try {
+            $majors = $this->model->searchMajors($query, $limit);
+            $this->json(['success' => true, 'data' => $majors]);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to search majors.'], 500);
         }
     }
 

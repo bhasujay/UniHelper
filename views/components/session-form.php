@@ -106,18 +106,21 @@ if (!empty($scheduledAt)) {
         <!-- ========================================== -->
         <div class="session-form-col">
             
-            <!-- Major (dropdown from DB) -->
-            <div class="session-form-group">
-                <label for="sf-major">Subject / Major</label>
-                <select id="sf-major" name="major_id">
-                    <option value="">— Select a major —</option>
+            <!-- Major (type to search + exact match required if provided) -->
+            <div class="session-form-group <?= isset($errors['major_id']) ? 'has-error' : '' ?>">
+                <label for="sf-major-name">Subject / Major</label>
+                <input type="hidden" id="sf-major-id" name="major_id" value="<?= (int)($formData['major_id'] ?? 0) ?>">
+                <input type="text" id="sf-major-name" name="major_name" list="sf-major-options" autocomplete="off"
+                       value="<?= htmlspecialchars($formData['major_name'] ?? '') ?>"
+                       placeholder="Start typing a major name...">
+                <datalist id="sf-major-options">
                     <?php foreach ($majors as $major): ?>
-                        <option value="<?= (int)$major['id'] ?>"
-                            <?= ((int)($formData['major_id'] ?? 0) === (int)$major['id']) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($major['name']) ?>
-                        </option>
+                        <option value="<?= htmlspecialchars($major['name']) ?>" data-major-id="<?= (int)$major['id'] ?>"></option>
                     <?php endforeach; ?>
-                </select>
+                </datalist>
+                <?php if (isset($errors['major_id'])): ?>
+                    <span class="field-error"><?= htmlspecialchars($errors['major_id']) ?></span>
+                <?php endif; ?>
             </div>
 
             <!-- Date & Time row -->

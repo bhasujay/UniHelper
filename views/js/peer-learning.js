@@ -89,8 +89,41 @@ document.addEventListener('DOMContentLoaded', function () {
         var card = e.target.closest('.peer-card:not(.template)');
         if (!card) return;
         if (e.target.closest('a')) return; // let profile links through
+        if (e.target.closest('button')) return; // keep card action buttons from opening detail
         var id = parseInt(card.dataset.sessionId, 10);
         if (id > 0) peerOpenDetail(id);
+    });
+
+    // ── EVENT: Delete completed session from My Sessions card (delegated) ──
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.js-delete-completed-session');
+        if (!btn) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        var sessionId = parseInt(btn.dataset.id, 10);
+        if (!sessionId) return;
+
+        window.confirm('Delete this completed session permanently?').then(function (ok) {
+            if (!ok) return;
+            btn.disabled = true;
+
+            peerApiPost('deleteCompletedSession', { id: sessionId }).then(function (res) {
+                if (!res.success) {
+                    showToast(res.message || 'Failed to delete session.', 'error');
+                    btn.disabled = false;
+                    return;
+                }
+
+                showToast(res.message || 'Completed session deleted.', 'success');
+                peerPages['my-sessions'] = 1;
+                peerLoadTab('my-sessions', 1);
+            }).catch(function () {
+                showToast('Failed to delete session.', 'error');
+                btn.disabled = false;
+            });
+        });
     });
 
     // ── EVENT: Create button ──
@@ -262,14 +295,33 @@ function peerRenderCard(session) {
     // Author
     var authorLink = card.querySelector('.js-author-link');
     authorLink.href = peerProfileUrl(session.user_id);
+    authorLink.target = '_blank';
+    authorLink.rel = 'noopener noreferrer';
     card.querySelector('.js-author-avatar').src = peerPfp(session.profile_picture);
     var nameEl = card.querySelector('.js-author-name');
     nameEl.textContent = peerFullName(session);
     nameEl.href = peerProfileUrl(session.user_id);
+    nameEl.target = '_blank';
+    nameEl.rel = 'noopener noreferrer';
     card.querySelector('.js-author-uni').textContent = session.university_name || '';
 
     // Subs
     card.querySelector('.js-subs-count').textContent = parseInt(session.sub_count, 10) || 0;
+
+    // My Sessions completed cards: show simple delete button on card
+    if (peerCurrentTab === 'my-sessions' && peerIsOwner(session) && (session.status === 'completed' || session.status === 'cancelled')) {
+        var actions = document.createElement('div');
+        actions.className = 'peer-card-actions';
+
+        var deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'peer-card-delete-btn js-delete-completed-session';
+        deleteBtn.dataset.id = session.id;
+        deleteBtn.textContent = 'Delete';
+
+        actions.appendChild(deleteBtn);
+        card.appendChild(actions);
+    }
 
     return card;
 }
@@ -292,10 +344,14 @@ function peerRenderSubscriberItem(sub, sessionId) {
     item.dataset.subId = sub.subscriber_id;
 
     item.querySelector('.js-sub-profile-link').href = peerProfileUrl(sub.subscriber_id);
+    item.querySelector('.js-sub-profile-link').target = '_blank';
+    item.querySelector('.js-sub-profile-link').rel = 'noopener noreferrer';
     item.querySelector('.js-sub-avatar').src = peerPfp(sub.profile_picture);
     var nameLink = item.querySelector('.js-sub-name');
     nameLink.textContent = ((sub.first_name || '') + ' ' + (sub.last_name || '')).trim();
     nameLink.href = peerProfileUrl(sub.subscriber_id);
+    nameLink.target = '_blank';
+    nameLink.rel = 'noopener noreferrer';
     item.querySelector('.js-sub-time').textContent = peerFormatDate(sub.requested_at);
 
     var statusEl = item.querySelector('.js-sub-status');
@@ -342,7 +398,13 @@ function peerLoadTab(tab, page) {
 
     var action;
     if (peerSearchQuery.length >= 2) {
-        action = 'searchSessions&query=' + encodeURIComponent(peerSearchQuery) + '&tab=' + tab + '&page=' + page;
+        if (tab === 'my-sessions') {
+            action = 'searchMySessions&query=' + encodeURIComponent(peerSearchQuery) + '&page=' + page;
+        } else if (tab === 'subscribed-sessions') {
+            action = 'searchSubscribedSessions&query=' + encodeURIComponent(peerSearchQuery) + '&page=' + page;
+        } else {
+            action = 'searchAllSessions&query=' + encodeURIComponent(peerSearchQuery) + '&page=' + page;
+        }
     } else if (tab === 'all-sessions') {
         action = 'getAllSessions&page=' + page;
     } else if (tab === 'my-sessions') {
@@ -488,6 +550,8 @@ function peerRenderDetail(s) {
     authorDiv.className = 'peer-detail-author';
     var authorAnchor = document.createElement('a');
     authorAnchor.href = peerProfileUrl(s.user_id);
+    authorAnchor.target = '_blank';
+    authorAnchor.rel = 'noopener noreferrer';
     var authorImg = document.createElement('img');
     authorImg.className = 'peer-detail-author-avatar';
     authorImg.src = peerPfp(s.profile_picture);
@@ -498,6 +562,8 @@ function peerRenderDetail(s) {
     var authorName = document.createElement('a');
     authorName.className = 'peer-detail-author-name';
     authorName.href = peerProfileUrl(s.user_id);
+    authorName.target = '_blank';
+    authorName.rel = 'noopener noreferrer';
     authorName.textContent = peerFullName(s);
     authorInfo.appendChild(authorName);
     var authorUni = document.createElement('span');
@@ -684,6 +750,130 @@ function peerCloseCreateModal() {
     peerCreateModalBody.innerHTML = '';
 }
 
+function peerClearFormErrors(form) {
+    form.querySelectorAll('.session-form-group.has-error').forEach(function (group) {
+        group.classList.remove('has-error');
+    });
+    form.querySelectorAll('.field-error').forEach(function (errEl) {
+        errEl.remove();
+    });
+}
+
+function peerShowFieldError(input, message) {
+    if (!input) return;
+    var group = input.closest('.session-form-group');
+    if (!group) return;
+
+    group.classList.add('has-error');
+    var errEl = group.querySelector('.field-error');
+    if (!errEl) {
+        errEl = document.createElement('span');
+        errEl.className = 'field-error';
+        group.appendChild(errEl);
+    }
+    errEl.textContent = message;
+}
+
+function peerBindMajorAutocomplete(form) {
+    var majorInput = form.querySelector('#sf-major-name');
+    var majorIdInput = form.querySelector('#sf-major-id');
+    var majorOptions = form.querySelector('#sf-major-options');
+    if (!majorInput || !majorIdInput || !majorOptions) return;
+
+    var exactMap = {};
+    var searchTimer = null;
+    var lastQuerySent = '';
+
+    function rebuildMapFromOptions() {
+        exactMap = {};
+        majorOptions.querySelectorAll('option').forEach(function (opt) {
+            var name = (opt.value || '').trim();
+            var id = (opt.dataset.majorId || '').trim();
+            if (name && id) {
+                exactMap[name.toLowerCase()] = id;
+            }
+        });
+    }
+
+    function syncMajorIdFromInput() {
+        var typed = majorInput.value.trim().toLowerCase();
+        majorIdInput.value = typed && exactMap[typed] ? exactMap[typed] : '';
+    }
+
+    function applyOptions(items) {
+        majorOptions.innerHTML = '';
+        items.forEach(function (item) {
+            var opt = document.createElement('option');
+            opt.value = item.name;
+            opt.dataset.majorId = String(item.id);
+            majorOptions.appendChild(opt);
+        });
+        rebuildMapFromOptions();
+        syncMajorIdFromInput();
+    }
+
+    // Seed exact map from initial server-rendered options
+    var seeded = [];
+    majorOptions.querySelectorAll('option').forEach(function (opt) {
+        seeded.push({ id: parseInt(opt.dataset.majorId || '0', 10), name: opt.value || '' });
+    });
+    applyOptions(seeded.filter(function (m) { return m.id > 0 && m.name; }));
+
+    majorInput.addEventListener('input', function () {
+        syncMajorIdFromInput();
+
+        var query = majorInput.value.trim();
+        if (searchTimer) clearTimeout(searchTimer);
+        if (!query) {
+            return;
+        }
+
+        searchTimer = setTimeout(function () {
+            lastQuerySent = query;
+            peerApiFetch('searchMajors&query=' + encodeURIComponent(query) + '&limit=12').then(function (res) {
+                if (!res.success) return;
+                // Ignore stale responses
+                if (majorInput.value.trim() !== lastQuerySent) return;
+                applyOptions(res.data || []);
+            }).catch(function () {
+                // Keep current options if lookup fails
+            });
+        }, 220);
+    });
+
+    majorInput.addEventListener('blur', syncMajorIdFromInput);
+}
+
+function peerValidateSessionForm(form) {
+    var ok = true;
+    var titleInput = form.querySelector('[name="title"]');
+    var descInput = form.querySelector('[name="description"]');
+    var majorNameInput = form.querySelector('#sf-major-name');
+    var majorIdInput = form.querySelector('#sf-major-id');
+
+    var title = (titleInput?.value || '').trim();
+    var desc = (descInput?.value || '').trim();
+    var majorName = (majorNameInput?.value || '').trim();
+    var majorId = parseInt((majorIdInput?.value || '0'), 10);
+
+    if (title.length < 5) {
+        peerShowFieldError(titleInput, 'Title must be at least 5 characters.');
+        ok = false;
+    }
+
+    if (desc.length < 10) {
+        peerShowFieldError(descInput, 'Description must be at least 10 characters.');
+        ok = false;
+    }
+
+    if (majorName !== '' && !(majorId > 0)) {
+        peerShowFieldError(majorNameInput, 'Please choose a valid major from suggestions.');
+        ok = false;
+    }
+
+    return ok;
+}
+
 function peerBindFormEvents() {
     var form = peerCreateModalBody.querySelector('form');
     if (!form) return;
@@ -700,11 +890,18 @@ function peerBindFormEvents() {
         });
     });
 
+    // Major autocomplete + exact-match hidden id sync
+    peerBindMajorAutocomplete(form);
+
     // Submit
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         var submitBtn = form.querySelector('.js-submit-session-form');
         if (submitBtn.disabled) return;
+
+        peerClearFormErrors(form);
+        if (!peerValidateSessionForm(form)) return;
+
         submitBtn.disabled = true;
         var origText = submitBtn.textContent;
         submitBtn.textContent = 'Saving...';

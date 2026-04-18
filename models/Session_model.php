@@ -136,54 +136,104 @@ class Session_model extends BaseModel
     }
 
     /**
-     * Search sessions — works for both All Sessions and My Sessions tabs.
+     * Backward-compatible search entry point.
      */
     public function searchSessions(string $query, int $viewerId, ?int $viewerUniId, string $tab, int $limit = 10, int $offset = 0): array
     {
-        $like = '%' . $query . '%';
-
         if ($tab === 'my-sessions') {
-            $sql = "SELECT s.*, m.name AS major_name,
-                        u.first_name, u.last_name, u.profile_picture,
-                        uni.name AS university_name,
-                        'none' AS subscription_status
-                    FROM {$this->table} s
-                    LEFT JOIN users u      ON s.user_id = u.id
-                    LEFT JOIN universities uni ON s.university_id = uni.id
-                    LEFT JOIN majors m     ON s.major_id = m.id
-                    WHERE s.user_id = :uid
-                      AND (LOWER(s.title) LIKE LOWER(:q1) OR LOWER(s.description) LIKE LOWER(:q2) OR LOWER(COALESCE(s.tags,'')) LIKE LOWER(:q3) OR LOWER(COALESCE(m.name,'')) LIKE LOWER(:q4))
-                    ORDER BY s.scheduled_at DESC
-                    LIMIT :lim OFFSET :off";
-
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':uid', $viewerId, PDO::PARAM_INT);
-        } else {
-            $sql = "SELECT s.*, m.name AS major_name,
-                        u.first_name, u.last_name, u.profile_picture,
-                        uni.name AS university_name,
-                        COALESCE((SELECT sub.status FROM peer_session_subscriptions sub WHERE sub.subscriber_id = :uid1 AND sub.session_id = s.id LIMIT 1), 'none') AS subscription_status
-                    FROM {$this->table} s
-                    LEFT JOIN users u      ON s.user_id = u.id
-                    LEFT JOIN universities uni ON s.university_id = uni.id
-                    LEFT JOIN majors m     ON s.major_id = m.id
-                    WHERE s.status IN ('scheduled','ongoing')
-                      AND (
-                            s.audience = 'public'
-                            OR s.user_id = :uid2
-                            OR (s.audience IN ('university_only','private') AND :vuni1 IS NOT NULL AND s.university_id = :vuni2)
-                      )
-                      AND (LOWER(s.title) LIKE LOWER(:q1) OR LOWER(s.description) LIKE LOWER(:q2) OR LOWER(COALESCE(s.tags,'')) LIKE LOWER(:q3) OR LOWER(COALESCE(m.name,'')) LIKE LOWER(:q4))
-                    ORDER BY s.scheduled_at ASC
-                    LIMIT :lim OFFSET :off";
-
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':uid1', $viewerId, PDO::PARAM_INT);
-            $stmt->bindValue(':uid2', $viewerId, PDO::PARAM_INT);
-            $stmt->bindValue(':vuni1', $viewerUniId, $viewerUniId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
-            $stmt->bindValue(':vuni2', $viewerUniId, $viewerUniId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+            return $this->searchMySessions($query, $viewerId, $limit, $offset);
         }
+        if ($tab === 'subscribed-sessions') {
+            return $this->searchSubscribedSessions($query, $viewerId, $limit, $offset);
+        }
+        return $this->searchAllSessions($query, $viewerId, $viewerUniId, $limit, $offset);
+    }
 
+    public function searchAllSessions(string $query, int $viewerId, ?int $viewerUniId, int $limit = 10, int $offset = 0): array
+    {
+        $like = '%' . $query . '%';
+        $sql = "SELECT s.*, m.name AS major_name,
+                    u.first_name, u.last_name, u.profile_picture,
+                    uni.name AS university_name,
+                    COALESCE((SELECT sub.status FROM peer_session_subscriptions sub WHERE sub.subscriber_id = :uid1 AND sub.session_id = s.id LIMIT 1), 'none') AS subscription_status
+                FROM {$this->table} s
+                LEFT JOIN users u      ON s.user_id = u.id
+                LEFT JOIN universities uni ON s.university_id = uni.id
+                LEFT JOIN majors m     ON s.major_id = m.id
+                WHERE s.status IN ('scheduled','ongoing')
+                  AND (
+                        s.audience = 'public'
+                        OR s.user_id = :uid2
+                        OR (s.audience IN ('university_only','private') AND :vuni1 IS NOT NULL AND s.university_id = :vuni2)
+                  )
+                  AND (LOWER(s.title) LIKE LOWER(:q1) OR LOWER(s.description) LIKE LOWER(:q2) OR LOWER(COALESCE(s.tags,'')) LIKE LOWER(:q3) OR LOWER(COALESCE(m.name,'')) LIKE LOWER(:q4))
+                ORDER BY s.scheduled_at ASC
+                LIMIT :lim OFFSET :off";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':uid1', $viewerId, PDO::PARAM_INT);
+        $stmt->bindValue(':uid2', $viewerId, PDO::PARAM_INT);
+        $stmt->bindValue(':vuni1', $viewerUniId, $viewerUniId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+        $stmt->bindValue(':vuni2', $viewerUniId, $viewerUniId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+        $stmt->bindValue(':q1', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':q2', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':q3', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':q4', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function searchMySessions(string $query, int $viewerId, int $limit = 10, int $offset = 0): array
+    {
+        $like = '%' . $query . '%';
+        $sql = "SELECT s.*, m.name AS major_name,
+                    u.first_name, u.last_name, u.profile_picture,
+                    uni.name AS university_name,
+                    'none' AS subscription_status
+                FROM {$this->table} s
+                LEFT JOIN users u      ON s.user_id = u.id
+                LEFT JOIN universities uni ON s.university_id = uni.id
+                LEFT JOIN majors m     ON s.major_id = m.id
+                WHERE s.user_id = :uid
+                  AND (LOWER(s.title) LIKE LOWER(:q1) OR LOWER(s.description) LIKE LOWER(:q2) OR LOWER(COALESCE(s.tags,'')) LIKE LOWER(:q3) OR LOWER(COALESCE(m.name,'')) LIKE LOWER(:q4))
+                ORDER BY s.scheduled_at DESC
+                LIMIT :lim OFFSET :off";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':uid', $viewerId, PDO::PARAM_INT);
+        $stmt->bindValue(':q1', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':q2', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':q3', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':q4', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function searchSubscribedSessions(string $query, int $userId, int $limit = 10, int $offset = 0): array
+    {
+        $like = '%' . $query . '%';
+        $sql = "SELECT s.*, m.name AS major_name,
+                    u.first_name, u.last_name, u.profile_picture,
+                    uni.name AS university_name,
+                    sub.status AS subscription_status
+                FROM peer_session_subscriptions sub
+                INNER JOIN {$this->table} s ON s.id = sub.session_id
+                LEFT JOIN users u      ON s.user_id = u.id
+                LEFT JOIN universities uni ON s.university_id = uni.id
+                LEFT JOIN majors m     ON s.major_id = m.id
+                WHERE sub.subscriber_id = :uid
+                  AND sub.status <> 'rejected'
+                  AND s.status IN ('scheduled','ongoing')
+                  AND (LOWER(s.title) LIKE LOWER(:q1) OR LOWER(s.description) LIKE LOWER(:q2) OR LOWER(COALESCE(s.tags,'')) LIKE LOWER(:q3) OR LOWER(COALESCE(m.name,'')) LIKE LOWER(:q4))
+                ORDER BY s.scheduled_at ASC
+                LIMIT :lim OFFSET :off";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
         $stmt->bindValue(':q1', $like, PDO::PARAM_STR);
         $stmt->bindValue(':q2', $like, PDO::PARAM_STR);
         $stmt->bindValue(':q3', $like, PDO::PARAM_STR);
@@ -273,6 +323,35 @@ class Session_model extends BaseModel
             return true;
         }
         return false;
+    }
+
+    public function deleteCompletedSession(int $id, int $ownerId): bool
+    {
+        $pdo = $this->db->getConnection();
+
+        $check = $this->db->prepare("SELECT id FROM {$this->table} WHERE id = :id AND user_id = :owner_id AND status IN ('completed','cancelled') LIMIT 1");
+        $check->execute(['id' => $id, 'owner_id' => $ownerId]);
+        if (!$check->fetch(PDO::FETCH_ASSOC)) {
+            return false;
+        }
+
+        try {
+            $pdo->beginTransaction();
+
+            $this->db->prepare("DELETE FROM peer_session_subscriptions WHERE session_id = :sid")
+                ->execute(['sid' => $id]);
+
+            $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id = :id AND user_id = :owner_id AND status IN ('completed','cancelled')");
+            $stmt->execute(['id' => $id, 'owner_id' => $ownerId]);
+
+            $pdo->commit();
+            return $stmt->rowCount() > 0;
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
     // ───────────────────────────────────────────────────
@@ -407,6 +486,24 @@ class Session_model extends BaseModel
         $stmt = $this->db->prepare("SELECT id, name FROM majors ORDER BY name ASC");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function searchMajors(string $query, int $limit = 12): array
+    {
+        $like = '%' . $query . '%';
+        $sql = "SELECT id, name FROM majors WHERE LOWER(name) LIKE LOWER(:q) ORDER BY name ASC LIMIT :lim";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':q', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function majorExists(int $majorId): bool
+    {
+        $stmt = $this->db->prepare("SELECT 1 FROM majors WHERE id = :id LIMIT 1");
+        $stmt->execute(['id' => $majorId]);
+        return (bool)$stmt->fetchColumn();
     }
 
     // ───────────────────────────────────────────────────
