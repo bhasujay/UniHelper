@@ -1094,4 +1094,108 @@ class Session_model extends BaseModel {
             throw new Exception("Failed to check session existence: " . $e->getMessage());
         }
     }
+
+    private function syncSubCount($sessionId): void
+    {
+        $sql = "UPDATE {$this->table} s
+                SET s.sub_count = (
+                    SELECT COUNT(*)
+                    FROM subscribers sub
+                    WHERE sub.Session_ID = s.id
+                      AND sub.status <> 'rejected'
+                )
+                WHERE s.id = :session_id
+                  AND s.is_deleted = 0";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['session_id' => $sessionId]);
+    }
+
+    private function getNonRejectedSubscriberIds(int $sessionId): array
+    {
+        $sql = "SELECT Subscriber_ID
+                FROM subscribers
+                WHERE Session_ID = :session_id
+                  AND status <> 'rejected'";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['session_id' => $sessionId]);
+
+        $subscriberIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return array_map('intval', $subscriberIds ?: []);
+    }
+
+    private function buildSessionDeepLink(int $sessionId, string $tab): string
+    {
+        $safeTab = $tab === 'my-sessions' ? 'my-sessions' : 'all-sessions';
+        return '/UniHelper/peer-learning?session_id=' . $sessionId . '&tab=' . $safeTab;
+    }
+
+    private function safeInsertSessionNotification(int $recipientId, string $message, string $link): void
+    {
+        if ($recipientId <= 0) {
+            return;
+        }
+
+        try {
+            $this->notifyModel->insertNotification($recipientId, $message, 'session', $link);
+        } catch (\Throwable $e) {
+            // Notification publishing must not block session workflows.
+        }
+    }
+
+    private function getSubscriptionState($userId, $sessionId, string $audience): array
+    {
+        $sql = "SELECT status
+                FROM subscribers
+                WHERE Subscriber_ID = :subscriber_id
+                  AND Session_ID = :session_id
+                LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'subscriber_id' => $userId,
+            'session_id' => $sessionId
+        ]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $status = $row['status'] ?? self::SUB_STATUS_NONE;
+
+        if ($status === self::SUB_STATUS_REJECTED) {
+            $status = self::SUB_STATUS_NONE;
+        }
+
+        $isSubscribed = in_array($status, [self::SUB_STATUS_PENDING, self::SUB_STATUS_APPROVED], true) ? 1 : 0;
+        $canJoin = ($audience === 'private')
+            ? (($status === self::SUB_STATUS_APPROVED) ? 1 : 0)
+            : 1;
+
+        return [
+            'subscription_status' => $status,
+            'is_subscribed' => $isSubscribed,
+            'can_join' => $canJoin
+        ];
+    }
+
+    private function normalizeUniversity($university)
+    {
+        if ($university === null || $university === '') {
+            return null;
+        }
+
+        return (int)$university;
+    }
+
+    private function getUserUniversity(int $userId): ?int
+    {
+        $sql = "SELECT university FROM users WHERE id = :user_id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row || $row['university'] === null || $row['university'] === '') {
+            return null;
+        }
+
+        return (int)$row['university'];
+    }
 }
