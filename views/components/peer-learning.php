@@ -1373,7 +1373,7 @@
             return;
         }
 
-        alert(safeMessage);
+        console.error(safeMessage);
     }
 
     function normalizeSearchQuery(value) {
@@ -1896,6 +1896,9 @@
             })
             .catch(error => {
                 console.error('Create-session modal load error:', error);
+                if (typeof window.showToast === 'function') {
+                    window.showToast(error.message || 'Failed to load the session form.', 'error');
+                }
                 renderCreateSessionModalError(error.message || 'Failed to load the session form.');
             });
     }
@@ -1955,9 +1958,16 @@
                 const payload = result.data || {};
                 const returnedSession = payload.session ? upsertSessionCache(payload.session) : null;
                 const updatedSessionId = Number(payload.session_id || (returnedSession && returnedSession.id) || 0);
+                const successMessage = result.message || (payload.operation === 'update'
+                    ? 'Session updated successfully.'
+                    : 'Session created successfully.');
 
                 closeCreateSessionModal();
                 loadTabData('my-sessions', 1);
+
+                if (typeof window.showToast === 'function') {
+                    window.showToast(successMessage, 'success');
+                }
 
                 const allSessionsContainer = document.getElementById('all-sessions-container');
                 if (allSessionsContainer && allSessionsContainer.innerHTML) {
@@ -1988,7 +1998,7 @@
             })
             .catch(error => {
                 console.error('Create-session modal submit error:', error);
-                alert(error.message || 'Failed to save session. Please try again.');
+                showPeerLearningError(error.message || 'Failed to save session. Please try again.');
             })
             .finally(() => {
                 createSessionSubmitInFlight = false;
@@ -2110,7 +2120,7 @@
             .catch(error => {
                 loading.style.display = 'none';
                 console.error('Error loading sessions:', error);
-                alert(error.message || 'Failed to load your sessions. Please try again.');
+                showPeerLearningError(error.message || 'Failed to load your sessions. Please try again.');
                 if (page === 1) {
                     container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
                     container.dataset.mode = 'default';
@@ -2158,7 +2168,7 @@
             .catch(error => {
                 loading.style.display = 'none';
                 console.error('Error loading sessions:', error);
-                alert(error.message || 'Failed to load sessions. Please try again.');
+                showPeerLearningError(error.message || 'Failed to load sessions. Please try again.');
                 if (page === 1) {
                     container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load sessions</p>';
                     container.dataset.mode = 'default';
@@ -2220,7 +2230,7 @@
             .catch(error => {
                 loading.style.display = 'none';
                 console.error('Error searching sessions:', error);
-                alert(error.message || 'Failed to search sessions. Please try again.');
+                showPeerLearningError(error.message || 'Failed to search sessions. Please try again.');
                 if (page === 1) {
                     container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to search sessions</p>';
                     container.dataset.mode = 'search';
@@ -2276,7 +2286,7 @@
         }
 
         if (query.length < 2) {
-            alert('Please enter at least 2 characters to search.');
+            showPeerLearningError('Please enter at least 2 characters to search.');
             return Promise.resolve();
         }
 
@@ -2291,7 +2301,7 @@
     function editSession(sessionId) {
         const normalizedSessionId = Number(sessionId || 0);
         if (!normalizedSessionId) {
-            alert('Invalid session ID.');
+            showPeerLearningError('Invalid session ID.');
             return;
         }
 
@@ -2390,6 +2400,9 @@
             })
             .catch(error => {
                 console.error('Subscriber list error:', error);
+                if (typeof window.showToast === 'function') {
+                    window.showToast(error.message || 'Failed to load subscriber list.', 'error');
+                }
                 const body = document.getElementById('sessionMainSubscriberBody');
                 if (body) {
                     body.innerHTML = `<div class="session-main-subscriber-empty" style="color:#fc8181;">${escapeHtml(error.message || 'Failed to load subscriber list.')}</div>`;
@@ -2405,7 +2418,7 @@
         const actionType = button.getAttribute('data-action');
         const subscriberId = Number(button.getAttribute('data-subscriber-id') || 0);
         if (!subscriberId || (actionType !== 'approve' && actionType !== 'reject')) {
-            alert('Invalid subscriber action.');
+            showPeerLearningError('Invalid subscriber action.');
             return;
         }
 
@@ -2445,13 +2458,17 @@
                 const nextStatus = (result.data && result.data.status) ? result.data.status : (actionType === 'approve' ? 'approved' : 'rejected');
                 applySubscriberRowState(row, nextStatus);
 
+                if (typeof window.showToast === 'function') {
+                    window.showToast(result.message || `Subscriber ${nextStatus}.`, 'success');
+                }
+
                 if (result.data && typeof result.data.sub_count !== 'undefined') {
                     updateSubscriberCountForSession(sessionForSubscribersId, result.data.sub_count);
                 }
             })
             .catch(error => {
                 console.error('Subscriber decision error:', error);
-                alert(error.message || 'Failed to update subscriber status.');
+                showPeerLearningError(error.message || 'Failed to update subscriber status.');
                 if (approveButton) {
                     approveButton.disabled = false;
                 }
@@ -2464,7 +2481,7 @@
     function deleteSession(sessionId, triggerButton) {
         const normalizedSessionId = Number(sessionId || 0);
         if (!normalizedSessionId) {
-            alert('Invalid session ID.');
+            showPeerLearningError('Invalid session ID.');
             return;
         }
 
@@ -2498,13 +2515,17 @@
                         closeSessionModal();
                         loadTabData('my-sessions', 1);
 
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(data.message || 'Session deleted successfully.', 'success');
+                        }
+
                         if (document.getElementById('all-sessions-container').innerHTML) {
                             loadTabData('all-sessions', 1);
                         }
                     })
                     .catch(error => {
                         console.error('Error deleting session:', error);
-                        alert(error.message || 'Failed to delete session. Please try again.');
+                        showPeerLearningError(error.message || 'Failed to delete session. Please try again.');
                     })
                     .finally(() => {
                         deleteSubmitInFlight = false;
@@ -2519,7 +2540,7 @@
     function handleSubscribeAction(subscribeButton) {
         const sessionId = Number(subscribeButton.getAttribute('data-session-id') || 0);
         if (!sessionId) {
-            alert('Invalid session ID.');
+            showPeerLearningError('Invalid session ID.');
             return;
         }
 
@@ -2568,10 +2589,15 @@
                 if (activeSessionId === sessionId) {
                     openSessionModal(cachedSession);
                 }
+
+                if (typeof window.showToast === 'function') {
+                    const defaultMessage = isSubscribed ? 'Unsubscribed successfully.' : 'Subscription updated successfully.';
+                    window.showToast(result.message || defaultMessage, 'success');
+                }
             })
             .catch(error => {
                 console.error('Subscription error:', error);
-                alert(error.message || 'Failed to update subscription. Please try again.');
+                showPeerLearningError(error.message || 'Failed to update subscription. Please try again.');
             })
             .finally(() => {
                 subscribeButton.disabled = false;
