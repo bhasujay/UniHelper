@@ -54,6 +54,7 @@ class ApiGateway
             'authcontroller' => ['checkexistsaction'],
             'otpcontroller' => ['generateotpaction', 'validateotpaction'],
             'feedbackcontroller' => ['getfeedback'],
+            'session_mail_check' => ['send_mails_for_session'],
         ];
 
         // role based access control can be implemented here as well if needed, but for now we are just checking if the route is in the public routes list.
