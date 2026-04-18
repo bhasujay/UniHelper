@@ -14,6 +14,7 @@ class SessionController
 {
     protected $sessionModel;
     protected $user;
+    private const DEFAULT_DURATION_HOURS = 1.0;
 
     public function __construct()
     {
@@ -735,17 +736,17 @@ class SessionController
 
     /**
      * Helper method to mark expired sessions
-     * Checks if date/time has passed and auto-expires them
+     * Checks if session end time has passed and auto-expires them
      */
     private function markExpiredSessions($sessions)
     {
         $now = new \DateTime();
         
         foreach ($sessions as &$session) {
-            $sessionDateTime = new \DateTime($session['date'] . ' ' . $session['time']);
+            $sessionEndDateTime = $this->getSessionEndDateTime($session);
             
-            // If session time has passed, mark as expired
-            if ($sessionDateTime < $now && is_null($session['deleted_at'])) {
+            // Expire only after the computed end time is in the past.
+            if ($sessionEndDateTime < $now && is_null($session['deleted_at'])) {
                 $this->sessionModel->markAsExpired($session['id']);
                 $session['deleted_at'] = date('Y-m-d H:i:s');
             }
@@ -763,8 +764,8 @@ class SessionController
         $now = new \DateTime();
         
         foreach ($sessions as &$session) {
-            $sessionDateTime = new \DateTime($session['date'] . ' ' . $session['time']);
-            $session['is_expired'] = $sessionDateTime < $now ? 1 : 0;
+            $sessionEndDateTime = $this->getSessionEndDateTime($session);
+            $session['is_expired'] = $sessionEndDateTime < $now ? 1 : 0;
             
             // If expired and not already marked, mark it now
             if ($session['is_expired'] && is_null($session['deleted_at'])) {
@@ -774,6 +775,33 @@ class SessionController
         }
         
         return $sessions;
+    }
+
+    private function getSessionEndDateTime(array $session): \DateTime
+    {
+        $startDateTime = new \DateTime((string)$session['date'] . ' ' . (string)$session['time']);
+        $durationHours = $this->normalizeDurationHours($session['duration'] ?? null);
+        $durationSeconds = (int)round($durationHours * 3600);
+
+        if ($durationSeconds > 0) {
+            $startDateTime->modify('+' . $durationSeconds . ' seconds');
+        }
+
+        return $startDateTime;
+    }
+
+    private function normalizeDurationHours($duration): float
+    {
+        if (!is_numeric($duration)) {
+            return self::DEFAULT_DURATION_HOURS;
+        }
+
+        $durationHours = (float)$duration;
+        if ($durationHours <= 0) {
+            return self::DEFAULT_DURATION_HOURS;
+        }
+
+        return $durationHours;
     }
 
     /**

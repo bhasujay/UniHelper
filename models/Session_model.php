@@ -17,6 +17,7 @@ class Session_model extends BaseModel {
     private const SUB_STATUS_PENDING = 'pending';
     private const SUB_STATUS_APPROVED = 'approved';
     private const SUB_STATUS_REJECTED = 'rejected';
+    private const DEFAULT_DURATION_HOURS = 1.0;
 
     public function __construct()
     {
@@ -388,6 +389,7 @@ class Session_model extends BaseModel {
         $currentUserIdValue = (int)$currentUserId;
         $safeLimit = max(1, (int)$limit);
         $safeOffset = max(0, (int)$offset);
+        $activeWindowSql = $this->getSessionActiveWindowConditionSql('s');
 
         // Each named placeholder must appear exactly once (ATTR_EMULATE_PREPARES = false).
         $sql = "SELECT s.*, u.first_name as creator_first_name, u.last_name as creator_last_name,
@@ -418,7 +420,7 @@ class Session_model extends BaseModel {
             WHERE s.user_id = :owner_id
               AND s.is_deleted = 0
               AND s.deleted_at IS NULL
-              AND TIMESTAMP(s.date, s.time) >= NOW()
+                            AND {$activeWindowSql}
               AND (
                     LOWER(s.title) LIKE LOWER(:lq1)
                     OR LOWER(s.subject) LIKE LOWER(:lq2)
@@ -489,6 +491,7 @@ class Session_model extends BaseModel {
         $viewerUniversity = $this->normalizeUniversity($currentUserUniversity);
         $safeLimit = max(1, (int)$limit);
         $safeOffset = max(0, (int)$offset);
+        $activeWindowSql = $this->getSessionActiveWindowConditionSql('s');
 
         // Each named placeholder must appear exactly once (ATTR_EMULATE_PREPARES = false).
         $sql = "SELECT s.*, u.first_name as creator_first_name, u.last_name as creator_last_name,
@@ -518,7 +521,7 @@ class Session_model extends BaseModel {
             LEFT JOIN universities uni ON u.university = uni.id
             WHERE s.deleted_at IS NULL
               AND s.is_deleted = 0
-              AND TIMESTAMP(s.date, s.time) >= NOW()
+                            AND {$activeWindowSql}
               AND (
                     s.user_id = :uid4
                     OR s.audience = 'all_universities'
@@ -1093,6 +1096,26 @@ class Session_model extends BaseModel {
         } catch (PDOException $e) {
             throw new Exception("Failed to check session existence: " . $e->getMessage());
         }
+    }
+
+    private function getSessionActiveWindowConditionSql(string $alias): string
+    {
+        return 'NOW() <= ' . $this->getSessionEndDateTimeSql($alias);
+    }
+
+    private function getSessionEndDateTimeSql(string $alias): string
+    {
+        $defaultDuration = (float)self::DEFAULT_DURATION_HOURS;
+        $durationHoursSql = "CASE
+                WHEN CAST(COALESCE({$alias}.duration, 0) AS DECIMAL(10,2)) > 0
+                THEN CAST({$alias}.duration AS DECIMAL(10,2))
+                ELSE {$defaultDuration}
+            END";
+
+        return "DATE_ADD(
+                TIMESTAMP({$alias}.date, COALESCE({$alias}.time, '00:00:00')),
+                INTERVAL ({$durationHoursSql} * 3600) SECOND
+            )";
     }
 
     private function syncSubCount($sessionId): void
