@@ -34,7 +34,7 @@ class session_mail_check
     public function get_subscribers_for_session($session_id)
     {
         // this function gets all the subscribers for a session, and return their emails
-        $sql = "SELECT u.email FROM users u JOIN subscribers s ON u.id = s.Subscriber_ID WHERE s.Session_ID = :session_id";
+        $sql = "SELECT u.email FROM users u JOIN subscribers s ON u.id = s.Subscriber_ID WHERE s.Session_ID = :session_id AND s.status = 'approved'";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':session_id' => (int) $session_id]);
 
