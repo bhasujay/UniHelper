@@ -6,6 +6,7 @@ use PDO;
 
 require_once dirname(__DIR__) . '/models/base-model.php';
 
+// Model for managing notifications
 
 class Notification extends BaseModel
 {

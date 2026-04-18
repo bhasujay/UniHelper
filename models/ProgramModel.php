@@ -26,10 +26,12 @@ class ProgramModel extends BaseModel {
         if (!empty($searchTerm)) {
             $sql .= " AND (dp.name LIKE :search_term1 
                      OR u.name LIKE :search_term2 
-                     OR m.name LIKE :search_term3)";
+                     OR m.name LIKE :search_term3
+                     OR dp.unicode LIKE :search_term4)";
             $params['search_term1'] = "%{$searchTerm}%";
             $params['search_term2'] = "%{$searchTerm}%";
             $params['search_term3'] = "%{$searchTerm}%";
+            $params['search_term4'] = "%{$searchTerm}%";
         }
         
         // University filter
@@ -40,8 +42,8 @@ class ProgramModel extends BaseModel {
         
         // Stream filter
         if (isset($filters['stream']) && !empty($filters['stream'])) {
-            $sql .= " AND dp.stream = :stream";
-            $params['stream'] = $filters['stream'];
+            $sql .= " AND LOWER(REPLACE(dp.stream, '-', ' ')) = LOWER(REPLACE(:stream, '-', ' '))";
+            $params['stream'] = trim((string)$filters['stream']);
         }
         
         // Major filter

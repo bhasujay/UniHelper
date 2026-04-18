@@ -48,16 +48,18 @@ class searchController
                 $results = $this->model->user_search($query, $index);
             } elseif ($type === 'feed') {
                 $viewerRole = '';
+                $viewerId = 0;
                 $sessionUserId = $request->session('user_id');
                 if (!empty($sessionUserId)) {
+                    $viewerId = (int)$sessionUserId;
                     $userModel = new User();
-                    $viewer = $userModel->findById((int)$sessionUserId);
+                    $viewer = $userModel->findById($viewerId);
                     if ($viewer && isset($viewer->role)) {
                         $viewerRole = (string)$viewer->role;
                     }
                 }
 
-                $results = $this->model->feed_search($query, $index, $viewerRole);
+                $results = $this->model->feed_search($query, $index, $viewerRole, $viewerId);
             } elseif ($type === 'session') {
                 $results = $this->model->session_search($query, $index);
             } else {

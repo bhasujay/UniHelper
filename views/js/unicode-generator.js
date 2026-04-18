@@ -1,23 +1,30 @@
 (function () {
     'use strict';
 
-    const API_BASE = '/UniHelper/api?controller=UnicodeGeneratorController';
+    const APP_BASE = getAppBasePath();
+    const API_BASE = APP_BASE + '/api?controller=UnicodeGeneratorController';
 
     const state = {
         programs: [],
         suggestedOrderIds: [],
-        loading: false
+        loading: false,
+        hasUnsavedChanges: false,
+        hasSavedOrder: false,
+        lastLoadedAt: null
     };
 
     const ui = {
         root: null,
         list: null,
         emptyState: null,
+        loadingState: null,
         statusText: null,
         count: null,
         selectedProgram: null,
         selectedUnicode: null,
         selectedChance: null,
+        changeState: null,
+        lastRefresh: null,
         refreshBtn: null,
         autoSortBtn: null,
         resetSuggestedBtn: null,
@@ -39,11 +46,14 @@
         ui.root = document.getElementById('unicodeGeneratorCard');
         ui.list = document.getElementById('unicodePreferenceList');
         ui.emptyState = document.getElementById('unicodeEmptyState');
+        ui.loadingState = document.getElementById('unicodeLoadingState');
         ui.statusText = document.getElementById('unicodeStatusText');
         ui.count = document.getElementById('unicodeEligibleCount');
         ui.selectedProgram = document.getElementById('unicodeSelectedProgram');
         ui.selectedUnicode = document.getElementById('unicodeSelectedUnicode');
         ui.selectedChance = document.getElementById('unicodeSelectedChance');
+        ui.changeState = document.getElementById('unicodeChangeState');
+        ui.lastRefresh = document.getElementById('unicodeLastRefresh');
 
         ui.refreshBtn = document.getElementById('unicodeRefreshBtn');
         ui.autoSortBtn = document.getElementById('unicodeAutoSortBtn');
@@ -53,6 +63,9 @@
         ui.pdfBtn = document.getElementById('unicodePdfBtn');
 
         bindEvents();
+        setDirtyFlag(false);
+        updateActionButtons();
+        updateLastRefreshLabel();
         loadPreferencePrograms();
     }
 
@@ -61,37 +74,53 @@
             return;
         }
 
-        ui.refreshBtn && ui.refreshBtn.addEventListener('click', loadPreferencePrograms);
+        if (ui.refreshBtn) {
+            ui.refreshBtn.addEventListener('click', loadPreferencePrograms);
+        }
 
-        ui.autoSortBtn && ui.autoSortBtn.addEventListener('click', function () {
-            if (state.programs.length === 0) {
-                notify('No programs available to sort.', 'error');
-                return;
-            }
+        if (ui.autoSortBtn) {
+            ui.autoSortBtn.addEventListener('click', function () {
+                if (state.programs.length === 0) {
+                    notify('No programs available to sort.', 'error');
+                    return;
+                }
 
-            state.programs.sort(compareProgramsByRecommendation);
-            updateCurrentRanks();
-            renderPreferenceList();
-            updateSummary();
-            notify('Sorted by recommendation score.', 'success');
-        });
+                state.programs.sort(compareProgramsByRecommendation);
+                updateCurrentRanks();
+                renderPreferenceList();
+                updateSummary();
+                setDirtyFlag(true);
+                notify('Sorted by recommendation score.', 'success');
+            });
+        }
 
-        ui.resetSuggestedBtn && ui.resetSuggestedBtn.addEventListener('click', function () {
-            if (state.suggestedOrderIds.length === 0) {
-                notify('No suggested order available yet.', 'error');
-                return;
-            }
+        if (ui.resetSuggestedBtn) {
+            ui.resetSuggestedBtn.addEventListener('click', function () {
+                if (state.suggestedOrderIds.length === 0) {
+                    notify('No suggested order available yet.', 'error');
+                    return;
+                }
 
-            applySuggestedOrder();
-            updateCurrentRanks();
-            renderPreferenceList();
-            updateSummary();
-            notify('Reset to suggested ranking.', 'success');
-        });
+                applySuggestedOrder();
+                updateCurrentRanks();
+                renderPreferenceList();
+                updateSummary();
+                setDirtyFlag(true);
+                notify('Reset to suggested ranking.', 'success');
+            });
+        }
 
-        ui.saveBtn && ui.saveBtn.addEventListener('click', savePreferenceOrder);
-        ui.clearSavedBtn && ui.clearSavedBtn.addEventListener('click', clearSavedOrder);
-        ui.pdfBtn && ui.pdfBtn.addEventListener('click', printPreferenceList);
+        if (ui.saveBtn) {
+            ui.saveBtn.addEventListener('click', savePreferenceOrder);
+        }
+
+        if (ui.clearSavedBtn) {
+            ui.clearSavedBtn.addEventListener('click', clearSavedOrder);
+        }
+
+        if (ui.pdfBtn) {
+            ui.pdfBtn.addEventListener('click', printPreferenceList);
+        }
 
         ui.list.addEventListener('click', onListClick);
         ui.list.addEventListener('dragover', onDragOver);
@@ -102,8 +131,7 @@
         setLoading(true);
 
         try {
-            const response = await fetch(API_BASE + '&action=getPreferencePrograms');
-            const result = await response.json();
+            const result = await fetchJson(API_BASE + '&action=getPreferencePrograms');
 
             if (!result.success) {
                 throw new Error(result.message || 'Failed to load preference programs');
@@ -114,6 +142,7 @@
                 : [];
 
             state.programs = programs.map(normalizeProgram);
+            state.hasSavedOrder = Boolean(result.data && result.data.has_saved_order);
             state.suggestedOrderIds = [...state.programs]
                 .sort(function (a, b) {
                     return a.suggested_rank - b.suggested_rank;
@@ -125,12 +154,9 @@
             updateCurrentRanks();
             renderPreferenceList();
             updateSummary();
-
-            if (ui.statusText) {
-                ui.statusText.textContent = state.programs.length > 0
-                    ? 'Drag and drop to reorder. Top item is your simulated UGC selection.'
-                    : 'No Likely / Very Likely results right now. Update your Z-Score and refresh.';
-            }
+            setDirtyFlag(false);
+            state.lastLoadedAt = new Date();
+            updateLastRefreshLabel();
 
             if (result.data && result.data.has_saved_order) {
                 notify('Loaded your saved preference order.', 'success');
@@ -139,6 +165,8 @@
             console.error('Unicode generator load error:', error);
             notify(error.message || 'Failed to load preference programs.', 'error');
             state.programs = [];
+            state.hasSavedOrder = false;
+            setDirtyFlag(false);
             renderPreferenceList();
             updateSummary();
         } finally {
@@ -189,12 +217,15 @@
 
     function createPreferenceItem(program, index) {
         const item = document.createElement('li');
-        item.className = 'unicode-pref-item';
+        item.className = 'unicode-pref-item' + (index === 0 ? ' is-selected' : '');
         item.draggable = true;
+        item.tabIndex = 0;
         item.dataset.programId = String(program.program_id);
+        item.setAttribute('aria-label', 'Preference rank ' + (index + 1) + ': ' + program.name);
 
         item.addEventListener('dragstart', onDragStart);
         item.addEventListener('dragend', onDragEnd);
+        item.addEventListener('keydown', onItemKeyDown);
 
         const rank = document.createElement('span');
         rank.className = 'unicode-rank';
@@ -216,6 +247,13 @@
 
         head.appendChild(title);
         head.appendChild(eligibilityBadge);
+
+        if (index === 0) {
+            const selectedBadge = document.createElement('span');
+            selectedBadge.className = 'unicode-badge unicode-badge-selected';
+            selectedBadge.textContent = 'Selected';
+            head.appendChild(selectedBadge);
+        }
 
         if (program.major_match) {
             const majorBadge = document.createElement('span');
@@ -266,7 +304,8 @@
         dragHandle.type = 'button';
         dragHandle.className = 'unicode-drag-handle';
         dragHandle.setAttribute('title', 'Drag to reorder');
-        dragHandle.textContent = '::';
+        dragHandle.setAttribute('aria-label', 'Drag ' + program.name + ' to reorder');
+        dragHandle.textContent = '||';
 
         const upBtn = document.createElement('button');
         upBtn.type = 'button';
@@ -274,7 +313,9 @@
         upBtn.dataset.action = 'move-up';
         upBtn.dataset.programId = String(program.program_id);
         upBtn.setAttribute('title', 'Move up');
+        upBtn.setAttribute('aria-label', 'Move ' + program.name + ' up');
         upBtn.textContent = '^';
+        upBtn.disabled = index === 0;
 
         const downBtn = document.createElement('button');
         downBtn.type = 'button';
@@ -282,7 +323,9 @@
         downBtn.dataset.action = 'move-down';
         downBtn.dataset.programId = String(program.program_id);
         downBtn.setAttribute('title', 'Move down');
+        downBtn.setAttribute('aria-label', 'Move ' + program.name + ' down');
         downBtn.textContent = 'v';
+        downBtn.disabled = index === state.programs.length - 1;
 
         side.appendChild(dragHandle);
         side.appendChild(upBtn);
@@ -317,7 +360,30 @@
         }
     }
 
-    function moveProgram(programId, direction) {
+    function onItemKeyDown(event) {
+        const item = event.currentTarget;
+        if (!item || state.loading) {
+            return;
+        }
+
+        const programId = Number(item.dataset.programId);
+        if (!programId) {
+            return;
+        }
+
+        if ((event.altKey || event.ctrlKey) && event.key === 'ArrowUp') {
+            event.preventDefault();
+            moveProgram(programId, -1, true);
+            return;
+        }
+
+        if ((event.altKey || event.ctrlKey) && event.key === 'ArrowDown') {
+            event.preventDefault();
+            moveProgram(programId, 1, true);
+        }
+    }
+
+    function moveProgram(programId, direction, keepFocus) {
         const index = state.programs.findIndex(function (program) {
             return program.program_id === programId;
         });
@@ -331,12 +397,21 @@
             return;
         }
 
+        const moved = state.programs[index];
         const [item] = state.programs.splice(index, 1);
         state.programs.splice(targetIndex, 0, item);
 
         updateCurrentRanks();
         renderPreferenceList();
         updateSummary();
+        setDirtyFlag(true);
+
+        if (keepFocus && moved) {
+            const focusTarget = ui.list.querySelector('[data-program-id="' + moved.program_id + '"]');
+            if (focusTarget) {
+                focusTarget.focus();
+            }
+        }
     }
 
     function onDragStart(event) {
@@ -352,11 +427,11 @@
     function onDragEnd(event) {
         event.currentTarget.classList.remove('dragging');
         draggedItem = null;
-        syncStateFromDom();
+        syncStateFromDom(true);
     }
 
     function onDragOver(event) {
-        if (!draggedItem) {
+        if (!draggedItem || !ui.list) {
             return;
         }
 
@@ -372,7 +447,7 @@
 
     function onDrop(event) {
         event.preventDefault();
-        syncStateFromDom();
+        syncStateFromDom(true);
     }
 
     function getDragAfterElement(container, y) {
@@ -398,7 +473,7 @@
         return closest.element;
     }
 
-    function syncStateFromDom() {
+    function syncStateFromDom(markDirty) {
         if (!ui.list) {
             return;
         }
@@ -415,6 +490,14 @@
             return;
         }
 
+        const currentIds = state.programs.map(function (program) {
+            return program.program_id;
+        });
+
+        if (arrayEquals(currentIds, orderedIds)) {
+            return;
+        }
+
         const map = new Map(state.programs.map(function (program) {
             return [program.program_id, program];
         }));
@@ -426,6 +509,10 @@
         updateCurrentRanks();
         renderPreferenceList();
         updateSummary();
+
+        if (markDirty) {
+            setDirtyFlag(true);
+        }
     }
 
     function applySuggestedOrder() {
@@ -454,6 +541,11 @@
             return;
         }
 
+        if (!state.hasUnsavedChanges) {
+            notify('There are no unsaved changes.', 'success');
+            return;
+        }
+
         const payload = {
             program_ids: state.programs.map(function (program) {
                 return program.program_id;
@@ -463,15 +555,13 @@
         setLoading(true);
 
         try {
-            const response = await fetch(API_BASE + '&action=savePreferenceOrder', {
+            const result = await fetchJson(API_BASE + '&action=savePreferenceOrder', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
             });
-
-            const result = await response.json();
 
             if (!result.success) {
                 throw new Error(result.message || 'Failed to save preference order');
@@ -482,9 +572,13 @@
                 : [];
 
             state.programs = programs.map(normalizeProgram);
+            state.hasSavedOrder = true;
             updateCurrentRanks();
             renderPreferenceList();
             updateSummary();
+            setDirtyFlag(false);
+            state.lastLoadedAt = new Date();
+            updateLastRefreshLabel();
             notify('Preference order saved successfully.', 'success');
         } catch (error) {
             console.error('Save preference order error:', error);
@@ -494,34 +588,37 @@
         }
     }
 
-    function clearSavedOrder() {
-        handleConfirm('Clear your saved preference order?', async function (confirmed) {
-            if (!confirmed) {
-                return;
+    async function clearSavedOrder() {
+        if (!state.hasSavedOrder && !state.hasUnsavedChanges) {
+            notify('No saved order found to clear.', 'error');
+            return;
+        }
+
+        const confirmed = await confirmAction('Clear your saved preference order?');
+        if (!confirmed) {
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const result = await fetchJson(API_BASE + '&action=clearPreferenceOrder', {
+                method: 'DELETE'
+            });
+
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to clear saved preference order');
             }
 
-            setLoading(true);
-
-            try {
-                const response = await fetch(API_BASE + '&action=clearPreferenceOrder', {
-                    method: 'DELETE'
-                });
-
-                const result = await response.json();
-
-                if (!result.success) {
-                    throw new Error(result.message || 'Failed to clear saved preference order');
-                }
-
-                notify('Saved order cleared. Re-loading suggested list...', 'success');
-                await loadPreferencePrograms();
-            } catch (error) {
-                console.error('Clear saved order error:', error);
-                notify(error.message || 'Failed to clear saved preference order.', 'error');
-            } finally {
-                setLoading(false);
-            }
-        });
+            state.hasSavedOrder = false;
+            notify('Saved order cleared. Re-loading suggested list...', 'success');
+            await loadPreferencePrograms();
+        } catch (error) {
+            console.error('Clear saved order error:', error);
+            notify(error.message || 'Failed to clear saved preference order.', 'error');
+        } finally {
+            setLoading(false);
+        }
     }
 
     function updateSummary() {
@@ -533,9 +630,18 @@
         }
 
         if (!selected) {
-            ui.selectedProgram && (ui.selectedProgram.textContent = '-');
-            ui.selectedUnicode && (ui.selectedUnicode.textContent = '-');
-            ui.selectedChance && (ui.selectedChance.textContent = '-');
+            if (ui.selectedProgram) {
+                ui.selectedProgram.textContent = '-';
+            }
+            if (ui.selectedUnicode) {
+                ui.selectedUnicode.textContent = '-';
+            }
+            if (ui.selectedChance) {
+                ui.selectedChance.textContent = '-';
+            }
+            if (ui.statusText) {
+                ui.statusText.textContent = 'No likely or very likely programs right now. Refresh after updating your Z-Score details.';
+            }
             return;
         }
 
@@ -551,6 +657,10 @@
             ui.selectedChance.textContent = selected.probability_percent !== null
                 ? selected.probability_percent.toFixed(1) + '%'
                 : 'N/A';
+        }
+
+        if (ui.statusText) {
+            ui.statusText.textContent = 'Rank the list to match your preference. The first row is your simulated selection at this moment.';
         }
     }
 
@@ -581,11 +691,120 @@
             ui.root.classList.toggle('loading', isLoading);
         }
 
-        [ui.refreshBtn, ui.autoSortBtn, ui.resetSuggestedBtn, ui.saveBtn, ui.clearSavedBtn, ui.pdfBtn].forEach(function (button) {
-            if (button) {
-                button.disabled = isLoading;
-            }
+        if (ui.loadingState) {
+            ui.loadingState.hidden = !isLoading;
+        }
+
+        if (ui.list) {
+            ui.list.hidden = isLoading;
+        }
+
+        if (ui.emptyState && isLoading) {
+            ui.emptyState.hidden = true;
+        }
+
+        updateActionButtons();
+    }
+
+    function setDirtyFlag(isDirty) {
+        state.hasUnsavedChanges = Boolean(isDirty);
+        updateChangeState();
+        updateActionButtons();
+    }
+
+    function updateChangeState() {
+        if (!ui.changeState) {
+            return;
+        }
+
+        if (state.hasUnsavedChanges) {
+            ui.changeState.textContent = 'Unsaved order changes';
+            ui.changeState.classList.remove('unicode-change-state-synced');
+            ui.changeState.classList.add('unicode-change-state-dirty');
+            return;
+        }
+
+        ui.changeState.textContent = 'All changes saved';
+        ui.changeState.classList.remove('unicode-change-state-dirty');
+        ui.changeState.classList.add('unicode-change-state-synced');
+    }
+
+    function updateLastRefreshLabel() {
+        if (!ui.lastRefresh) {
+            return;
+        }
+
+        if (!state.lastLoadedAt) {
+            ui.lastRefresh.textContent = 'Not loaded yet';
+            return;
+        }
+
+        ui.lastRefresh.textContent = 'Last refresh: ' + state.lastLoadedAt.toLocaleString();
+    }
+
+    function updateActionButtons() {
+        const disableAll = state.loading;
+
+        if (ui.refreshBtn) {
+            ui.refreshBtn.disabled = disableAll;
+        }
+
+        if (ui.autoSortBtn) {
+            ui.autoSortBtn.disabled = disableAll;
+        }
+
+        if (ui.resetSuggestedBtn) {
+            ui.resetSuggestedBtn.disabled = disableAll;
+        }
+
+        if (ui.saveBtn) {
+            ui.saveBtn.disabled = disableAll;
+        }
+
+        if (ui.clearSavedBtn) {
+            ui.clearSavedBtn.disabled = disableAll;
+        }
+
+        if (ui.pdfBtn) {
+            ui.pdfBtn.disabled = disableAll;
+        }
+    }
+
+    async function fetchJson(url, options) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(function () {
+            controller.abort();
+        }, 15000);
+
+        const requestOptions = Object.assign({}, options || {}, {
+            credentials: 'same-origin',
+            signal: controller.signal
         });
+
+        try {
+            const response = await fetch(url, requestOptions);
+
+            let payload = null;
+            try {
+                payload = await response.json();
+            } catch (error) {
+                throw new Error('Server returned an invalid response.');
+            }
+
+            if (!response.ok) {
+                throw new Error(payload && payload.message ? payload.message : 'Request failed with status ' + response.status);
+            }
+
+            return payload;
+        } catch (error) {
+            if (error && error.name === 'AbortError') {
+                throw new Error('Request timed out. Please try again.');
+            }
+
+            throw error;
+        } finally {
+            window.clearTimeout(timeout);
+        }
     }
 
     function notify(message, type) {
@@ -597,17 +816,15 @@
         alert(message);
     }
 
-    function handleConfirm(message, callback) {
+    async function confirmAction(message) {
         const confirmation = window.confirm(message);
 
         if (confirmation && typeof confirmation.then === 'function') {
-            confirmation.then(function (result) {
-                callback(Boolean(result));
-            });
-            return;
+            const asyncResult = await confirmation;
+            return Boolean(asyncResult);
         }
 
-        callback(Boolean(confirmation));
+        return Boolean(confirmation);
     }
 
     function printPreferenceList() {
@@ -617,8 +834,7 @@
         }
 
         const selected = state.programs[0];
-        const now = new Date();
-        const createdAt = now.toLocaleString();
+        const createdAt = new Date().toLocaleString();
 
         const rows = state.programs.map(function (program, index) {
             return '<tr>' +
@@ -664,6 +880,40 @@
         printWindow.document.close();
         printWindow.focus();
         printWindow.print();
+    }
+
+    function getAppBasePath() {
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        if (pathParts.length > 0) {
+            return '/' + pathParts[0];
+        }
+
+        const baseElement = document.querySelector('base[href]');
+        if (!baseElement) {
+            return '';
+        }
+
+        try {
+            const baseUrl = new URL(baseElement.getAttribute('href'), window.location.origin);
+            const path = baseUrl.pathname.replace(/\/+$/, '');
+            return path === '/' ? '' : path;
+        } catch (error) {
+            return '';
+        }
+    }
+
+    function arrayEquals(a, b) {
+        if (a.length !== b.length) {
+            return false;
+        }
+
+        for (let i = 0; i < a.length; i += 1) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     function escapeHtml(value) {

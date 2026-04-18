@@ -13,6 +13,8 @@ class Router
             '/api' => ['apiGateway', 'handleRequest'],
             '/' => ['DashboardController', 'index'],
             '/dashboard' => ['DashboardController', 'index'],
+            '/admin-panel' => ['ProgramController', 'degreeProgramsManagement'],
+            '/degree-programs-management' => ['ProgramController', 'degreeProgramsManagement'],
             '/profile/view' => ['DashboardController', 'profileIndex'],
             '/profile/edit' => ['DashboardController', 'profileIndex'],
             '/profile/change-password' => ['DashboardController', 'profileIndex'],

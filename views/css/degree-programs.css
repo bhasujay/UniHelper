@@ -1,304 +1,37 @@
-/* Page-based Search Styling */
+@import url('./components/degree-cards.css');
 
-.global-search-bar {
-    max-width: 1200px;
-    margin: 0 auto;
-}
+/* Degree Programs page styles aligned with dashboard design tokens */
 
-.search-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: #f8f9fa;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    margin-bottom: 12px;
-}
-
-.search-input-wrapper:focus-within {
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.global-search-input {
-    flex: 1;
-    padding: 14px 18px;
-    border: none;
-    background: transparent;
-    font-size: 16px;
-    outline: none;
-    color: #333;
-}
-
-.global-search-input::placeholder {
-    color: #999;
-}
-
-.global-search-btn {
-    padding: 14px 18px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 0 10px 10px 0;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.global-search-btn:hover {
-    background: #0056b3;
-}
-
-/* Quick Filters */
-.quick-filters {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.filter-chip {
-    padding: 6px 12px;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    color: #666;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.filter-chip:hover {
-    background: #e9ecef;
-    color: #333;
-}
-
-.filter-chip.active {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
-}
-
-/* Search Results Dropdown */
-.search-results-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid #e9ecef;
-    border-radius: 0 0 16px 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.search-results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #e9ecef;
-    background: #f8f9fa;
-}
-
-.results-count {
-    font-size: 14px;
-    color: #666;
-    font-weight: 500;
-}
-
-.view-all-btn {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.view-all-btn:hover {
-    background: #0056b3;
-}
-
-.search-results-list {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.search-result-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.search-result-item:hover {
-    background: #f8f9fa;
-}
-
-.search-result-item:last-child {
-    border-bottom: none;
-}
-
-.search-result-icon {
-    width: 32px;
-    height: 32px;
-    background: #e9ecef;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 12px;
-    color: #666;
-}
-
-.search-result-content {
-    flex: 1;
-}
-
-.search-result-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #333;
-    margin: 0 0 2px 0;
-}
-
-.search-result-subtitle {
-    font-size: 12px;
-    color: #666;
-    margin: 0;
-}
-
-.search-result-meta {
-    font-size: 11px;
-    color: #999;
-    margin-top: 2px;
-}
-
-/* No Results */
-.no-results-item {
-    padding: 20px;
-    text-align: center;
-    color: #666;
-    font-size: 14px;
-}
-
-/* Loading State */
-.search-loading {
-    padding: 20px;
-    text-align: center;
-    color: #666;
-}
-
-.search-loading .spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #007bff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 8px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .floating-search-overlay {
-        padding: 10px;
-    }
-    
-    .floating-search-container {
-        max-width: 100%;
-        margin: 0;
-    }
-    
-    .floating-search-bar {
-        padding: 16px;
-    }
-    
-    .global-search-input {
-        font-size: 14px;
-        padding: 12px 16px;
-    }
-    
-    .global-search-btn {
-        padding: 12px 16px;
-    }
-    
-    .quick-filters {
-        gap: 6px;
-    }
-    
-    .filter-chip {
-        padding: 4px 8px;
-        font-size: 11px;
-    }
-    
-    .search-toggle-btn {
-        bottom: 20px;
-        right: 20px;
-        width: 48px;
-        height: 48px;
-    }
-    
-    .search-results-dropdown {
-        max-height: 300px;
-    }
-}
-
-/* Degree Programs Page Styling */
 .degree-programs-page {
-    padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
+    padding: 0;
 }
 
-/* Mode Toggle Styles */
 .mode-toggle {
     display: flex;
-    gap: 10px;
-    margin-bottom: 30px;
-    padding: 0 0 20px 0;
-    border-bottom: 1px solid #444;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
 }
 
 .mode-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    border: 1px solid #444;
-    background: #2a2a2a;
-    color: #fff;
-    border-radius: 8px;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--foreground);
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.mode-btn:hover {
-    background: #3a3a3a;
-    border-color: #555;
-}
-
-.mode-btn.active {
-    background: #007bff;
-    border-color: #007bff;
-    color: #fff;
-}
-
-.mode-btn.active:hover {
-    background: #0056b3;
-    border-color: #0056b3;
+    transition: all 0.2s ease;
 }
 
 .mode-btn svg {
@@ -306,242 +39,144 @@
     height: 16px;
 }
 
-/* Filters Loading State */
-.filters-loading {
+.mode-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(0, 170, 255, 0.08);
+}
+
+.mode-btn.active {
+    border-color: var(--primary);
+    background: var(--btn-gradient-primary);
+    color: #ffffff;
+    box-shadow: 0 6px 14px rgba(0, 170, 255, 0.2);
+}
+
+.mode-btn.active:hover {
+    color: #ffffff;
+}
+
+.page-search-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.search-header {
+    margin-bottom: 1rem;
+}
+
+.search-header h2 {
+    margin: 0;
+    color: var(--foreground);
+    font-size: 1.55rem;
+    line-height: 1.25;
+}
+
+.search-header p {
+    margin: 0.4rem 0 0;
+    color: var(--muted-foreground);
+}
+
+.search-bar-container {
+    margin-bottom: 1rem;
+}
+
+.search-input-wrapper {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-    color: #666;
-    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--text_background);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.loading-spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #007bff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+.search-input-wrapper:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.12);
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.search-input {
+    flex: 1;
+    padding: 0.85rem 0.95rem;
+    border: 0;
+    background: transparent;
+    color: var(--foreground);
+    font-size: 0.95rem;
+    outline: 0;
 }
 
-/* Disabled state for search input */
-.search-input:disabled {
-    background-color: #f5f5f5;
-    color: #999;
-    cursor: not-allowed;
+.search-input::placeholder {
+    color: var(--muted-foreground);
+}
+
+.search-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 48px;
+    border: 0;
+    border-left: 1px solid var(--border);
+    background: var(--btn-gradient-primary);
+    color: #ffffff;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.search-btn:hover {
+    filter: brightness(1.06);
 }
 
 .search-btn:disabled {
-    background-color: #ccc;
+    opacity: 0.65;
     cursor: not-allowed;
-    opacity: 0.6;
+    filter: none;
 }
 
-/* Page Search Section - Always visible at top */
-.page-search-section {
-    background: var(--card);
-    border-radius: 12px;
-    padding: 40px;
-    margin-bottom: 40px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border);
-}
-
-.search-header {
-    margin-bottom: 32px;
-}
-
-.search-header h2 {
-    color: var(--text);
-    font-size: 28px;
-    font-weight: 600;
-    margin: 0 0 12px 0;
-}
-
-.search-header p {
-    color: var(--text);
-    font-size: 16px;
-    margin: 0;
-}
-
-.search-bar-container {
-    margin-bottom: 28px;
-}
-
-.search-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: #f8f9fa;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-}
-
-.search-input-wrapper:focus-within {
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.search-input {
-    flex: 1;
-    padding: 16px 20px;
-    border: none;
-    background: transparent;
-    font-size: 16px;
-    outline: none;
-    color: #333;
-}
-
-.search-input::placeholder {
-    color: #999;
-}
-
-.search-btn {
-    padding: 16px 20px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 0 10px 10px 0;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.search-btn:hover {
-    background: #0056b3;
-}
-
-/* Quick Filters */
 .quick-filters {
     display: flex;
-    gap: 16px;
     flex-wrap: wrap;
-    margin-bottom: 32px;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 .filter-chip {
-    padding: 12px 20px;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 24px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #666;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-bottom: 8px;
-}
-
-.filter-chip:hover {
-    background: #e9ecef;
-    color: #333;
-}
-
-.filter-chip.active {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
-}
-
-/* Search Section */
-.search-section {
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.search-header {
-    margin-bottom: 20px;
-}
-
-.search-header h2 {
-    color: #1a1a1a;
-    font-size: 24px;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--text_background);
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
     font-weight: 600;
-    margin: 0 0 8px 0;
-}
-
-.search-header p {
-    color: #666;
-    font-size: 14px;
-    margin: 0;
-}
-
-/* Search Bar */
-.search-bar-container {
-    margin-bottom: 20px;
-}
-
-.search-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: #f8f9fa;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.search-input-wrapper:focus-within {
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.search-input {
-    flex: 1;
-    padding: 12px 16px;
-    border: none;
-    background: transparent;
-    font-size: 16px;
-    outline: none;
-}
-
-.search-input::placeholder {
-    color: #999;
-}
-
-.search-btn {
-    padding: 12px 16px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 0 6px 6px 0;
     cursor: pointer;
-    transition: background 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    transition: all 0.2s ease;
 }
 
-.search-btn:hover {
-    background: #0056b3;
+.filter-chip:hover,
+.filter-chip.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(0, 170, 255, 0.08);
 }
 
-/* Advanced Search */
 .advanced-search {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 32px;
-    margin-bottom: 32px;
-    border: 1px solid #e9ecef;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
 }
 
 .filter-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 24px;
-    margin-bottom: 24px;
+    gap: 0.9rem;
+    margin-bottom: 0.9rem;
 }
 
 .filter-row:last-child {
@@ -551,335 +186,411 @@
 .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0.4rem;
 }
 
 .filter-label {
-    font-size: 14px;
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .filter-select,
 .filter-input {
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 14px;
-    background: white;
-    transition: border-color 0.3s ease;
+    width: 100%;
+    padding: 0.62rem 0.72rem;
+    border: 1px solid var(--border);
+    border-radius: 0.55rem;
+    font-size: 0.9rem;
+    color: var(--foreground);
+    background: var(--text_background);
+    outline: 0;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .filter-select:focus,
 .filter-input:focus {
-    outline: none;
-    border-color: #007bff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.12);
 }
 
-/* Search Controls */
 .search-controls {
     display: flex;
-    gap: 20px;
-    align-items: center;
-    margin-top: 28px;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
 }
 
 .toggle-btn,
 .clear-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: white;
-    color: #666;
-    font-size: 14px;
+    gap: 0.5rem;
+    padding: 0.55rem 0.9rem;
+    border-radius: 0.55rem;
+    border: 1px solid var(--border);
+    background: var(--text_background);
+    color: var(--foreground);
+    font-size: 0.85rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .toggle-btn:hover,
 .clear-btn:hover {
-    background: #f8f9fa;
-    border-color: #007bff;
-    color: #007bff;
+    border-color: var(--primary);
+    color: var(--primary);
 }
 
-/* Loading Indicator */
 .loading {
     text-align: center;
-    padding: 40px;
-    color: #666;
+    padding: 2rem 1rem;
+    color: var(--muted-foreground);
 }
 
 .spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #007bff;
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.16);
+    border-top-color: var(--primary);
     border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 16px;
+    animation: degree-search-spin 0.9s linear infinite;
+    margin: 0 auto 0.7rem;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Search Results */
-.search-results {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    margin-top: 40px;
-}
-
-/* Degree Program Cards - Better Separation */
-.degree-program-card {
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    margin-bottom: 20px;
-    padding: 20px;
-    background: var(--card);
-    color: var(--text);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-
-.degree-program-card:hover {
-    border-color: var(--primary) !important;
-    border-top-color: var(--primary) !important;
-    box-shadow: 0 6px 20px rgba(0, 170, 255, 0.2);
-}
-
-/* Add separation between cards */
-.degree-program-card:not(:first-child) {
-    border-top: 3px solid var(--border);
-    margin-top: 16px;
-}
-
-/* No Search Message */
-.no-search-message,
-.no-results {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 60px 20px;
-    color: #666;
-}
-
-.no-search-icon,
-.no-results-icon {
-    margin-bottom: 16px;
-    color: #ccc;
-}
-
-.no-search-message h3,
-.no-results h3 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-    margin: 0 0 8px 0;
-}
-
-.no-search-message p,
-.no-results p {
-    font-size: 14px;
-    margin: 0;
-}
-
-/* Error Messages */
-.error {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 20px;
-    color: #dc3545;
-    background: #f8d7da;
-    border: 1px solid #f5c6cb;
-    border-radius: 6px;
-    margin: 20px 0;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .degree-programs-container {
-        padding: 16px;
-    }
-    
-    .search-section {
-        padding: 16px;
-    }
-    
-    .filter-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .search-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .toggle-btn,
-    .clear-btn {
-        justify-content: center;
-    }
-    
-    .search-results {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 480px) {
-    .search-header h2 {
-        font-size: 20px;
-    }
-    
-    .search-input {
-        font-size: 14px;
-    }
-    
-    .search-btn {
-        padding: 10px 12px;
-    }
-}
-
-/* Wishlist Button States */
-.wishlist-btn.in-wishlist {
-    color: #dc2626;
-    background: #fef2f2;
-    border-color: #fecaca;
-}
-
-.wishlist-btn.in-wishlist:hover {
-    background: #fee2e2;
-    border-color: #fca5a5;
-}
-
-.wishlist-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Wishlist Messages */
-.wishlist-message {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    max-width: 300px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    animation: slideInRight 0.3s ease;
-}
-
-.wishlist-message-success {
-    background: #d1fae5;
-    border: 1px solid #a7f3d0;
-    color: #065f46;
-}
-
-.wishlist-message-error {
-    background: #fee2e2;
-    border: 1px solid #fecaca;
-    color: #991b1b;
-}
-
-.wishlist-message-info {
-    background: #dbeafe;
-    border: 1px solid #93c5fd;
-    color: #1e40af;
-}
-
-.message-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-}
-
-.message-text {
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.message-close {
-    background: none;
-    border: none;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    color: inherit;
-    opacity: 0.7;
-    margin-left: 12px;
-}
-
-.message-close:hover {
-    opacity: 1;
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-/* Loading animation for heart button */
-.animate-spin {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
+@keyframes degree-search-spin {
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
 }
 
-/* ====================================
-   Eligible Programs Modal Styles
-   ==================================== */
-
-#eligibleProgramsModal .modal-body {
-    background: var(--bg);
-}
-
-#eligibleProgramsModal .search-results {
+.degree-programs-page #searchResults,
+.degree-programs-page #wishlistResults {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 1rem;
+    margin-top: 0;
 }
 
-#eligibleProgramsModal .degree-program-card {
+.degree-programs-page .degree-program-card {
+    margin: 0;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: var(--card);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+}
+
+.degree-programs-page .degree-program-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 3px;
+    background: var(--gradient-primary);
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.degree-programs-page .degree-program-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: var(--glow-primary), 0 16px 30px rgba(0, 0, 0, 0.35);
+}
+
+.degree-programs-page .degree-program-card .card-header {
+    display: grid;
+    gap: 0.25rem;
     margin-bottom: 0;
 }
 
-/* Responsive */
-@media (max-width: 1400px) {
-    #eligibleProgramsModal .search-results {
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    }
+.degree-programs-page .degree-program-card .card-header h3 {
+    font-size: 1rem;
+    line-height: 1.35;
+    color: var(--foreground);
+    margin: 0;
+}
+
+.degree-programs-page .degree-program-card .card-header p {
+    margin: 0;
+    font-size: 0.84rem;
+    color: var(--muted-foreground);
+}
+
+.degree-programs-page .zscore-program-headline-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+}
+
+.degree-programs-page .zscore-rank-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--text_background);
+    color: var(--foreground);
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+.degree-programs-page .zscore-eligibility-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.62rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+}
+
+.degree-programs-page .zscore-eligibility-badge.is-very-likely {
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.14);
+    border-color: rgba(34, 197, 94, 0.38);
+}
+
+.degree-programs-page .zscore-eligibility-badge.is-likely {
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(59, 130, 246, 0.36);
+}
+
+.degree-programs-page .zscore-eligibility-badge.is-possible {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.14);
+    border-color: rgba(245, 158, 11, 0.34);
+}
+
+.degree-programs-page .zscore-eligibility-badge.is-unlikely {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.14);
+    border-color: rgba(239, 68, 68, 0.34);
+}
+
+.degree-programs-page .zscore-eligibility-badge.is-noc {
+    color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.14);
+    border-color: rgba(139, 92, 246, 0.34);
+}
+
+.degree-programs-page .zscore-cutoff-insight {
+    margin: 0;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.7rem;
+    border: 1px solid var(--border);
+    background: var(--text_background);
+    color: var(--muted-foreground);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.degree-programs-page .zscore-probability-wrap {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.degree-programs-page .zscore-probability-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.degree-programs-page .zscore-probability-meta span {
+    color: var(--muted-foreground);
+    font-weight: 600;
+}
+
+.degree-programs-page .zscore-probability-meta strong {
+    color: var(--foreground);
+    font-weight: 800;
+}
+
+.degree-programs-page .zscore-probability-track {
+    height: 0.55rem;
+    border-radius: 999px;
+    background: rgba(125, 133, 150, 0.25);
+    border: 1px solid rgba(125, 133, 150, 0.22);
+    overflow: hidden;
+}
+
+.degree-programs-page .zscore-probability-fill {
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    transition: width 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.degree-programs-page .zscore-probability-fill.is-very-likely {
+    background: linear-gradient(90deg, #16a34a, #22c55e);
+}
+
+.degree-programs-page .zscore-probability-fill.is-likely {
+    background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+}
+
+.degree-programs-page .zscore-probability-fill.is-possible {
+    background: linear-gradient(90deg, #d97706, #f59e0b);
+}
+
+.degree-programs-page .zscore-probability-fill.is-unlikely {
+    background: linear-gradient(90deg, #dc2626, #ef4444);
+}
+
+.degree-programs-page .zscore-probability-fill.is-noc {
+    background: linear-gradient(90deg, #7c3aed, #8b5cf6);
+}
+
+.degree-programs-page .zscore-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.degree-programs-page .zscore-stat-chip {
+    border: 1px solid var(--border);
+    border-radius: 0.65rem;
+    padding: 0.5rem 0.55rem;
+    background: var(--text_background);
+    display: grid;
+    gap: 0.2rem;
+}
+
+.degree-programs-page .zscore-stat-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted-foreground);
+    font-weight: 700;
+}
+
+.degree-programs-page .zscore-stat-value {
+    font-size: 0.84rem;
+    color: var(--foreground);
+    font-weight: 700;
+}
+
+.degree-programs-page .degree-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.degree-programs-page .degree-tags .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.58rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 170, 255, 0.35);
+    background: rgba(0, 170, 255, 0.08);
+    color: var(--primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.degree-programs-page .degree-program-card .card-footer {
+    margin-top: auto;
+    padding-top: 0.7rem;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.degree-programs-page .degree-program-card .footer-details {
+    display: grid;
+    gap: 0.2rem;
+    color: var(--muted-foreground);
+    font-size: 0.76rem;
+}
+
+.degree-programs-page .degree-program-card .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.degree-programs-page .zscore-program-action {
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 0.65rem;
+    border: 1px solid var(--border);
+    background: var(--text_background);
+    color: var(--foreground);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.22s ease;
+}
+
+.degree-programs-page .zscore-program-action:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.degree-programs-page .zscore-program-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.degree-programs-page .zscore-program-action.wishlist-btn.in-wishlist {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.1);
 }
 
 @media (max-width: 768px) {
-    #eligibleProgramsModal .modal-content {
-        width: 98vw !important;
-        max-width: 98vw !important;
+    .mode-toggle {
+        justify-content: flex-start;
     }
-    
-    #eligibleProgramsModal .search-results {
-        grid-template-columns: 1fr;
+
+    .page-search-section {
+        padding: 1rem;
     }
-    
-    #eligibleProgramsModal .modal-body {
-        padding: 20px !important;
+
+    .search-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .search-controls {
+        flex-direction: column;
+    }
+
+    .toggle-btn,
+    .clear-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .degree-programs-page .zscore-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

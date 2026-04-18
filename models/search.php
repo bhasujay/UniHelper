@@ -278,7 +278,7 @@ class search extends BaseModel
     }
 
     // searching for posts in the feed
-    public function feed_search($query, $index, $viewerRole = '')
+    public function feed_search($query, $index, $viewerRole = '', $viewerId = 0)
     {
         $query = trim((string)$query);
         if ($query === '') {
@@ -288,6 +288,16 @@ class search extends BaseModel
         $page = max(0, (int)$index);
         $limit = 20;
         $offset = $page * $limit;
+        $viewerRole = trim((string)$viewerRole);
+        $viewerId = (int)$viewerId;
+        $isAdmin = $viewerRole === 'role-admin';
+
+        $visibilityClause = $isAdmin
+            ? '1 = 1'
+            : "(
+                        p.audience_mode = 'all_roles'
+                        OR (p.audience_mode = 'selected_roles' AND p.audience_roles LIKE :role_pattern)
+                    )";
 
         $sql = "SELECT
                     p.id,
@@ -306,10 +316,7 @@ class search extends BaseModel
                 INNER JOIN users u ON u.id = p.user_id
                 WHERE p.is_deleted = 0
                   AND p.deleted_at IS NULL
-                    AND (
-                        p.audience_mode = 'all_roles'
-                        OR (p.audience_mode = 'selected_roles' AND p.audience_roles LIKE :role_pattern)
-                    )
+                                        AND {$visibilityClause}
                   AND (
                                 LOWER(p.title) LIKE LOWER(:query_title)
                             OR LOWER(p.body) LIKE LOWER(:query_body)
@@ -318,16 +325,20 @@ class search extends BaseModel
                 LIMIT {$limit} OFFSET {$offset}";
 
         $stmt = $this->db->prepare($sql);
-              $rolePattern = '%,' . trim((string)$viewerRole) . ',%';
-              if ($viewerRole === '') {
-                $rolePattern = ',,,';
-              }
-              $stmt->bindValue(':role_pattern', $rolePattern, \PDO::PARAM_STR);
+                if (!$isAdmin) {
+                        $rolePattern = '%,' . $viewerRole . ',%';
+                        if ($viewerRole === '') {
+                                $rolePattern = ',,,';
+                        }
+                        $stmt->bindValue(':role_pattern', $rolePattern, \PDO::PARAM_STR);
+                }
+
                 $searchLike = '%' . $query . '%';
                 $stmt->bindValue(':query_title', $searchLike, \PDO::PARAM_STR);
                 $stmt->bindValue(':query_body', $searchLike, \PDO::PARAM_STR);
         $stmt->execute();
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                $likeStats = $this->loadPostLikeStats($rows, $viewerId);
 
         $results = [];
         foreach ($rows as $row) {
@@ -337,18 +348,26 @@ class search extends BaseModel
                 $authorName = 'User #' . (int)$row['user_id'];
             }
 
+                    $sourceId = (int)$row['id'];
+                    $likeCount = (int)($likeStats[$sourceId]['like_count'] ?? 0);
+                    $likedByViewer = (bool)($likeStats[$sourceId]['liked_by_viewer'] ?? false);
+
             $results[] = [
-                'id' => 'post-' . (int)$row['id'],
+                        'id' => 'post-' . $sourceId,
                 'source' => 'post',
-                'source_id' => (int)$row['id'],
+                        'source_id' => $sourceId,
                 'post_type' => (string)$row['post_type'],
                 'title' => (string)$row['title'],
                 'body' => (string)$row['body'],
                 'image_path' => (string)($row['image_path'] ?? ''),
                 'created_at' => (string)$row['created_at'],
                 'audience_label' => $this->audienceLabel((string)($row['audience_mode'] ?? 'all_roles'), $roles),
+                'author_id' => (int)($row['user_id'] ?? 0),
                 'author_name' => $authorName,
                 'author_role_label' => $this->roleLabel((string)($row['author_role'] ?? '')),
+                'can_manage' => $isAdmin || ($viewerId > 0 && (int)$row['user_id'] === $viewerId),
+                'like_count' => $likeCount,
+                'liked_by_viewer' => $likedByViewer,
                 'meta' => [
                     'roles' => $roles,
                 ],
@@ -362,6 +381,81 @@ class search extends BaseModel
     public function session_search($query, $index)
     {
         return [];
+    }
+
+    private function loadPostLikeStats(array $rows, int $viewerId): array
+    {
+        $postIds = [];
+        foreach ($rows as $row) {
+            $postId = (int)($row['id'] ?? 0);
+            if ($postId > 0) {
+                $postIds[$postId] = $postId;
+            }
+        }
+
+        if (empty($postIds)) {
+            return [];
+        }
+
+        $ids = array_values($postIds);
+        $stats = [];
+        foreach ($ids as $id) {
+            $stats[$id] = [
+                'like_count' => 0,
+                'liked_by_viewer' => false,
+            ];
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($ids as $index => $id) {
+            $token = ':id_' . $index;
+            $placeholders[] = $token;
+            $params['id_' . $index] = $id;
+        }
+        $inClause = implode(', ', $placeholders);
+
+        try {
+            $countSql = "SELECT source_id, COUNT(*) AS like_count
+                         FROM feed_likes
+                         WHERE source_type = 'post'
+                           AND source_id IN ({$inClause})
+                         GROUP BY source_id";
+            $countStmt = $this->db->prepare($countSql);
+            $countStmt->execute($params);
+            $countRows = $countStmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            foreach ($countRows as $row) {
+                $id = (int)($row['source_id'] ?? 0);
+                if (isset($stats[$id])) {
+                    $stats[$id]['like_count'] = (int)($row['like_count'] ?? 0);
+                }
+            }
+
+            if ($viewerId > 0) {
+                $viewerSql = "SELECT source_id
+                              FROM feed_likes
+                              WHERE source_type = 'post'
+                                AND user_id = :viewer_id
+                                AND source_id IN ({$inClause})";
+                $viewerStmt = $this->db->prepare($viewerSql);
+                $viewerParams = array_merge(['viewer_id' => $viewerId], $params);
+                $viewerStmt->execute($viewerParams);
+                $viewerRows = $viewerStmt->fetchAll(\PDO::FETCH_ASSOC);
+
+                foreach ($viewerRows as $row) {
+                    $id = (int)($row['source_id'] ?? 0);
+                    if (isset($stats[$id])) {
+                        $stats[$id]['liked_by_viewer'] = true;
+                    }
+                }
+            }
+        } catch (\PDOException $e) {
+            // Keep feed search available even when likes migration has not been applied.
+            return $stats;
+        }
+
+        return $stats;
     }
 
     private function parseAudienceRoles($serialized)

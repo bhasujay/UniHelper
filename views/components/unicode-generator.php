@@ -16,6 +16,11 @@
             <button type="button" id="unicodeClearSavedBtn" class="btn btn-outline">Clear Saved</button>
             <button type="button" id="unicodePdfBtn" class="btn btn-outline">Print / Save PDF</button>
         </div>
+
+        <div class="unicode-toolbar-meta" aria-live="polite">
+            <span id="unicodeChangeState" class="unicode-change-state unicode-change-state-synced">All changes saved</span>
+            <span id="unicodeLastRefresh" class="unicode-last-refresh">Not loaded yet</span>
+        </div>
     </div>
 
     <div class="unicode-summary-grid">
@@ -44,8 +49,37 @@
         <div class="unicode-list-title-row">
             <h3 id="unicodePreferenceHeading">Your Preference Order</h3>
             <p id="unicodeStatusText">
-                Drag and drop to reorder. The first valid item in this list is treated as the simulated UGC selection.
+                Drag and drop to reorder. Use <strong>Alt + Arrow Up/Down</strong> for keyboard reorder.
             </p>
+        </div>
+
+        <div id="unicodeLoadingState" class="unicode-loading-state" hidden>
+            <ul class="unicode-loading-list" aria-hidden="true">
+                <li class="unicode-loading-item">
+                    <span class="unicode-loading-rank"></span>
+                    <div class="unicode-loading-main">
+                        <span class="unicode-loading-line unicode-loading-line-lg"></span>
+                        <span class="unicode-loading-line unicode-loading-line-md"></span>
+                        <span class="unicode-loading-line unicode-loading-line-sm"></span>
+                    </div>
+                </li>
+                <li class="unicode-loading-item">
+                    <span class="unicode-loading-rank"></span>
+                    <div class="unicode-loading-main">
+                        <span class="unicode-loading-line unicode-loading-line-lg"></span>
+                        <span class="unicode-loading-line unicode-loading-line-md"></span>
+                        <span class="unicode-loading-line unicode-loading-line-sm"></span>
+                    </div>
+                </li>
+                <li class="unicode-loading-item">
+                    <span class="unicode-loading-rank"></span>
+                    <div class="unicode-loading-main">
+                        <span class="unicode-loading-line unicode-loading-line-lg"></span>
+                        <span class="unicode-loading-line unicode-loading-line-md"></span>
+                        <span class="unicode-loading-line unicode-loading-line-sm"></span>
+                    </div>
+                </li>
+            </ul>
         </div>
 
         <ul id="unicodePreferenceList" class="unicode-preference-list" aria-live="polite"></ul>

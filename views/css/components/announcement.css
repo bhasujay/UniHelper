@@ -31,7 +31,7 @@
 .feed-open-btn.expanded {
     padding: 0.65rem 1.1rem;
     transform: translateY(-1px);
-    box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 34%, transparent 66%);
+    box-shadow: var(--glow-secondary);
 }
 
 .feed-open-icon {
@@ -80,9 +80,9 @@
     overflow: auto;
     border: 1px solid var(--border);
     border-radius: 1rem;
-    background: color-mix(in srgb, var(--card) 88%, #0d1117 12%);
+    background: var(--card);
     padding: 1.25rem;
-    box-shadow: 0 8px 30px color-mix(in srgb, var(--primary) 22%, transparent 78%);
+    box-shadow: var(--glow-primary);
 }
 
 .feed-composer-header {
@@ -165,7 +165,7 @@
 .feed-file-input::file-selector-button {
     border: 1px solid var(--border);
     border-radius: 0.55rem;
-    background: color-mix(in srgb, var(--key) 75%, #0b0f13 25%);
+    background: var(--key);
     color: var(--foreground);
     padding: 0.45rem 0.7rem;
     margin-right: 0.55rem;
@@ -287,7 +287,7 @@
     width: 100%;
     border: 1px solid var(--border);
     border-radius: 999px;
-    background: color-mix(in srgb, var(--key) 86%, #0b0f13 14%);
+    background: var(--key);
     color: var(--foreground);
     padding: 0.68rem 0.95rem;
     font-size: 0.92rem;
@@ -322,10 +322,30 @@
 .feed-card {
     border: 1px solid var(--border);
     border-radius: 0.95rem;
-    background: color-mix(in srgb, var(--card) 92%, #0b0f13 8%);
+    background: var(--card);
     padding: 1rem;
     display: grid;
     gap: 0.75rem;
+}
+
+.feed-card-highlight {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 42%, transparent);
+    animation: feedCardPulse 2.4s ease;
+}
+
+@keyframes feedCardPulse {
+    0% {
+        transform: translateY(0);
+    }
+
+    30% {
+        transform: translateY(-2px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
 }
 
 .feed-card-head {
@@ -333,6 +353,60 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 0.7rem;
+}
+
+.feed-card-head-right {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+}
+
+.feed-menu-wrap {
+    position: relative;
+}
+
+.feed-menu-btn {
+    border: none;
+    background: transparent;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    border-radius: 0.45rem;
+    padding: 0.25rem;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.feed-menu-btn:hover {
+    color: var(--primary);
+    background: var(--key);
+}
+
+.feed-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    min-width: 135px;
+    border: 1px solid var(--border);
+    border-radius: 0.55rem;
+    background: var(--card);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 0.35rem 0;
+    z-index: 10010;
+}
+
+.feed-menu-item {
+    width: 100%;
+    border: none;
+    background: none;
+    color: var(--foreground);
+    text-align: left;
+    padding: 0.48rem 0.8rem;
+    cursor: pointer;
+    font-size: 0.86rem;
+}
+
+.feed-menu-item:hover {
+    background: var(--key);
 }
 
 .feed-type-badge {
@@ -364,6 +438,18 @@
     font-size: 0.8rem;
 }
 
+.feed-author-link {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: text-decoration-color 0.2s ease;
+}
+
+.feed-author-link:hover,
+.feed-author-link:focus-visible {
+    text-decoration-color: currentColor;
+}
+
 .feed-item-body {
     margin: 0;
     color: var(--foreground);
@@ -373,10 +459,10 @@
 }
 
 .feed-item-media {
-    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent 30%);
+    border: 1px solid var(--border);
     border-radius: 0.85rem;
     overflow: hidden;
-    background: color-mix(in srgb, var(--key) 72%, #0b0f13 28%);
+    background: var(--key);
 }
 
 .feed-item-image {
@@ -391,10 +477,65 @@
     justify-content: space-between;
     align-items: center;
     gap: 0.6rem;
-    border-top: 1px dashed color-mix(in srgb, var(--border) 70%, transparent 30%);
+    border-top: 1px dashed var(--border);
     padding-top: 0.7rem;
     font-size: 0.78rem;
     color: var(--muted-foreground);
+}
+
+.feed-item-foot-left {
+    display: inline-flex;
+    align-items: center;
+}
+
+.feed-item-foot-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.feed-like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.78rem;
+    transition: all 0.2s ease;
+}
+
+.feed-like-btn svg {
+    flex: 0 0 auto;
+    fill: none;
+}
+
+.feed-like-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.feed-like-btn.is-liked {
+    color: #e14a6a;
+    border-color: rgba(225, 74, 106, 0.45);
+    background: rgba(225, 74, 106, 0.1);
+}
+
+.feed-like-btn.is-liked svg {
+    fill: currentColor;
+}
+
+.feed-like-btn:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+}
+
+.feed-like-count {
+    font-weight: 700;
+    color: inherit;
 }
 
 .feed-session-link {
@@ -459,6 +600,23 @@
     .feed-card-head {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .feed-card-head-right {
+        width: 100%;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .feed-item-foot {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .feed-item-foot-right {
+        width: 100%;
+        justify-content: space-between;
     }
 
     .feed-search {

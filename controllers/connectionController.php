@@ -2,8 +2,8 @@
 
 namespace app\controllers;
 
-require_once dirname(__DIR__) . '\models\connection.php';
-require_once dirname(__DIR__) . '\models\User.php';
+require_once dirname(__DIR__) . '/models/connection.php';
+require_once dirname(__DIR__) . '/models/User.php';
 
 use app\models\Connection;
 use app\core\Request;
