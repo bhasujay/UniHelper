@@ -69,13 +69,6 @@ class DashboardController
     public function renderComponent($params)
     {
         $component = $params['component'] ?? $this->role_data[$this->user->role][0]['component'];
-
-        // we should verify that the requested component is actually allowed for the user's role to prevent unauthorized access to components.
-        // $allowedComponents = array_column($this->role_data[$this->user->role], 'component');
-        // $allowedComponents[] = 'feedback-forum'; // Make feedback-forum accessible to all roles
-        // if (!in_array($component, $allowedComponents)) {
-        //     return $this->renderDashboard("<div class='error'>Unauthorized access to component: {$component}</div>", $this->role_data[$this->user->role]);
-        // }
         
         
         // Set active component
@@ -128,6 +121,15 @@ class DashboardController
         $activeComponent = $this->activeComponent;  // Make active component available to the dashboard template
         $role_title = $this->role_title;            // Make role title available to the dashboard template
         $pageParams = $this->queryParams;           // Query-string params forwarded to the view for data-page-params
+        $moduleName = $this->role_title;
+        $sidebarItems = is_array($sidebar) ? $sidebar : ($this->role_data[$this->user->role] ?? []);
+
+        foreach ($sidebarItems as $item) {
+            if (($item['component'] ?? null) === $this->activeComponent) {
+                $moduleName = $item['title'] ?? $this->role_title;
+                break;
+            }
+        }
 
         // Make content available to the dashboard template
         include Application::$ROOT_DIR . "/views/dashboard.php";
