@@ -170,13 +170,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 showToast('Answer posted successfully!', 'success');
                 
-                // Update answer count in the question card
-                const questionCard = document.getElementById(questionId);
-                const answerCountEl = questionCard.querySelector('.qa-answer-count');
-                const currentCount = parseInt(answerCountEl.textContent.match(/\d+/)[0]);
-                answerCountEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>${currentCount + 1}`;
+                // Update answer count in all matching question cards (if rendered in feed/tag/search containers).
+                const questionCards = Array.from(document.querySelectorAll('.qa-question-card'))
+                    .filter(card => card.id === String(questionId));
+
+                questionCards.forEach(questionCard => {
+                    const answerCountEl = questionCard.querySelector('.qa-answer-count');
+                    if (!answerCountEl) return;
+                    const currentCount = parseInt(answerCountEl.textContent.match(/\d+/)?.[0] || '0', 10);
+                    answerCountEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>${currentCount + 1}`;
+                });
 
                 // if the view modal is open for this question, append the new answer there too
                 const qaViewModal = document.querySelector('.qa-question-view');

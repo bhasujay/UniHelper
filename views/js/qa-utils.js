@@ -377,10 +377,37 @@ function removeImage(fileName, previewElement) {
 
 function answer(questionId) {
     const answermodal = document.querySelector('.qa-answermodal');
-    const questionCard = document.getElementById(questionId);
-    const username = questionCard.querySelector('.qa-username').textContent;
     const label = answermodal.querySelector('.qa-form-label');
-    label.innerHTML = `Your Answer to <span class="answer-to-username">${username}</span>`;
+
+    let username = '';
+    const questionCard = document.getElementById(questionId);
+    if (questionCard) {
+        const cardUsername = questionCard.querySelector('.qa-username');
+        if (cardUsername) {
+            username = cardUsername.textContent.trim();
+        }
+    }
+
+    // Deep-link flow can open question view without rendering a feed card first.
+    if (!username) {
+        const qaView = document.querySelector('.qa-question-view');
+        const viewQuestionIdEl = qaView ? qaView.querySelector('#qaViewModalQuestionId') : null;
+        if (qaView && qaView.style.display === 'flex' && viewQuestionIdEl && String(viewQuestionIdEl.textContent) === String(questionId)) {
+            const viewUsername = qaView.querySelector('.qa-username');
+            if (viewUsername) {
+                username = viewUsername.textContent.trim();
+            }
+        }
+    }
+
+    label.textContent = 'Your Answer';
+    if (username) {
+        label.textContent = 'Your Answer to ';
+        const usernameSpan = document.createElement('span');
+        usernameSpan.className = 'answer-to-username';
+        usernameSpan.textContent = username;
+        label.appendChild(usernameSpan);
+    }
     
     // Store question ID in the form
     document.getElementById('qaAnswerForm').dataset.questionId = questionId;
