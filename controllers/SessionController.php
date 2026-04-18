@@ -734,6 +734,31 @@ class SessionController
         $this->handleSubscriberDecision($request, 'rejected');
     }
 
+    // GET /api?controller=SessionController&action=getSubscribedSessions
+    public function getSubscribedSessions(Request $request)
+    {
+        header('Content-Type: application/json');
+
+        $userId = $request->session('user_id');
+
+        try {
+            $sessions = $this->sessionModel->findSubscribedSessions((int)$userId);
+
+            $sessions = $this->addExpiredFlag($sessions);
+
+            echo json_encode([
+                'success' => true,
+                'data' => $sessions
+            ]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to fetch subscribed sessions.'
+            ]);
+        }
+    }
+
     /**
      * Helper method to mark expired sessions
      * Checks if session end time has passed and auto-expires them

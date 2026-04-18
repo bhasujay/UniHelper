@@ -1223,6 +1223,7 @@
     <div class="peer-tabs">
         <button class="peer-tab active" data-tab="my-sessions">My Sessions</button>
         <button class="peer-tab" data-tab="all-sessions">All Sessions</button>
+        <button class="peer-tab" data-tab="subscribed-sessions">Subscribed Sessions</button>
     </div>
 
     <!-- My Sessions Tab -->
@@ -1239,6 +1240,15 @@
         <div id="all-sessions-container" class="sessions-grid"></div>
         <button class="load-more-btn" id="all-sessions-load-more" style="display: none;">Load More Sessions</button>
         <div class="loading-spinner" id="all-sessions-loading" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- Subscribed Sessions Tab -->
+    <div class="peer-content" id="subscribed-sessions">
+        <div id="subscribed-sessions-container" class="sessions-grid"></div>
+        <button class="load-more-btn" id="subscribed-sessions-load-more" style="display: none;">Load More Sessions</button>
+        <div class="loading-spinner" id="subscribed-sessions-loading" style="display: none;">
             <div class="spinner"></div>
         </div>
     </div>
@@ -1273,6 +1283,7 @@
     let currentTab = 'my-sessions';
     let mySessionsPage = 1;
     let allSessionsPage = 1;
+    let subscribedSessionsPage = 1;
     let activeSessionId = null;
     let sessionForSubscribersId = null;
     let activeCreateSessionId = 0;
@@ -1281,7 +1292,8 @@
 
     const sessionSearchState = {
         'my-sessions': { query: '', page: 1 },
-        'all-sessions': { query: '', page: 1 }
+        'all-sessions': { query: '', page: 1 },
+        'subscribed-sessions': { query: '', page: 1 }
     };
 
     const sessionCache = new Map();
@@ -1343,7 +1355,10 @@
     }
 
     function normalizeTabName(rawTab) {
-        return rawTab === 'all-sessions' ? 'all-sessions' : 'my-sessions';
+        if (rawTab === 'all-sessions' || rawTab === 'subscribed-sessions') {
+            return rawTab;
+        }
+        return 'my-sessions';
     }
 
     function normalizePositiveInt(rawValue) {
@@ -1392,12 +1407,14 @@
     }
 
     function getTabSearchState(tabName) {
-        return tabName === 'all-sessions'
-            ? sessionSearchState['all-sessions']
-            : sessionSearchState['my-sessions'];
+        const normalizedTab = normalizeTabName(tabName);
+        return sessionSearchState[normalizedTab] || sessionSearchState['my-sessions'];
     }
 
     function isSearchMode(tabName) {
+        if (normalizeTabName(tabName) === 'subscribed-sessions') {
+            return false;
+        }
         return getTabSearchState(tabName).query.length >= 2;
     }
 
@@ -1407,6 +1424,14 @@
                 container: document.getElementById('all-sessions-container'),
                 loading: document.getElementById('all-sessions-loading'),
                 loadMoreBtn: document.getElementById('all-sessions-load-more')
+            };
+        }
+
+        if (tabName === 'subscribed-sessions') {
+            return {
+                container: document.getElementById('subscribed-sessions-container'),
+                loading: document.getElementById('subscribed-sessions-loading'),
+                loadMoreBtn: document.getElementById('subscribed-sessions-load-more')
             };
         }
 
@@ -1441,6 +1466,13 @@
             return createEmptyState(
                 'No matching sessions',
                 `No sessions in All Sessions matched "${normalizedQuery}".`
+            );
+        }
+
+        if (tabName === 'subscribed-sessions') {
+            return createEmptyState(
+                'No matching sessions',
+                `No sessions in Subscribed Sessions matched "${normalizedQuery}".`
             );
         }
 
@@ -2135,9 +2167,8 @@
         currentTab = normalizedTab;
         syncSearchUiToCurrentTab();
 
-        const targetContainer = normalizedTab === 'all-sessions'
-            ? document.getElementById('all-sessions-container')
-            : document.getElementById('my-sessions-container');
+        const targetElements = getTabElements(normalizedTab);
+        const targetContainer = targetElements.container;
         const expectedMode = isSearchMode(normalizedTab) ? 'search' : 'default';
 
         if (!targetContainer || !targetContainer.innerHTML || targetContainer.dataset.mode !== expectedMode) {
@@ -2243,8 +2274,60 @@
             });
     }
 
+    function loadSubscribedSessions(page) {
+        const container = document.getElementById('subscribed-sessions-container');
+        const loading = document.getElementById('subscribed-sessions-loading');
+        const loadMoreBtn = document.getElementById('subscribed-sessions-load-more');
+
+        if (page === 1) {
+            loading.style.display = 'flex';
+        }
+
+        return fetch(`${BASE_URL}/api?controller=SessionController&action=getSubscribedSessions&page=${page}`)
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+
+                if (!data.success) {
+                    throw new Error(data.error || data.message || 'Failed to load subscribed sessions');
+                }
+
+                if (data.data && data.data.length > 0) {
+                    if (page === 1) {
+                        container.innerHTML = '';
+                        container.dataset.mode = 'default';
+                    }
+
+                    data.data.forEach(session => {
+                        upsertSessionCache(session);
+                        container.insertAdjacentHTML('beforeend', createSessionCard(session));
+                    });
+
+                    const canLoadMore = typeof data.count !== 'undefined' ? Number(data.count) >= 10 : false;
+                    loadMoreBtn.style.display = canLoadMore ? 'block' : 'none';
+                    subscribedSessionsPage = page + 1;
+                } else if (page === 1) {
+                    container.innerHTML = createEmptyState('No subscribed sessions', 'Subscribe to sessions to see them here.');
+                    container.dataset.mode = 'default';
+                    loadMoreBtn.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                console.error('Error loading subscribed sessions:', error);
+                showPeerLearningError(error.message || 'Failed to load subscribed sessions. Please try again.');
+                if (page === 1) {
+                    container.innerHTML = '<p style="color: #fc8181; text-align: center;">Failed to load subscribed sessions</p>';
+                    container.dataset.mode = 'default';
+                }
+            });
+    }
+
     function searchSessions(tabName, page) {
-        const normalizedTab = tabName === 'all-sessions' ? 'all-sessions' : 'my-sessions';
+        const normalizedTab = normalizeTabName(tabName);
+        if (normalizedTab === 'subscribed-sessions') {
+            return Promise.resolve();
+        }
         const searchState = getTabSearchState(normalizedTab);
         const query = normalizeSearchQuery(searchState.query);
 
@@ -2310,6 +2393,10 @@
             return searchSessions(tabName, page);
         }
 
+        if (tabName === 'subscribed-sessions') {
+            return loadSubscribedSessions(page);
+        }
+
         if (tabName === 'all-sessions') {
             return loadAllSessions(page);
         }
@@ -2322,11 +2409,19 @@
             return getTabSearchState(tabName).page;
         }
 
-        return tabName === 'all-sessions' ? allSessionsPage : mySessionsPage;
+        if (tabName === 'all-sessions') {
+            return allSessionsPage;
+        }
+
+        if (tabName === 'subscribed-sessions') {
+            return subscribedSessionsPage;
+        }
+
+        return mySessionsPage;
     }
 
     function clearSearchForTab(tabName, reload = false) {
-        const normalizedTab = tabName === 'all-sessions' ? 'all-sessions' : 'my-sessions';
+        const normalizedTab = normalizeTabName(tabName);
         const state = getTabSearchState(normalizedTab);
         state.query = '';
         state.page = 1;
@@ -2344,6 +2439,11 @@
 
     function submitSearchForCurrentTab() {
         if (!sessionSearchInput) {
+            return Promise.resolve();
+        }
+
+        if (currentTab === 'subscribed-sessions') {
+            showPeerLearningError('Search is available only for My Sessions and All Sessions.');
             return Promise.resolve();
         }
 
@@ -2657,6 +2757,10 @@
                     openSessionModal(cachedSession);
                 }
 
+                if (currentTab === 'subscribed-sessions' && nextStatus === 'none') {
+                    loadTabData('subscribed-sessions', 1);
+                }
+
                 if (typeof window.showToast === 'function') {
                     const defaultMessage = isSubscribed ? 'Unsubscribed successfully.' : 'Subscription updated successfully.';
                     window.showToast(result.message || defaultMessage, 'success');
@@ -2706,6 +2810,10 @@
 
     document.getElementById('all-sessions-load-more').addEventListener('click', function () {
         loadTabData('all-sessions', getNextPageForTab('all-sessions'));
+    });
+
+    document.getElementById('subscribed-sessions-load-more').addEventListener('click', function () {
+        loadTabData('subscribed-sessions', getNextPageForTab('subscribed-sessions'));
     });
 
     document.addEventListener('submit', function (event) {

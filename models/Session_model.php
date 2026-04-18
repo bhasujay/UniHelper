@@ -1221,4 +1221,72 @@ class Session_model extends BaseModel {
 
         return (int)$row['university'];
     }
+
+    // get subscribes sessions for a userid
+    public function findSubscribedSessions(int $userId): array
+    {
+        $currentUserIdValue = (int)$userId;
+        $viewerUniversity = $this->normalizeUniversity($this->getUserUniversity($currentUserIdValue));
+
+        $sql = "SELECT s.*, u.first_name as creator_first_name, u.last_name as creator_last_name,
+            u.profile_picture as creator_profile_picture, uni.name as creator_university,
+                COALESCE((
+                    SELECT sub.status
+                    FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :uid1 AND sub.Session_ID = s.id
+                    LIMIT 1
+                ), 'none') AS subscription_status,
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM subscribers sub
+                    WHERE sub.Subscriber_ID = :uid2
+                      AND sub.Session_ID = s.id
+                      AND sub.status <> 'rejected'
+                ) THEN 1 ELSE 0 END AS is_subscribed,
+                CASE WHEN s.audience = 'private' THEN
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM subscribers sub
+                        WHERE sub.Subscriber_ID = :uid3
+                          AND sub.Session_ID = s.id
+                          AND sub.status = 'approved'
+                    ) THEN 1 ELSE 0 END
+                ELSE 1 END AS can_join
+            FROM {$this->table} s
+            LEFT JOIN users u ON s.user_id = u.id
+            LEFT JOIN universities uni ON u.university = uni.id
+            WHERE s.deleted_at IS NULL
+              AND s.is_deleted = 0
+              AND (
+                    s.user_id = :uid4
+                    OR s.audience = 'all_universities'
+                    OR (
+                        :viewer_university1 IS NOT NULL
+                        AND s.university = :viewer_university2
+                        AND s.audience IN ('my_university', 'private')
+                    )
+              )
+              AND EXISTS (
+                    SELECT 1
+                    FROM subscribers filter_sub
+                    WHERE filter_sub.Subscriber_ID = :uid5
+                      AND filter_sub.Session_ID = s.id
+                      AND filter_sub.status <> 'rejected'
+              )
+            ORDER BY s.date DESC, s.time DESC";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'uid1' => $currentUserIdValue,
+                'uid2' => $currentUserIdValue,
+                'uid3' => $currentUserIdValue,
+                'uid4' => $currentUserIdValue,
+                'uid5' => $currentUserIdValue,
+                'viewer_university1' => $viewerUniversity,
+                'viewer_university2' => $viewerUniversity
+            ]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to fetch subscribed sessions: " . $e->getMessage());
+        }
+    }
 }
