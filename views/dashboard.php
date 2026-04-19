@@ -11,7 +11,7 @@
     <base href="/unihelper/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniHelper - From Application to Graduation</title>
+    <title>UniHelper - <?= htmlspecialchars($moduleName ?? 'From Application to Graduation') ?></title>
 
     <link rel="stylesheet" href="/unihelper/views/css/style.css">
     <link rel="stylesheet" href="/unihelper/views/css/dashboard.css">
