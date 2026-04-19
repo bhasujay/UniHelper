@@ -268,15 +268,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadSuggestions(type = 'mutual') {
-        if (type !== 'mutual') {
-            setSpaceMessage(spaces.suggestions, 'This suggestion type is not supported by backend yet.');
-            return;
-        }
+        const suggestionType = ['mutual', 'major', 'university'].includes(type) ? type : 'mutual';
 
         setSpaceMessage(spaces.suggestions, 'Loading suggestions...');
 
         try {
-            const payload = await apiGet('connectionController', 'getSuggestions', { type: 'mutual' });
+            const payload = await apiGet('connectionController', 'getSuggestions', { type: suggestionType });
             const users = (payload.data || []).map(normalizeUser);
             renderCards(spaces.suggestions, users, (user) => [
                 {

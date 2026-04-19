@@ -86,6 +86,29 @@ class ProgramController extends DashboardController
     }
 
     /**
+     * Bootstrap data for dynamic degree management component
+     * GET /api?controller=ProgramController&action=getDegreeManagementData
+     */
+    public function getDegreeManagementData(Request $request)
+    {
+        $this->ensureAdminAccess(true);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            $this->sendJsonResponse(false, 'Method not allowed', null, 405);
+        }
+
+        $majorModel = new Major();
+        $universityModel = new University();
+        $degreeModel = new DegreeProgram();
+
+        $this->sendJsonResponse(true, 'Degree management data retrieved successfully.', [
+            'universities' => $universityModel->getAll(),
+            'majors' => $majorModel->getAll(),
+            'degrees' => $degreeModel->getAllDegrees()
+        ]);
+    }
+
+    /**
      * Add new degree program
      * POST /api?controller=ProgramController&action=addDegreeProgram
      */

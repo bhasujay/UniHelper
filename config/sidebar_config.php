@@ -29,5 +29,6 @@ return [
         ['component' => 'feedback-forum', 'title' => 'User Feedbacks'],
         ['component' => 'qa-forum',        'title' => 'Q&A Forum'],
         ['component' => 'connections', 'title' => 'Connections'],
+        ['component' => 'degree-programs-management', 'title' => 'Degree Programs Management'],
     ],
 ];

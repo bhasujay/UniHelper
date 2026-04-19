@@ -10,8 +10,15 @@
     }
 
     function initDegreeProgramsManagement() {
+        const dashboardMain = document.getElementById('dashboardMain');
+        if (dashboardMain && dashboardMain.dataset.component && dashboardMain.dataset.component !== 'degree-programs-management') {
+            return;
+        }
+
         const form = document.getElementById('addDegreeForm');
         const listContent = document.querySelector('.admin-list-content');
+        const universitySelect = document.getElementById('university');
+        const majorSelect = document.getElementById('major');
 
         if (!form || !listContent) {
             return;
@@ -45,6 +52,202 @@
         searchOptions.forEach((option) => {
             option.addEventListener('change', filterCards);
         });
+
+        loadInitialData();
+
+        async function loadInitialData() {
+            renderListMessage('Loading degree programs...', '&#9203;');
+
+            try {
+                const response = await apiRequest('getDegreeManagementData', {
+                    method: 'GET'
+                });
+
+                const payload = await readJsonSafely(response);
+                if (!payload || payload.success !== true || !payload.data || typeof payload.data !== 'object') {
+                    throw new Error((payload && payload.message) || 'Failed to load degree management data.');
+                }
+
+                const data = payload.data;
+                populateSelect(universitySelect, data.universities, 'Select University');
+                populateSelect(majorSelect, data.majors, 'Select Major');
+                renderDegreeCards(data.degrees);
+                filterCards();
+            } catch (error) {
+                console.error('Failed to load degree management data:', error);
+                renderListMessage(error && error.message ? error.message : 'Failed to load degree programs.', '&#9888;');
+            }
+        }
+
+        function renderDegreeCards(degrees) {
+            if (!Array.isArray(degrees) || degrees.length === 0) {
+                renderListMessage('No degree programs found. Add your first program using the form.', '&#128218;');
+                return;
+            }
+
+            listContent.innerHTML = degrees.map(getDegreeCardMarkup).join('');
+        }
+
+        function populateSelect(selectElement, options, placeholderText) {
+            if (!selectElement) {
+                return;
+            }
+
+            const currentValue = String(selectElement.value || '');
+            const optionRows = Array.isArray(options) ? options : [];
+            const markup = ['<option value="">' + escapeHtml(placeholderText) + '</option>'];
+
+            optionRows.forEach(function (option) {
+                if (!option || option.id == null) {
+                    return;
+                }
+
+                markup.push(
+                    '<option value="' + escapeHtml(option.id) + '">' + escapeHtml(option.name || '') + '</option>'
+                );
+            });
+
+            selectElement.innerHTML = markup.join('');
+
+            if (currentValue !== '') {
+                selectElement.value = currentValue;
+            }
+        }
+
+        function getDegreeCardMarkup(rawDegree) {
+            const degree = rawDegree || {};
+            const degreeId = escapeHtml(degree.id || '');
+            const name = escapeHtml(degree.name || '');
+            const unicode = escapeHtml(degree.unicode || '');
+            const university = escapeHtml(degree.university || '');
+            const stream = escapeHtml(degree.stream || '');
+            const duration = escapeHtml(degree.duration || '');
+            const description = escapeHtml(degree.description || '');
+            const statusText = escapeHtml(degree.status || 'Active');
+            const statusClass = escapeHtml(String(degree.status || 'active').toLowerCase().replace(/\s+/g, '-'));
+            const requirementsMarkup = getRequirementsMarkup(normalizeRequirements(degree.subject_requirements));
+
+            return [
+                '<div class="degree-card" data-degree-id="' + degreeId + '">',
+                '<input type="hidden" name="degree_id" value="' + degreeId + '">',
+                '<div class="degree-card-header">',
+                '<h3 class="degree-card-title">' + name + '</h3>',
+                '<span class="degree-card-code">' + unicode + '</span>',
+                '</div>',
+                '<div class="degree-card-info">',
+                '<div class="degree-card-item">',
+                '<span class="degree-card-item-label">University</span>',
+                '<span class="degree-card-item-value">' + university + '</span>',
+                '</div>',
+                '<div class="degree-card-item">',
+                '<span class="degree-card-item-label">Stream</span>',
+                '<span class="degree-card-item-value">' + stream + '</span>',
+                '</div>',
+                '<div class="degree-card-item">',
+                '<span class="degree-card-item-label">Duration</span>',
+                '<span class="degree-card-item-value">' + duration + ' Years</span>',
+                '</div>',
+                '<div class="degree-card-item">',
+                '<span class="degree-card-item-label">Status</span>',
+                '<span class="status-badge status-' + statusClass + '">' + statusText + '</span>',
+                '</div>',
+                '</div>',
+                '<div class="degree-card-description">' + description + '</div>',
+                requirementsMarkup,
+                '<div class="degree-card-actions">',
+                '<button class="degree-card-button" title="Edit" data-degree-id="' + degreeId + '">',
+                '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">',
+                '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>',
+                '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>',
+                '</svg>',
+                '</button>',
+                '<button class="degree-card-button delete-button" title="Delete" data-degree-id="' + degreeId + '">',
+                '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">',
+                '<polyline points="3 6 5 6 21 6"></polyline>',
+                '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>',
+                '<line x1="10" y1="11" x2="10" y2="17"></line>',
+                '<line x1="14" y1="11" x2="14" y2="17"></line>',
+                '</svg>',
+                '</button>',
+                '</div>',
+                '</div>'
+            ].join('');
+        }
+
+        function getRequirementsMarkup(requirements) {
+            if (!Array.isArray(requirements) || requirements.length === 0) {
+                return '';
+            }
+
+            const listItems = requirements.map(function (requirement) {
+                return [
+                    '<li>',
+                    escapeHtml(requirement.subject_name),
+                    '<span>(Min: ' + escapeHtml(requirement.min_grade) + ')</span>',
+                    '</li>'
+                ].join('');
+            }).join('');
+
+            return [
+                '<div class="degree-card-requirements">',
+                '<span class="degree-card-item-label">Subject Requirements</span>',
+                '<ul class="degree-card-requirements-list">',
+                listItems,
+                '</ul>',
+                '</div>'
+            ].join('');
+        }
+
+        function normalizeRequirements(rawRequirements) {
+            if (Array.isArray(rawRequirements)) {
+                return rawRequirements.map(normalizeRequirement).filter(Boolean);
+            }
+
+            if (typeof rawRequirements === 'string') {
+                const value = rawRequirements.trim();
+                if (value === '') {
+                    return [];
+                }
+
+                try {
+                    const parsed = JSON.parse(value);
+                    if (Array.isArray(parsed)) {
+                        return parsed.map(normalizeRequirement).filter(Boolean);
+                    }
+                } catch (error) {
+                    return [];
+                }
+            }
+
+            return [];
+        }
+
+        function normalizeRequirement(requirement) {
+            if (!requirement || typeof requirement !== 'object') {
+                return null;
+            }
+
+            const subjectName = String(requirement.subject_name || requirement.subject || '').trim();
+            if (subjectName === '') {
+                return null;
+            }
+
+            const minGrade = String(requirement.min_grade || requirement.minGrade || 'S').trim() || 'S';
+
+            return {
+                subject_name: subjectName,
+                min_grade: minGrade
+            };
+        }
+
+        function renderListMessage(message, iconHtml) {
+            listContent.innerHTML = [
+                '<div class="empty-state">',
+                '<div class="empty-state-icon">' + iconHtml + '</div>',
+                '<p class="empty-state-message">' + escapeHtml(message) + '</p>',
+                '</div>'
+            ].join('');
+        }
 
         function onListActionClick(event) {
             const actionButton = event.target.closest('.degree-card-button');
@@ -295,6 +498,15 @@
         function getText(scope, selector) {
             const node = scope.querySelector(selector);
             return node ? node.textContent.trim() : '';
+        }
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         function applyFormValuesToCard(degreeId) {
