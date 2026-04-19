@@ -405,4 +405,104 @@ Class Connection extends BaseModel
             throw new Exception("Failed to get mutual suggestions: " . $e->getMessage());
         }
     }
+
+    /**
+     * Returns major-based suggestions using the authenticated user's wishlist.
+     * Algorithm:
+     * 1) Get majors from wishlist degree programs.
+     * 2) Suggest public users whose profile major matches those majors.
+     * 3) Exclude authenticated user and direct pending/accepted connections.
+     * Contract: [{user_id, name, profile_picture, role}, ...]
+     */
+    public function getMajorBasedSuggestions($userId, $limit = 30)
+    {
+        $limit = max(1, min(30, (int) $limit));
+
+        try {
+            $sql = "SELECT
+                        cand.id AS user_id,
+                        CONCAT(cand.first_name, ' ', cand.last_name) AS name,
+                        cand.profile_picture,
+                        cand.role,
+                        COUNT(*) AS match_count
+                    FROM wishlist w
+                    JOIN degree_program dp ON dp.program_id = w.program_id
+                    JOIN users cand ON cand.major = dp.major_id
+                    LEFT JOIN connections direct
+                        ON ((direct.requester_id = :uid_d1 AND direct.receiver_id = cand.id)
+                         OR (direct.requester_id = cand.id AND direct.receiver_id = :uid_d2))
+                       AND direct.status IN ('pending', 'accepted')
+                    WHERE w.user_id = :uid_w
+                      AND dp.major_id IS NOT NULL
+                      AND cand.major IS NOT NULL
+                      AND cand.id <> :uid_self
+                      AND cand.public = 1
+                      AND direct.requester_id IS NULL
+                    GROUP BY cand.id, cand.first_name, cand.last_name, cand.profile_picture, cand.role
+                    ORDER BY match_count DESC, RAND()
+                    LIMIT $limit";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':uid_d1' => $userId,
+                ':uid_d2' => $userId,
+                ':uid_w' => $userId,
+                ':uid_self' => $userId,
+            ]);
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to get major based suggestions: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Returns university-based suggestions using the authenticated user's wishlist.
+     * Algorithm:
+     * 1) Get universities from wishlist degree programs.
+     * 2) Suggest public users whose profile university matches those universities.
+     * 3) Exclude authenticated user and direct pending/accepted connections.
+     * Contract: [{user_id, name, profile_picture, role}, ...]
+     */
+    public function getUniversityBasedSuggestions($userId, $limit = 30)
+    {
+        $limit = max(1, min(30, (int) $limit));
+
+        try {
+            $sql = "SELECT
+                        cand.id AS user_id,
+                        CONCAT(cand.first_name, ' ', cand.last_name) AS name,
+                        cand.profile_picture,
+                        cand.role,
+                        COUNT(*) AS match_count
+                    FROM wishlist w
+                    JOIN degree_program dp ON dp.program_id = w.program_id
+                    JOIN users cand ON cand.university = dp.university_id
+                    LEFT JOIN connections direct
+                        ON ((direct.requester_id = :uid_d1 AND direct.receiver_id = cand.id)
+                         OR (direct.requester_id = cand.id AND direct.receiver_id = :uid_d2))
+                       AND direct.status IN ('pending', 'accepted')
+                    WHERE w.user_id = :uid_w
+                      AND dp.university_id IS NOT NULL
+                      AND cand.university IS NOT NULL
+                      AND cand.id <> :uid_self
+                      AND cand.public = 1
+                      AND direct.requester_id IS NULL
+                    GROUP BY cand.id, cand.first_name, cand.last_name, cand.profile_picture, cand.role
+                    ORDER BY match_count DESC, RAND()
+                    LIMIT $limit";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':uid_d1' => $userId,
+                ':uid_d2' => $userId,
+                ':uid_w' => $userId,
+                ':uid_self' => $userId,
+            ]);
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Failed to get university based suggestions: " . $e->getMessage());
+        }
+    }
 }
