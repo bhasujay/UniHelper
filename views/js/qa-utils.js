@@ -458,36 +458,52 @@ function removeImage(fileName, previewElement) {
 
 function answer(questionId) {
     const answermodal = document.querySelector('.qa-answermodal');
-    const label = answermodal.querySelector('.qa-form-label');
+    const answerLabel = answermodal.querySelector('.qa-form-group .qa-form-label');
+    const answerQuestionTitleEl = answermodal.querySelector('.qa-answer-question-title');
+    const answerToUsernameEl = answermodal.querySelector('.qa-answer-target .answer-to-username');
 
     let username = '';
+    let questionTitle = '';
     const questionCard = document.getElementById(questionId);
     if (questionCard) {
         const cardUsername = questionCard.querySelector('.qa-username');
+        const cardTitle = questionCard.querySelector('.qa-question-title');
         if (cardUsername) {
             username = cardUsername.textContent.trim();
+        }
+        if (cardTitle) {
+            questionTitle = cardTitle.textContent.trim();
         }
     }
 
     // Deep-link flow can open question view without rendering a feed card first.
-    if (!username) {
+    if (!username || !questionTitle) {
         const qaView = document.querySelector('.qa-question-view');
         const viewQuestionIdEl = qaView ? qaView.querySelector('#qaViewModalQuestionId') : null;
         if (qaView && qaView.style.display === 'flex' && viewQuestionIdEl && String(viewQuestionIdEl.textContent) === String(questionId)) {
-            const viewUsername = qaView.querySelector('.qa-username');
-            if (viewUsername) {
-                username = viewUsername.textContent.trim();
+            if (!username) {
+                const viewUsername = qaView.querySelector('.qa-username');
+                if (viewUsername) {
+                    username = viewUsername.textContent.trim();
+                }
+            }
+            if (!questionTitle) {
+                const viewTitle = qaView.querySelector('.qa-view-title');
+                if (viewTitle) {
+                    questionTitle = viewTitle.textContent.trim();
+                }
             }
         }
     }
 
-    label.textContent = 'Your Answer';
-    if (username) {
-        label.textContent = 'Your Answer to ';
-        const usernameSpan = document.createElement('span');
-        usernameSpan.className = 'answer-to-username';
-        usernameSpan.textContent = username;
-        label.appendChild(usernameSpan);
+    if (answerLabel) {
+        answerLabel.textContent = 'Your Answer';
+    }
+    if (answerQuestionTitleEl) {
+        answerQuestionTitleEl.textContent = questionTitle || 'Question';
+    }
+    if (answerToUsernameEl) {
+        answerToUsernameEl.textContent = username || 'this question';
     }
     
     // Store question ID in the form
