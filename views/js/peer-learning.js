@@ -21,6 +21,7 @@ var peerPages        = { 'all-sessions': 1, 'my-sessions': 1 };
 var peerSearchTimer  = null;
 var peerSearchQuery  = '';
 var peerActiveDetail = 0;
+var peerAllStatusFilter = 'all';
 
 // ────────────────────────────────────────────────────────
 // DOM REFS (set in DOMContentLoaded)
@@ -60,6 +61,21 @@ document.addEventListener('DOMContentLoaded', function () {
             var tab = btn.dataset.tab;
             if (tab === peerCurrentTab) return;
             peerSwitchTab(tab);
+        });
+    });
+
+    // ── EVENT: All Sessions status filter ──
+    document.querySelectorAll('[data-status-filter]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var nextFilter = btn.dataset.statusFilter || 'all';
+            if (nextFilter === peerAllStatusFilter) return;
+
+            peerAllStatusFilter = nextFilter;
+            document.querySelectorAll('[data-status-filter]').forEach(function (b) {
+                b.classList.toggle('active', b.dataset.statusFilter === peerAllStatusFilter);
+            });
+
+            peerApplyAllSessionsFilter();
         });
     });
 
@@ -252,6 +268,7 @@ function peerRenderCard(session) {
     card.classList.remove('template');
     card.style.display = '';
     card.dataset.sessionId = session.id;
+    card.dataset.sessionStatus = session.status || '';
 
     // Badges
     var aud = AUDIENCE_MAP[session.audience] || {};
@@ -326,6 +343,34 @@ function peerRenderCard(session) {
     return card;
 }
 
+function peerApplyAllSessionsFilter() {
+    var grid = document.getElementById('grid-all-sessions');
+    if (!grid) return;
+
+    var cards = Array.from(grid.querySelectorAll('.peer-card:not(.template)'));
+    var visibleCount = 0;
+
+    cards.forEach(function (card) {
+        var status = card.dataset.sessionStatus || '';
+        var show = peerAllStatusFilter === 'all' || status === peerAllStatusFilter;
+        card.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+
+    var existingFilterEmpty = grid.querySelector('.peer-filter-empty');
+    if (existingFilterEmpty) existingFilterEmpty.remove();
+
+    if (cards.length > 0 && visibleCount === 0) {
+        var emptyTitle = peerAllStatusFilter === 'ongoing' ? 'No live sessions' : 'No scheduled sessions';
+        var emptySub = peerAllStatusFilter === 'ongoing'
+            ? 'Try switching to Scheduled or All sessions.'
+            : 'Try switching to Live or All sessions.';
+        var empty = peerRenderEmpty(emptyTitle, emptySub);
+        empty.classList.add('peer-filter-empty');
+        grid.appendChild(empty);
+    }
+}
+
 function peerRenderEmpty(title, subtitle) {
     var el = tplEmpty.cloneNode(true);
     el.removeAttribute('id');
@@ -385,8 +430,12 @@ function peerSwitchTab(tab) {
     document.querySelectorAll('.peer-panel').forEach(function (p) { p.classList.remove('active'); });
     document.getElementById('panel-' + tab)?.classList.add('active');
 
+    var filterBar = document.getElementById('allSessionsFilters');
+    if (filterBar) filterBar.style.display = (tab === 'all-sessions') ? 'flex' : 'none';
+
     var grid = document.getElementById('grid-' + tab);
     if (!grid.children.length) peerLoadTab(tab, 1);
+    if (tab === 'all-sessions') peerApplyAllSessionsFilter();
 }
 
 function peerLoadTab(tab, page) {
@@ -425,6 +474,7 @@ function peerLoadTab(tab, page) {
         }
 
         sessions.forEach(function (s) { grid.appendChild(peerRenderCard(s)); });
+        if (tab === 'all-sessions') peerApplyAllSessionsFilter();
         if (more) more.style.display = (res.count >= PEER_PAGE_SIZE) ? 'block' : 'none';
         if (tab !== 'subscribed-sessions') peerPages[tab] = page + 1;
     }).catch(function (err) {

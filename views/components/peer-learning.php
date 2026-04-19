@@ -128,6 +128,11 @@
 
     <!-- All Sessions Panel -->
     <div class="peer-panel active" id="panel-all-sessions">
+        <div class="peer-panel-tools" id="allSessionsFilters">
+            <button type="button" class="peer-mini-filter active" data-status-filter="all">All</button>
+            <button type="button" class="peer-mini-filter" data-status-filter="ongoing">Live</button>
+            <button type="button" class="peer-mini-filter" data-status-filter="scheduled">Scheduled</button>
+        </div>
         <div class="peer-loading" id="loading-all-sessions"><span>Loading sessions...</span></div>
         <div class="peer-card-grid" id="grid-all-sessions"></div>
         <div class="peer-load-more" id="more-all-sessions"><button type="button">Load More Sessions</button></div>

@@ -161,7 +161,7 @@ class DashboardController
         // Get form data
         $this->user->firstName = $request->get('firstName');
         $this->user->lastName = $request->get('lastName');
-        $this->user->email = $request->get('email');
+        $this->user->email = trim((string) $request->get('email'));
         $this->user->phone = $request->get('phone');
         $this->user->public = $request->get('public') ? 1 : 0;
         
@@ -211,8 +211,19 @@ class DashboardController
         $error = $this->user->update();
 
         if ($error instanceof \PDOException) {
-            if (strpos($error->getMessage(), 'SQLSTATE[23000]') !== false) {
+            $errorText = $error->getMessage();
+            if (
+                strpos($errorText, 'SQLSTATE[23000]') !== false &&
+                (
+                    stripos($errorText, 'for key \'email\'') !== false ||
+                    stripos($errorText, 'for key "email"') !== false ||
+                    stripos($errorText, 'users.email') !== false ||
+                    stripos($errorText, 'Duplicate entry') !== false
+                )
+            ) {
                 $errorMsg = 'Email already in use by another account.';
+            } elseif (strpos($errorText, 'SQLSTATE[23000]') !== false) {
+                $errorMsg = 'Some profile fields are invalid. Please re-check your university/major and try again.';
             } else {
                 $errorMsg = 'An error occurred while updating your profile. Please try again.';
             }

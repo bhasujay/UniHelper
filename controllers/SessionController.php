@@ -485,4 +485,16 @@ class SessionController
             $this->json(['success' => false, 'message' => 'Failed to fetch majors.'], 500);
         }
     }
+
+
+    // to update session statuses on page load without needing a separate cron job or scheduled task
+    public function updateSessionStatuses(Request $request): void
+    {
+        try {
+            $this->model->autoUpdateStatuses();
+            $this->json(['success' => true, 'message' => 'Session statuses updated.']);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to update session statuses.'], 500);
+        }
+    }
 }

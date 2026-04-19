@@ -240,6 +240,11 @@ class User
     public function update()
     {
         try {
+            $alYear = ($this->alYear === '' || $this->alYear === null) ? null : (int) $this->alYear;
+            $university = ($this->University === '' || $this->University === null) ? null : (int) $this->University;
+            $major = ($this->major === '' || $this->major === null) ? null : (int) $this->major;
+            $profileRole = ($this->profileRole === '' || $this->profileRole === null) ? null : $this->profileRole;
+
             $sql = "UPDATE users SET 
                     first_name = :firstName,
                     last_name = :lastName,
@@ -260,10 +265,10 @@ class User
             $stmt->bindParam(':lastName', $this->lastName);
             $stmt->bindParam(':email', $this->email);
             $stmt->bindParam(':phone', $this->phone);
-            $stmt->bindParam(':alYear', $this->alYear);
-            $stmt->bindParam(':University', $this->University);
-            $stmt->bindParam(':major', $this->major);
-            $stmt->bindParam(':profileRole', $this->profileRole);
+            $stmt->bindValue(':alYear', $alYear, $alYear === null ? \PDO::PARAM_NULL : \PDO::PARAM_INT);
+            $stmt->bindValue(':University', $university, $university === null ? \PDO::PARAM_NULL : \PDO::PARAM_INT);
+            $stmt->bindValue(':major', $major, $major === null ? \PDO::PARAM_NULL : \PDO::PARAM_INT);
+            $stmt->bindValue(':profileRole', $profileRole, $profileRole === null ? \PDO::PARAM_NULL : \PDO::PARAM_STR);
             $stmt->bindValue(':profilePicture', $this->profilePicture, $this->profilePicture === null ? \PDO::PARAM_NULL : \PDO::PARAM_STR);
             $stmt->bindParam(':public', $this->public, \PDO::PARAM_INT);
             $stmt->bindParam(':id', $this->id);

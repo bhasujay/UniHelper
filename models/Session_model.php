@@ -31,6 +31,9 @@ class Session_model extends BaseModel
      */
     public function getAllSessions(int $viewerId, ?int $viewerUniId, int $limit = 10, int $offset = 0): array
     {
+        // Ensure time-based statuses are current before listing active sessions.
+        $this->autoUpdateStatuses();
+
         $sql = "SELECT s.*, m.name AS major_name,
                     u.first_name, u.last_name, u.profile_picture,
                     uni.name AS university_name,
@@ -102,7 +105,7 @@ class Session_model extends BaseModel
                 LEFT JOIN majors m     ON s.major_id = m.id
                 WHERE sub.subscriber_id = :uid
                   AND sub.status <> 'rejected'
-                  AND s.status IN ('scheduled','ongoing')
+                  AND s.status IN ('scheduled','ongoing','completed')
                 ORDER BY s.scheduled_at ASC";
 
         $stmt = $this->db->prepare($sql);
@@ -512,21 +515,19 @@ class Session_model extends BaseModel
 
     public function autoUpdateStatuses(): void
     {
-        $now = date('Y-m-d H:i:s');
+        // Use database time to avoid PHP/DB timezone drift when calculating status windows.
+        $sql = "UPDATE {$this->table}
+                SET status = CASE
+                    WHEN status IN ('scheduled','ongoing')
+                         AND DATE_ADD(scheduled_at, INTERVAL duration_minutes MINUTE) <= NOW() THEN 'completed'
+                    WHEN status IN ('scheduled','ongoing')
+                         AND scheduled_at <= NOW()
+                         AND DATE_ADD(scheduled_at, INTERVAL duration_minutes MINUTE) > NOW() THEN 'ongoing'
+                    ELSE status
+                END
+                WHERE status IN ('scheduled','ongoing')";
 
-        // scheduled → ongoing (past scheduled_at but within duration)
-        $this->db->prepare(
-            "UPDATE {$this->table} SET status = 'ongoing'
-             WHERE status = 'scheduled' AND scheduled_at <= :now1
-               AND DATE_ADD(scheduled_at, INTERVAL duration_minutes MINUTE) > :now2"
-        )->execute(['now1' => $now, 'now2' => $now]);
-
-        // ongoing/scheduled → completed (past end time)
-        $this->db->prepare(
-            "UPDATE {$this->table} SET status = 'completed'
-             WHERE status IN ('scheduled','ongoing')
-               AND DATE_ADD(scheduled_at, INTERVAL duration_minutes MINUTE) <= :now"
-        )->execute(['now' => $now]);
+        $this->db->exec($sql);
     }
 
     // ───────────────────────────────────────────────────
