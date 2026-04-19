@@ -230,7 +230,7 @@ class Qna extends BaseModel
                 SELECT *
                 FROM questions
                 WHERE status IN ('normal', 'flagged')
-                ORDER BY vote_count DESC, answer_count DESC, added_time DESC, last_modified DESC
+                ORDER BY DATE(COALESCE(last_modified, added_time)) DESC, vote_count DESC, answer_count DESC, q_id DESC
                 LIMIT :offset, :limit
             ";
 
@@ -247,7 +247,7 @@ class Qna extends BaseModel
             SELECT q.* 
             FROM questions q JOIN qa_tag qt ON q.q_id = qt.q_id JOIN tags t ON t.tag_id = qt.tag_id
             WHERE q.status IN ('normal', 'flagged') AND t.tag_name = :tag
-            ORDER BY q.vote_count DESC, q.answer_count DESC, q.added_time DESC, q.last_modified DESC
+            ORDER BY DATE(COALESCE(q.last_modified, q.added_time)) DESC, q.vote_count DESC, q.answer_count DESC, q.q_id DESC
             LIMIT :offset, :limit
         ";
 
