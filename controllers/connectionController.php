@@ -356,21 +356,33 @@ Class ConnectionController
     public function getSuggestions(Request $request): void
     {
         $userId = $request->session('user_id');
-        $type = $request->get('type') ?? 'mutual';
+        $type = strtolower((string) ($request->get('type') ?? 'mutual'));
         if (!$userId) {
             $this->json(['success' => false, 'message' => 'Unauthorised'], 401);
             return;
         }
 
-        if (strtolower((string) $type) !== 'mutual') {
-            $this->json(['success' => false, 'message' => 'Only type=mutual is supported'], 400);
+        if (!in_array($type, ['mutual', 'major', 'university'], true)) {
+            $this->json(['success' => false, 'message' => 'Invalid suggestion type'], 400);
             return;
         }
 
         try {
             // contract: [{user_id, name, profile_picture, role}, ...], max 30
-            // algorithm: random 10 direct friends -> friends of those friends -> dedupe/exclude self
-            $suggestions = $this->connectionModel->getMutualSuggestions((int) $userId, 10, 30);
+            // supported types: mutual, major, university
+            switch ($type) {
+                case 'major':
+                    $suggestions = $this->connectionModel->getMajorBasedSuggestions((int) $userId, 30);
+                    break;
+                case 'university':
+                    $suggestions = $this->connectionModel->getUniversityBasedSuggestions((int) $userId, 30);
+                    break;
+                case 'mutual':
+                default:
+                    $suggestions = $this->connectionModel->getMutualSuggestions((int) $userId, 10, 30);
+                    break;
+            }
+
             $this->json(['success' => true, 'data' => $suggestions]);
         } catch (\Exception $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
