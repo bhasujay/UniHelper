@@ -165,6 +165,63 @@ function applyFlaggedState(element, status) {
     }
 }
 
+var _qaImageLightbox = null;
+
+function getQuestionImageLightbox() {
+    if (_qaImageLightbox) {
+        return _qaImageLightbox;
+    }
+
+    const lightbox = document.createElement('div');
+    lightbox.className = 'qa-image-lightbox';
+    lightbox.style.display = 'none';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'qa-image-lightbox-close';
+    closeBtn.setAttribute('aria-label', 'Close image preview');
+    closeBtn.textContent = '❌';
+
+    const image = document.createElement('img');
+    image.className = 'qa-image-lightbox-img';
+    image.alt = 'Question image preview';
+
+    closeBtn.addEventListener('click', closeQuestionImageLightbox);
+
+    lightbox.appendChild(closeBtn);
+    lightbox.appendChild(image);
+    document.body.appendChild(lightbox);
+
+    _qaImageLightbox = lightbox;
+    return _qaImageLightbox;
+}
+
+function openQuestionImageLightbox(src, altText) {
+    if (!src) {
+        return;
+    }
+
+    const lightbox = getQuestionImageLightbox();
+    const image = lightbox.querySelector('.qa-image-lightbox-img');
+
+    image.src = src;
+    image.alt = altText || 'Question image preview';
+    lightbox.style.display = 'flex';
+}
+
+function closeQuestionImageLightbox() {
+    if (!_qaImageLightbox) {
+        return;
+    }
+
+    const image = _qaImageLightbox.querySelector('.qa-image-lightbox-img');
+    if (image) {
+        image.src = '';
+    }
+
+    _qaImageLightbox.style.display = 'none';
+}
+
 //////////////////////////////////////////////////////////////////////
 
 function generateMenuDropdown(element, questionUserId, currentUserId, isModerator, questionId, isAnswer = -1) {
@@ -285,8 +342,14 @@ function generateMenuDropdown(element, questionUserId, currentUserId, isModerato
 
 function resetAnswerForm() {
     document.getElementById('qaAnswerForm').reset();
-    const label = document.querySelector('.qa-answermodal .qa-form-label');
-    label.innerHTML = 'Your Answer';
+    const questionTitleEl = document.querySelector('.qa-answermodal .qa-answer-question-title');
+    const usernameEl = document.querySelector('.qa-answermodal .answer-to-username');
+    if (questionTitleEl) {
+        questionTitleEl.textContent = '';
+    }
+    if (usernameEl) {
+        usernameEl.textContent = '';
+    }
     // Clear question ID
     document.getElementById('qaAnswerForm').dataset.questionId = '';
 }
@@ -301,6 +364,8 @@ function resetForm() {
 }
 
 function resetQuestionView() {
+    closeQuestionImageLightbox();
+
     const qaViewModal = document.querySelector('.qa-question-view');
     applyFlaggedState(qaViewModal.querySelector('.qa-view-content'), 'normal');
     
@@ -338,6 +403,22 @@ function resetQuestionView() {
             card.style.display = 'none';
         }
     });
+}
+
+function scrollQuestionViewTop() {
+    const injectedMain = document.getElementById('dashboardMain');
+    if (injectedMain && typeof injectedMain.scrollTo === 'function') {
+        injectedMain.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+
+    const mainFallback = document.querySelector('main.main-content');
+    if (mainFallback && mainFallback !== injectedMain && typeof mainFallback.scrollTo === 'function') {
+        mainFallback.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+
+    if (typeof window.scrollTo === 'function') {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
 }
 
 function addImagePreview(file, imageTray, imageAddBox) { // Add parameters
@@ -378,9 +459,39 @@ function removeImage(fileName, previewElement) {
 function answer(questionId) {
     const answermodal = document.querySelector('.qa-answermodal');
     const questionCard = document.getElementById(questionId);
-    const username = questionCard.querySelector('.qa-username').textContent;
-    const label = answermodal.querySelector('.qa-form-label');
-    label.innerHTML = `Your Answer to <span class="answer-to-username">${username}</span>`;
+    const usernameSpan = answermodal.querySelector('.answer-to-username');
+    const questionTitleEl = answermodal.querySelector('.qa-answer-question-title');
+
+    let username = '';
+    let questionTitle = '';
+
+    if (questionCard) {
+        const cardUsername = questionCard.querySelector('.qa-username');
+        const cardTitle = questionCard.querySelector('.qa-question-title');
+        username = cardUsername ? cardUsername.textContent.trim() : '';
+        questionTitle = cardTitle ? cardTitle.textContent.trim() : '';
+    }
+
+    if (!username || !questionTitle) {
+        const questionView = document.querySelector('.qa-question-view');
+        if (questionView && questionView.style.display === 'flex') {
+            if (!username) {
+                const viewUsername = questionView.querySelector('.qa-username');
+                username = viewUsername ? viewUsername.textContent.trim() : '';
+            }
+            if (!questionTitle) {
+                const viewTitle = questionView.querySelector('.qa-view-title');
+                questionTitle = viewTitle ? viewTitle.textContent.trim() : '';
+            }
+        }
+    }
+
+    if (usernameSpan) {
+        usernameSpan.textContent = username || 'this user';
+    }
+    if (questionTitleEl) {
+        questionTitleEl.textContent = questionTitle || 'Answering this question';
+    }
     
     // Store question ID in the form
     document.getElementById('qaAnswerForm').dataset.questionId = questionId;
@@ -390,6 +501,8 @@ function answer(questionId) {
 }
 
 function goBackFromQuestionView(questionId) {
+    closeQuestionImageLightbox();
+
     // show the main qa forum elements
     document.querySelector('.qa-question-view').style.display = 'none';
     if (currentFilter === 'tag' || currentFilter === 'user') {
@@ -399,7 +512,7 @@ function goBackFromQuestionView(questionId) {
     } else {
         document.querySelector('.qa-main').style.display = 'block';
     }
-    document.querySelector('.qa-header').style.display = 'block';
+    document.querySelector('.qa-header').style.display = '';
     document.querySelector('.qa-sticky-btn').style.display = 'flex';
 
     // Duplicate ids can exist across different containers; update every matching card.
@@ -516,6 +629,8 @@ function goBackFromQuestionView(questionId) {
 
 // rendering the question view page
 async function viewQuestion(questionId) {
+    closeQuestionImageLightbox();
+
     // hide the main qa forum elements
     if (currentFilter === 'tag' || currentFilter === 'user') {
         document.querySelector('.qa-tag-filter').style.display = 'none';
@@ -549,10 +664,6 @@ async function viewQuestion(questionId) {
     viewAvatarImg.parentElement.style.cursor = 'pointer';
     viewUsernameEl.onclick = function(e) { e.stopPropagation(); window.open(viewProfileUrl, '_blank'); };
     viewUsernameEl.style.cursor = 'pointer';
-    viewUsernameEl.style.textDecoration = 'underline';
-    viewUsernameEl.style.textDecorationColor = 'transparent';
-    viewUsernameEl.onmouseenter = () => viewUsernameEl.style.textDecorationColor = 'currentColor';
-    viewUsernameEl.onmouseleave = () => viewUsernameEl.style.textDecorationColor = 'transparent';
     // Badge hover panel — question view opens below the name
     bindBadgeHoverPanel(viewUsernameEl, question.user_id, 'below');
     
@@ -600,6 +711,7 @@ async function viewQuestion(questionId) {
     if (question.images.length > 0) {
         const imageGallery = qaViewModal.querySelector('.qa-view-images');
         const imgContainer = imageGallery.querySelector('.qa-img-container');
+        const galleryImage = imgContainer.querySelector('img');
         const prevBtn = imageGallery.querySelector('.qa-img-prev');
         const nextBtn = imageGallery.querySelector('.qa-img-next');
         
@@ -608,7 +720,12 @@ async function viewQuestion(questionId) {
         let length = question.images.length;
         
         // Set first image
-        imgContainer.querySelector('img').src = question.images[0];
+        galleryImage.src = question.images[0];
+        galleryImage.style.cursor = 'zoom-in';
+        galleryImage.onclick = function(e) {
+            e.stopPropagation();
+            openQuestionImageLightbox(galleryImage.src, question.question);
+        };
         
         // Hide/show nav buttons based on number of images
         if (question.images.length === 1) {
@@ -622,13 +739,13 @@ async function viewQuestion(questionId) {
         // Previous button click handler
         prevBtn.onclick = function() {
             currentImageIndex = (currentImageIndex - 1 + length) % length;
-            imgContainer.querySelector('img').src = question.images[currentImageIndex];
+            galleryImage.src = question.images[currentImageIndex];
         };
         
         // Next button click handler
         nextBtn.onclick = function() {
             currentImageIndex = (currentImageIndex + 1) % length;
-            imgContainer.querySelector('img').src = question.images[currentImageIndex];
+            galleryImage.src = question.images[currentImageIndex];
         };
     } else {
         qaViewModal.querySelector('.qa-view-images').style.display = 'none';
@@ -677,10 +794,6 @@ async function viewQuestion(questionId) {
             ansAvatarImg.parentElement.style.cursor = 'pointer';
             ansUsernameEl.onclick = function(e) { e.stopPropagation(); window.open(ansProfileUrl, '_blank'); };
             ansUsernameEl.style.cursor = 'pointer';
-            ansUsernameEl.style.textDecoration = 'underline';
-            ansUsernameEl.style.textDecorationColor = 'transparent';
-            ansUsernameEl.onmouseenter = () => ansUsernameEl.style.textDecorationColor = 'currentColor';
-            ansUsernameEl.onmouseleave = () => ansUsernameEl.style.textDecorationColor = 'transparent';
             // Badge hover panel — answer cards in question view open above
             bindBadgeHoverPanel(ansUsernameEl, answer.user_id, 'above');
 
@@ -697,8 +810,10 @@ async function viewQuestion(questionId) {
             card.style.display = 'flex';
         }
     }
-    // Scroll the question view and its answers to the top, and bring page to top
+    // QA is injected into dashboard main-content; reset scroll there on view switch.
     qaViewModal.style.display = 'flex';
+    qaViewModal.scrollTop = 0;
+    scrollQuestionViewTop();
 }
 
 // rendering question cards
@@ -741,10 +856,6 @@ function makeQuestionCard(data, position) {
     avatarImg.parentElement.style.cursor = 'pointer';
     usernameEl.onclick = function(e) { e.stopPropagation(); window.open(profileUrl, '_blank'); };
     usernameEl.style.cursor = 'pointer';
-    usernameEl.style.textDecoration = 'underline';
-    usernameEl.style.textDecorationColor = 'transparent';
-    usernameEl.onmouseenter = () => usernameEl.style.textDecorationColor = 'currentColor';
-    usernameEl.onmouseleave = () => usernameEl.style.textDecorationColor = 'transparent';
     // Badge hover panel — feed view opens above the name
     bindBadgeHoverPanel(usernameEl, data.userID, 'above');
     
@@ -815,11 +926,50 @@ function makeQuestionCard(data, position) {
         answer(data.questionId);
     });
 
+    const openQuestionViewFromCard = function(e) {
+        if (e && e.target && e.target.closest('.hashtag')) {
+            return;
+        }
+
+        if (typeof window.getSelection === 'function') {
+            const selectedText = String(window.getSelection() || '').trim();
+            if (selectedText.length > 0) {
+                return;
+            }
+        }
+
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        viewQuestion(data.questionId);
+    };
+
+    const titleEl = card.querySelector('.qa-question-title');
+    const bodyEl = card.querySelector('.qa-question-text');
+
+    [titleEl, bodyEl].forEach(function(el) {
+        if (!el) {
+            return;
+        }
+
+        el.classList.add('qa-open-question-target');
+        el.setAttribute('tabindex', '0');
+        el.setAttribute('role', 'button');
+        el.setAttribute('aria-label', 'View full question');
+
+        el.addEventListener('click', openQuestionViewFromCard);
+        el.addEventListener('keydown', function(evt) {
+            if (evt.key === 'Enter' || evt.key === ' ') {
+                openQuestionViewFromCard(evt);
+            }
+        });
+    });
+
     // Add click handler for view question button
     const viewQuestionBtn = card.querySelector('.view-question-btn');
-    viewQuestionBtn.addEventListener('click', function() {
-        viewQuestion(data.questionId);
-    });
+    viewQuestionBtn.addEventListener('click', openQuestionViewFromCard);
     
     // Prepend the card to the cuurent filter
     let holder;

@@ -13,6 +13,7 @@ class AdminOverview
 {
     private $db;
     private $tableExistsCache = [];
+    private const DEFAULT_DURATION_HOURS = 1.0;
 
     public function __construct()
     {
@@ -270,6 +271,7 @@ class AdminOverview
         if ($this->hasTable('sessions')) {
             $sessionParams = ['detail_session_user_id' => $userId];
             $sessionWhere = $this->getSessionWindowCondition('s', $window) . ' AND s.user_id = :detail_session_user_id';
+            $sessionExpiredCondition = $this->getSessionExpiredCondition('s');
             $sessionWhere .= $this->buildDateCondition('DATE(s.date)', $from, $to, 'detail_session_date', $sessionParams);
             $sessionsCount = $this->fetchCount("SELECT COUNT(*) FROM sessions s WHERE {$sessionWhere}", $sessionParams);
 
@@ -285,7 +287,7 @@ class AdminOverview
                         CASE
                             WHEN s.is_deleted = 1
                                  OR s.deleted_at IS NOT NULL
-                                 OR TIMESTAMP(s.date, COALESCE(s.time, '00:00:00')) < NOW()
+                                 OR {$sessionExpiredCondition}
                             THEN 'archived'
                             ELSE 'active'
                         END AS session_state
@@ -568,10 +570,35 @@ class AdminOverview
     private function getSessionWindowCondition(string $alias, string $window): string
     {
         if ($window === 'archived') {
-            return "({$alias}.is_deleted = 1 OR {$alias}.deleted_at IS NOT NULL OR TIMESTAMP({$alias}.date, COALESCE({$alias}.time, '00:00:00')) < NOW())";
+            return "({$alias}.is_deleted = 1 OR {$alias}.deleted_at IS NOT NULL OR {$this->getSessionExpiredCondition($alias)})";
         }
 
-        return "({$alias}.is_deleted = 0 AND {$alias}.deleted_at IS NULL AND TIMESTAMP({$alias}.date, COALESCE({$alias}.time, '00:00:00')) >= NOW())";
+        return "({$alias}.is_deleted = 0 AND {$alias}.deleted_at IS NULL AND {$this->getSessionActiveCondition($alias)})";
+    }
+
+    private function getSessionExpiredCondition(string $alias): string
+    {
+        return 'NOW() > ' . $this->getSessionEndDateTimeExpression($alias);
+    }
+
+    private function getSessionActiveCondition(string $alias): string
+    {
+        return 'NOW() <= ' . $this->getSessionEndDateTimeExpression($alias);
+    }
+
+    private function getSessionEndDateTimeExpression(string $alias): string
+    {
+        $defaultDuration = (float)self::DEFAULT_DURATION_HOURS;
+        $durationHoursExpression = "CASE
+                WHEN CAST(COALESCE({$alias}.duration, 0) AS DECIMAL(10,2)) > 0
+                THEN CAST({$alias}.duration AS DECIMAL(10,2))
+                ELSE {$defaultDuration}
+            END";
+
+        return "DATE_ADD(
+                TIMESTAMP({$alias}.date, COALESCE({$alias}.time, '00:00:00')),
+                INTERVAL ({$durationHoursExpression} * 3600) SECOND
+            )";
     }
 
     private function hasTable(string $tableName): bool
