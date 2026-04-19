@@ -615,8 +615,8 @@ function applyEligibleProgramFilters(options) {
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    if (eligibleProgramsFiltered.length > 0 && typeof initializeWishlistStatus === 'function') {
-        initializeWishlistStatus();
+    if (eligibleProgramsFiltered.length > 0) {
+        initializeEligibleWishlistStatus();
     }
 }
 
@@ -625,7 +625,6 @@ function renderEligibleProgramCards(programs, programsList) {
     programsList.classList.add('zscore-programs-grid');
 
     const streamLabel = formatStreamName(submittedZScoreData && submittedZScoreData.stream);
-    const wishlistEnabled = typeof window.toggleWishlist === 'function';
 
     programs.forEach(function (program, index) {
         const eligibility = String(program.eligibility || 'noc').toLowerCase();
@@ -664,12 +663,8 @@ function renderEligibleProgramCards(programs, programsList) {
         card.className = 'degree-program-card';
         card.setAttribute('data-program-id', String(program.program_id));
 
-        const wishlistAction = wishlistEnabled
-            ? `<button class="zscore-program-action wishlist-btn" onclick="toggleWishlist(${Number(program.program_id)})" aria-label="Add to wishlist">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-               </button>`
-            : `<button class="zscore-program-action" disabled aria-label="Wishlist unavailable">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        const wishlistAction = `<button class="zscore-program-action wishlist-btn" onclick="handleEligibleWishlistAction(event, ${Number(program.program_id)})" aria-label="Add to wishlist">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                </button>`;
 
         card.innerHTML = `
@@ -724,6 +719,135 @@ function renderEligibleProgramCards(programs, programsList) {
 
         programsList.appendChild(card);
     });
+}
+
+async function handleEligibleWishlistAction(event, programId) {
+    if (event) {
+        event.preventDefault();
+    }
+
+    const numericProgramId = Number(programId);
+    if (!Number.isFinite(numericProgramId) || numericProgramId <= 0) {
+        return;
+    }
+
+    // Reuse the shared toggle behavior when degree-programs.js is loaded.
+    if (typeof window.toggleWishlist === 'function') {
+        window.toggleWishlist(numericProgramId);
+        return;
+    }
+
+    const clickedButton = event && event.currentTarget ? event.currentTarget : null;
+    const isInWishlist = clickedButton ? clickedButton.classList.contains('in-wishlist') : false;
+
+    const endpoint = isInWishlist
+        ? '/UniHelper/api?controller=WishlistController&action=removeFromWishlist'
+        : '/UniHelper/api?controller=WishlistController&action=addToWishlist';
+    const method = isInWishlist ? 'DELETE' : 'POST';
+
+    if (clickedButton) {
+        clickedButton.disabled = true;
+    }
+
+    try {
+        const response = await fetch(endpoint, {
+            method,
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ program_id: numericProgramId })
+        });
+
+        const result = await response.json();
+        const message = String(result && result.message ? result.message : 'Unable to update wishlist').toLowerCase();
+        const alreadySaved = message.includes('already in wishlist');
+        const alreadyRemoved = message.includes('not found in wishlist');
+
+        if (!result.success && !(alreadySaved || alreadyRemoved)) {
+            console.warn('Failed to update wishlist:', result.message || 'Unknown error');
+            return;
+        }
+
+        if (clickedButton) {
+            const nextInWishlist = !isInWishlist;
+            setEligibleWishlistButtonState(clickedButton, nextInWishlist);
+        }
+
+        if (typeof window.updateWishlistCount === 'function') {
+            window.updateWishlistCount();
+        }
+    } catch (error) {
+        console.error('Error updating wishlist:', error);
+    } finally {
+        if (clickedButton) {
+            clickedButton.disabled = false;
+        }
+    }
+}
+
+function getEligibleWishlistHeartSvg(isFilled) {
+    if (isFilled) {
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+    }
+
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+}
+
+function setEligibleWishlistButtonState(button, isInWishlist) {
+    if (!button) {
+        return;
+    }
+
+    button.classList.toggle('in-wishlist', isInWishlist);
+    button.setAttribute('aria-label', isInWishlist ? 'Remove from wishlist' : 'Add to wishlist');
+    button.innerHTML = getEligibleWishlistHeartSvg(isInWishlist);
+}
+
+async function initializeEligibleWishlistStatus() {
+    const programsList = document.getElementById('programsList');
+    if (!programsList) {
+        return;
+    }
+
+    const cards = Array.from(programsList.querySelectorAll('.degree-program-card'));
+    if (cards.length === 0) {
+        return;
+    }
+
+    // If shared wishlist helpers are available, reuse them for consistency.
+    if (typeof window.checkWishlistStatus === 'function' && typeof window.updateHeartIcon === 'function') {
+        await Promise.all(cards.map(async function (card) {
+            const programId = Number(card.getAttribute('data-program-id'));
+            if (!Number.isFinite(programId) || programId <= 0) {
+                return;
+            }
+
+            const isInWishlist = await window.checkWishlistStatus(programId);
+            window.updateHeartIcon(programId, isInWishlist);
+        }));
+        return;
+    }
+
+    // Fallback for pages where degree-programs.js is not loaded.
+    try {
+        const response = await fetch('/UniHelper/api?controller=WishlistController&action=getWishlistItems', {
+            credentials: 'same-origin'
+        });
+        const result = await response.json();
+        const wishlistItems = (result && result.success && Array.isArray(result.data)) ? result.data : [];
+        const wishlistProgramIds = new Set(wishlistItems.map(function (item) {
+            return Number(item.program_id);
+        }).filter(Number.isFinite));
+
+        cards.forEach(function (card) {
+            const programId = Number(card.getAttribute('data-program-id'));
+            const button = card.querySelector('.wishlist-btn');
+            setEligibleWishlistButtonState(button, wishlistProgramIds.has(programId));
+        });
+    } catch (error) {
+        console.error('Failed to initialize eligible wishlist state:', error);
+    }
 }
 
 function getProgramFilterCutoff(program) {
