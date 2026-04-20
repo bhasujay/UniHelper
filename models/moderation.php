@@ -224,6 +224,7 @@ class QaReport
     public function takeAction($reportId, $action, $moderatorId = null)
     {
         $action = strtolower(trim((string) $action));
+        $moderatorId = $moderatorId !== null ? (int) $moderatorId : null;
 
         $validActions = ['ignored', 'flagged', 'forwarded to admin'];
         if (!in_array($action, $validActions, true)) {
@@ -232,6 +233,17 @@ class QaReport
 
         if ($action === 'forwarded to admin' && $moderatorId === null) {
             throw new \InvalidArgumentException('A valid moderator ID is required to forward reports to admin.');
+        }
+
+        if ($moderatorId !== null) {
+            $moderatorCheckSql = "SELECT moderator FROM users WHERE id = :user_id LIMIT 1";
+            $moderatorCheckStmt = $this->db->prepare($moderatorCheckSql);
+            $moderatorCheckStmt->execute(['user_id' => $moderatorId]);
+            $isModerator = (int) $moderatorCheckStmt->fetchColumn() === 1;
+
+            if (!$isModerator) {
+                throw new \InvalidArgumentException('Invalid moderator ID. The selected user is not an active moderator.');
+            }
         }
 
         $sql = "SELECT report_id, q_id, a_id FROM reports WHERE report_id = :report_id LIMIT 1";

@@ -67,6 +67,13 @@ class search extends BaseModel
             JOIN tags t    ON t.tag_id = qt.tag_id
             WHERE LOWER(t.tag_name) = LOWER(:tagName)
                             AND q.status IN ('normal', 'flagged')
+                            AND NOT EXISTS (
+                                        SELECT 1
+                                        FROM reports r
+                                        WHERE r.q_id = q.q_id
+                                            AND r.status = 'resolved'
+                                            AND r.action_taken = 'removed'
+                            )
             ORDER BY q.vote_count DESC, q.added_time DESC
         ";
 
@@ -98,6 +105,13 @@ class search extends BaseModel
             FROM questions
             WHERE LOWER(question) LIKE LOWER(:query)
                             AND status IN ('normal', 'flagged')
+                            AND NOT EXISTS (
+                                        SELECT 1
+                                        FROM reports r
+                                        WHERE r.q_id = questions.q_id
+                                            AND r.status = 'resolved'
+                                            AND r.action_taken = 'removed'
+                            )
             ORDER BY vote_count DESC, added_time DESC
         ";
 
@@ -129,6 +143,13 @@ class search extends BaseModel
             FROM questions
             WHERE LOWER(text) LIKE LOWER(:query)
               AND status IN ('normal', 'flagged')
+                            AND NOT EXISTS (
+                                        SELECT 1
+                                        FROM reports r
+                                        WHERE r.q_id = questions.q_id
+                                            AND r.status = 'resolved'
+                                            AND r.action_taken = 'removed'
+                            )
         ";
 
         // Exclude question IDs already found in the title tier
@@ -181,8 +202,22 @@ class search extends BaseModel
             FROM answers a
             JOIN questions q ON a.q_id = q.q_id
             WHERE LOWER(a.text) LIKE LOWER(:query)
-              AND a.status = 'normal'
+                            AND a.status IN ('normal', 'flagged')
                             AND q.status IN ('normal', 'flagged')
+                            AND NOT EXISTS (
+                                        SELECT 1
+                                        FROM reports ra
+                                        WHERE ra.a_id = a.a_id
+                                            AND ra.status = 'resolved'
+                                            AND ra.action_taken = 'removed'
+                            )
+                            AND NOT EXISTS (
+                                        SELECT 1
+                                        FROM reports rq
+                                        WHERE rq.q_id = q.q_id
+                                            AND rq.status = 'resolved'
+                                            AND rq.action_taken = 'removed'
+                            )
             ORDER BY a.added_time DESC
         ";
 
