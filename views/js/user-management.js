@@ -27,6 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const panelOverlay = els.slidePanel.querySelector('.um-slide-panel-overlay');
+
+    function mountPanelToBody() {
+        if (!document.body || !els.slidePanel) {
+            return;
+        }
+
+        if (els.slidePanel.parentElement !== document.body) {
+            document.body.appendChild(els.slidePanel);
+        }
+    }
+
     const kpiTabs = Array.from(document.querySelectorAll('.um-kpi-tab[data-filter]'));
     const kpiEls = {
         total: document.getElementById('kpi-total-users'),
@@ -890,6 +901,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function initialize() {
+        mountPanelToBody();
         updateKpis();
         render();
 

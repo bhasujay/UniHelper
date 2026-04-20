@@ -19,46 +19,129 @@
                     <p class="hero-subtitle">The platform is designed to reduce the challenges faced during university selection and to promote collaboration among students across different institutions.</p>
                 </div>
 
-                <div class="features">
-                    <div class="card">
+                <div class="features about-carousel" id="aboutCarousel" aria-label="About section highlights" tabindex="0">
+                    <button type="button" class="carousel-nav carousel-prev" aria-label="Show previous card">&lt;</button>
+                    <div class="carousel-viewport">
+                        <div class="carousel-track">
+                            <div class="card about-card is-active is-visible" aria-hidden="false">
                         <h3>Project Background</h3>
                         <p>In Sri Lanka, students often rely on the printed University Admission Handbook to determine their eligibility for degree programs. This process can be manual, time-consuming, and confusing, especially for students trying to make the right academic choice.</p>
                     </div>
-                    <div class="card">
+                            <div class="card about-card" aria-hidden="true">
                         <h3>Smart Z-Score Support</h3>
                         <p>UniHelper addresses this challenge through a Z-score eligibility engine that helps students identify suitable degree programs based on district, subject stream, and Z-score. This makes the decision-making process faster and more informed.</p>
                     </div>
-                    <div class="card">
+                            <div class="card about-card" aria-hidden="true">
                         <h3>University Applicant Module</h3>
                         <p>This module supports school leavers and applicants by helping them discover degree opportunities, review options, and better understand possible university pathways.</p>
                     </div>
-                    <div class="card">
+                            <div class="card about-card" aria-hidden="true">
                         <h3>Undergraduate Community Module</h3>
                         <p>UniHelper creates a collaborative academic environment where applicants and undergraduates can connect through public Q&amp;A discussions and peer learning sessions, commonly known as Kuppi.</p>
                     </div>
-                    <div class="card">
+                            <div class="card about-card" aria-hidden="true">
                         <h3>University Admin Module</h3>
                         <p>Verified university representatives can publish official announcements, promote degree programs, and share updates on workshops, insight days, seminars, and other academic events.</p>
                     </div>
-                    <div class="card">
+                            <div class="card about-card" aria-hidden="true">
                         <h3>System Administrator Module</h3>
                         <p>The system administrator manages core academic data, approves role applications, oversees users, and maintains the overall quality, security, and reliability of the platform.</p>
                     </div>
-                    <div class="card">
+                            <div class="card about-card" aria-hidden="true">
                         <h3>Moderation and Integrity</h3>
                         <p>Selected undergraduates act as Platform Moderators to monitor activity, flag inappropriate content, and keep discussions respectful, helpful, and informative for all users.</p>
                     </div>
-                    <div class="card">
+                            <div class="card about-card" aria-hidden="true">
                         <h3>Technology Behind UniHelper</h3>
                         <p>UniHelper is built using MVC architecture with HTML, CSS, and JavaScript for the frontend, PHP for backend processing, MySQL for data management, and a Python-based component for Z-score calculation.</p>
                     </div>
-                    <div class="card">
+                            <div class="card about-card" aria-hidden="true">
                         <h3>Overall Vision</h3>
                         <p>UniHelper aims to build a student-centered digital ecosystem that bridges the gap between applicants, undergraduates, and universities by combining guidance, collaboration, and centralized access to reliable information.</p>
+                            </div>
+                        </div>
                     </div>
+                    <button type="button" class="carousel-nav carousel-next" aria-label="Show next card">&gt;</button>
                 </div>
             </div>
         </main>
     </div>
+
+    <script>
+        (function () {
+            const carousel = document.getElementById('aboutCarousel');
+            if (!carousel) {
+                return;
+            }
+
+            const cards = Array.from(carousel.querySelectorAll('.about-card'));
+            const prevButton = carousel.querySelector('.carousel-prev');
+            const nextButton = carousel.querySelector('.carousel-next');
+            const transitionDuration = 420;
+            let activeIndex = 0;
+            let isAnimating = false;
+
+            if (!cards.length || !prevButton || !nextButton) {
+                return;
+            }
+
+            function moveTo(nextIndex, direction) {
+                if (isAnimating || nextIndex === activeIndex) {
+                    return;
+                }
+
+                isAnimating = true;
+
+                const currentCard = cards[activeIndex];
+                const nextCard = cards[nextIndex];
+                const exitClass = direction === 'next' ? 'is-exiting-left' : 'is-exiting-right';
+                const enterClass = direction === 'next' ? 'is-entering-right' : 'is-entering-left';
+
+                currentCard.classList.add(exitClass);
+                nextCard.classList.add('is-active', 'is-entering', enterClass);
+                nextCard.setAttribute('aria-hidden', 'false');
+
+                requestAnimationFrame(function () {
+                    nextCard.classList.add('is-visible');
+                });
+
+                window.setTimeout(function () {
+                    currentCard.classList.remove('is-active', 'is-visible', exitClass);
+                    currentCard.setAttribute('aria-hidden', 'true');
+
+                    nextCard.classList.remove('is-entering', enterClass);
+                    nextCard.classList.add('is-visible');
+
+                    activeIndex = nextIndex;
+                    isAnimating = false;
+                }, transitionDuration);
+            }
+
+            function showNextCard() {
+                const nextIndex = (activeIndex + 1) % cards.length;
+                moveTo(nextIndex, 'next');
+            }
+
+            function showPreviousCard() {
+                const previousIndex = (activeIndex - 1 + cards.length) % cards.length;
+                moveTo(previousIndex, 'prev');
+            }
+
+            prevButton.addEventListener('click', showPreviousCard);
+            nextButton.addEventListener('click', showNextCard);
+
+            carousel.addEventListener('keydown', function (event) {
+                if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    showPreviousCard();
+                }
+
+                if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    showNextCard();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
