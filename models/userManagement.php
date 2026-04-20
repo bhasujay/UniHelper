@@ -36,6 +36,7 @@ class UserManagement
 
 	private const BANNED_PROFILE_PICTURE = '/uploads/profilePictures/banned-user.png';
 	private const DELETED_PROFILE_PICTURE = '/uploads/profilePictures/deleted-user.png';
+	private const DEFAULT_PROFILE_PICTURE = '/uploads/profilePictures/default-pfp.png';
 
 	public function __construct()
 	{
@@ -560,6 +561,124 @@ class UserManagement
 			}
 
 			throw new Exception('Failed to restore deleted user by email: ' . $e->getMessage(), 0, $e);
+		}
+	}
+
+	public function reactivateDeletedUserWithRegistration(array $registrationData): ?int
+	{
+		$email = trim((string) ($registrationData['email'] ?? ''));
+		if ($email === '') {
+			return null;
+		}
+
+		$connection = $this->db->getConnection();
+		$connection->beginTransaction();
+
+		try {
+			$snapshotStmt = $this->db->prepare('SELECT * FROM deleted_users WHERE email = :email LIMIT 1 FOR UPDATE');
+			$snapshotStmt->execute(['email' => $email]);
+			$snapshot = $snapshotStmt->fetch(\PDO::FETCH_ASSOC);
+
+			if (!$snapshot) {
+				$connection->rollBack();
+				return null;
+			}
+
+			$userStmt = $this->db->prepare('SELECT id FROM users WHERE email = :email LIMIT 1 FOR UPDATE');
+			$userStmt->execute(['email' => $email]);
+			$targetUserId = $userStmt->fetchColumn();
+
+			if ($targetUserId === false && isset($snapshot['id'])) {
+				$userById = $this->getUserSnapshotForUpdate((int) $snapshot['id']);
+				if ($userById !== null) {
+					$targetUserId = (int) $snapshot['id'];
+				}
+			}
+
+			if ($targetUserId === false || $targetUserId === null) {
+				$connection->rollBack();
+				return null;
+			}
+
+			// Keep existing behavior explicit: first restore from deleted snapshot,
+			// then overwrite with fresh registration data.
+			$this->restoreUserFromSnapshot($snapshot, (int) $targetUserId);
+
+			$alYear = $registrationData['al_year'] ?? null;
+			if ($alYear === '') {
+				$alYear = null;
+			}
+
+			$university = $registrationData['university'] ?? null;
+			if ($university === '') {
+				$university = null;
+			}
+
+			$major = $registrationData['major'] ?? null;
+			if ($major === '') {
+				$major = null;
+			}
+
+			$profileRole = $registrationData['profile_role'] ?? null;
+			if ($profileRole === '') {
+				$profileRole = null;
+			}
+
+			$profilePicture = $registrationData['profile_picture'] ?? null;
+			if (!is_string($profilePicture) || trim($profilePicture) === '') {
+				$profilePicture = self::DEFAULT_PROFILE_PICTURE;
+			}
+
+			$public = $registrationData['public'] ?? 1;
+			$public = ((int) $public === 0) ? 0 : 1;
+
+			$updateSql = "
+				UPDATE users
+				SET first_name = :first_name,
+					last_name = :last_name,
+					email = :email,
+					phone = :phone,
+					password_hash = :password_hash,
+					role = :role,
+					al_year = :al_year,
+					university = :university,
+					major = :major,
+					profile_role = :profile_role,
+					profile_picture = :profile_picture,
+					public = :public,
+					moderator = 0,
+					created_at = NOW()
+				WHERE id = :id
+			";
+
+			$updateStmt = $this->db->prepare($updateSql);
+			$updateStmt->execute([
+				'id' => (int) $targetUserId,
+				'first_name' => $registrationData['first_name'] ?? null,
+				'last_name' => $registrationData['last_name'] ?? null,
+				'email' => $email,
+				'phone' => $registrationData['phone'] ?? null,
+				'password_hash' => $registrationData['password_hash'] ?? null,
+				'role' => $registrationData['role'] ?? 'role-applicant',
+				'al_year' => $alYear,
+				'university' => $university,
+				'major' => $major,
+				'profile_role' => $profileRole,
+				'profile_picture' => $profilePicture,
+				'public' => $public,
+			]);
+
+			$deleteStmt = $this->db->prepare('DELETE FROM deleted_users WHERE id = :id');
+			$deleteStmt->execute(['id' => (int) $snapshot['id']]);
+
+			$connection->commit();
+			return (int) $targetUserId;
+		} catch (Throwable $e) {
+			if ($connection->inTransaction()) {
+				$connection->rollBack();
+			}
+
+			throw new Exception('Failed to reactivate deleted user with registration: ' . $e->getMessage(), 0, $e);
 		}
 	}
 

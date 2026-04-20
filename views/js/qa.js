@@ -144,8 +144,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (answerText.length < 5) {
-            showToast('Answer must be at least 5 characters long', 'error');
+        if (answerText.length < 1) {
+            showToast('Answer must be at least 1 characters long', 'error');
             return;
         }
         

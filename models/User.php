@@ -2,6 +2,8 @@
 
 namespace app\models;
 
+require_once dirname(__DIR__) . '/models/notify.php';
+
 use app\core\Database;
 
 class User
@@ -54,6 +56,11 @@ class User
             
             if ($result) {
                 $this->id = $this->db->lastInsertId();
+
+                // Create a welcome notification for the new user
+                $notify = new Notify();
+                $notify->insertNotification($this->id, "Welcome to our platform! We're glad to have you here. Try exploring your profile!", "other", "/unihelper/profile/view" );
+
                 return true;
             } else {
                 return false;

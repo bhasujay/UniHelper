@@ -56,6 +56,10 @@ class AuthController
                 $_SESSION['user_role'] = $foundUser->role;
                 $_SESSION['user_name'] = $foundUser->firstName . ' ' . $foundUser->lastName;
 
+                // add a welcome back notification for the user
+                $notify = new Notify();
+                $notify->insertNotification($foundUser->id, "Welcome back, " . $foundUser->firstName . "! Check out what's new since your last visit.", "other" );
+
                 // Redirect based on role
                 header('Location: /UniHelper/dashboard');
                 exit;
@@ -112,13 +116,12 @@ class AuthController
                 }
             }
 
-            if (!empty($errors)) {
-                return $this->render('register.php', ['errors' => $errors]);
+            if (empty($user->profilePicture)) {
+                $user->profilePicture = '/uploads/profilePictures/default-pfp.png';
             }
 
-            // Check if email already exists
-            if ($user->emailExists($user->email)) {
-                return $this->render('register.php', ['error' => 'Email already exists']);
+            if (!empty($errors)) {
+                return $this->render('register.php', ['errors' => $errors]);
             }
 
             // Check if phone already exists
@@ -126,8 +129,41 @@ class AuthController
                 return $this->render('register.php', ['error' => 'Phone number already exists']);
             }
 
-            // Save user
-            if ($user->save()) {
+            $reactivated = false;
+            $userManagement = new UserManagement();
+
+            try {
+                $reactivatedUserId = $userManagement->reactivateDeletedUserWithRegistration([
+                    'first_name' => $user->firstName,
+                    'last_name' => $user->lastName,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'password_hash' => $user->password_hash,
+                    'role' => $user->role,
+                    'al_year' => $user->alYear,
+                    'university' => $user->University,
+                    'major' => $user->major,
+                    'profile_role' => $user->profileRole,
+                    'profile_picture' => $user->profilePicture,
+                    'public' => 1,
+                ]);
+
+                if ($reactivatedUserId !== null) {
+                    $user->id = $reactivatedUserId;
+                    $reactivated = true;
+                }
+            } catch (\Throwable $e) {
+                error_log('Registration reactivation error: ' . $e->getMessage());
+                return $this->render('register.php', ['error' => 'Registration failed. Please try again.']);
+            }
+
+            // Check if email already exists
+            if (!$reactivated && $user->emailExists($user->email)) {
+                return $this->render('register.php', ['error' => 'Email already exists']);
+            }
+
+            // Save user (or continue with reactivated deleted row)
+            if ($reactivated || $user->save()) {
                 // Registration successful
                 session_start();
                 $_SESSION['user_id'] = $user->id;
@@ -136,7 +172,9 @@ class AuthController
                 $_SESSION['user_name'] = $user->firstName . ' ' . $user->lastName;
                 // Add initial user stat entry
                 $userStat = new UserStat();
-                $userStat->add($user->id);
+                if (!$reactivated) {
+                    $userStat->add($user->id);
+                }
                 // add them to session
                 $_SESSION['vote_count'] = 0;
                 $_SESSION['answer_count'] = 0;
