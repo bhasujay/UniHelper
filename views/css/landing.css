@@ -227,81 +227,95 @@ body::after {
     opacity: 0.7;
 }
 
-.hero-icon {
-    display: inline-flex;
+.hero-image-wrapper {
+    width: 100%;
+    height: 40vw;
+    max-height: 480px;
+}
+
+.hero-image-container {
+    position: fixed;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 95%;
+    max-width: 1050px;
+    margin: 0;
+    display: flex;
     justify-content: center;
-    align-items: center;
-    margin: 0 auto;
-    padding: 2rem;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
-    position: relative;
-    overflow: visible;
-}
-
-.hero-icon::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background-image:
-        radial-gradient(circle at center, rgba(56, 189, 248, 0.2), transparent 55%),
-        radial-gradient(circle 2px at 18% 25%, rgba(255,255,255,0.9), transparent 15%),
-        radial-gradient(circle 1.2px at 32% 72%, rgba(0,255,255,0.75), transparent 16%),
-        radial-gradient(circle 1.8px at 68% 20%, rgba(255,255,255,0.7), transparent 15%),
-        radial-gradient(circle 2px at 82% 58%, rgba(0,220,255,0.6), transparent 16%),
-        radial-gradient(circle 1px at 52% 48%, rgba(255,255,255,0.6), transparent 14%);
-    background-repeat: no-repeat;
-    filter: blur(5px);
-    opacity: 0.95;
     z-index: 0;
+    pointer-events: none;
+    filter: blur(0px);
+    opacity: 1;
 }
 
-.hero-icon::after {
-    content: '';
-    position: absolute;
-    inset: 0.5rem;
-    border-radius: 50%;
-    border: 1px solid rgba(56, 189, 248, 0.28);
-    box-shadow: 0 0 35px rgba(56, 189, 248, 0.22);
-    z-index: 0;
-}
-
-.logo-container {
-    position: relative;
-    display: inline-block;
-    z-index: 1;
-}
-
-.logo-container::before,
-.logo-container::after {
+.hero-image-container::before,
+.hero-image-container::after {
     content: "";
     position: absolute;
     top: 50%;
-    width: 1200px;
-    height: 1200px;
+    width: 1000px;
+    height: 1000px;
     transform: translateY(-50%);
     pointer-events: none;
     opacity: 0.95;
     background: url('/UniHelper/views/images/shine_dot.png') center / contain no-repeat;
+    z-index: 0;
 }
 
-.logo-container::before {
-    left: -920px;
+.hero-image-container::before {
+    left: -500px;
 }
 
-.logo-container::after {
-    right: -920px;
+.hero-image-container::after {
+    right: -500px;
+}
+
+.hero-background-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-text-section {
+    position: relative;
+    z-index: 3;
+    margin-top: -160px;
+}
+
+.hero-text-section::before {
+    content: '';
+    position: absolute;
+    inset: -40px -150px;
+    z-index: -1;
+    background: radial-gradient(ellipse at center, rgba(10, 15, 44, 0.98) 0%, rgba(10, 15, 44, 0.7) 50%, transparent 80%);
+    filter: blur(25px);
+    pointer-events: none;
+}
+
+.logo-container {
+    position: absolute;
+    top: 38%;
+    right: 15%;
+    z-index: 4;
+    pointer-events: auto;
 }
 
 .landing-logo {
-    width: 520px;
-    max-width: 100%;
+    width: 700px;
+    max-width: 150vw;
     height: auto;
     display: block;
-    margin: 0 auto;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6));
+    transform: translate(20%, -15%); /* tweak position slightly if enlarging shifts it */
+}
+
+.hero-cta,
+.hero-actions {
     position: relative;
-    z-index: 1;
+    z-index: 5;
 }
 
 .features {
@@ -311,7 +325,7 @@ body::after {
     margin-top: 3rem;
     flex-wrap: wrap;
     padding: 0 0.5rem;
-    z-index: 1;
+    z-index: 5;
     position: relative;
 }
 
@@ -497,8 +511,8 @@ body::after {
 .university-marquee-group {
     display: flex;
     align-items: center;
-    gap: 52px;
-    padding-right: 52px;
+    gap: 31px;
+    padding-right: 31px;
     flex-shrink: 0;
 }
 
@@ -506,13 +520,13 @@ body::after {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 134px;
+    min-width: 201px;
 }
 
 .university-marquee-item img {
-    height: 84px;
+    height: 126px;
     width: auto;
-    max-width: 168px;
+    max-width: 252px;
     object-fit: contain;
     opacity: 0.92;
     filter: grayscale(1);
@@ -684,15 +698,16 @@ body::after {
 }
 
 @media (max-width: 768px) {
-    .logo-container::before,
-    .logo-container::after {
-        width: 110px;
-        height: 110px;
-        left: -120px;
-        right: -120px;
+    .logo-container {
+        right: 12%;
+        top: 35%;
+        bottom: auto;
     }
     .landing-logo {
-        width: 360px;
+        width: 450px;
+    }
+    .hero-text-section {
+        margin-top: -30px;
     }
     .features {
         flex-direction: column;
@@ -766,15 +781,16 @@ body::after {
 }
 
 @media (max-width: 520px) {
-    .logo-container::before,
-    .logo-container::after {
-        width: 90px;
-        height: 90px;
-        left: -100px;
-        right: -100px;
+    .logo-container {
+        right: 8%;
+        top: 40%;
+        bottom: auto;
     }
     .landing-logo {
-        width: 320px;
+        width: 350px;
+    }
+    .hero-text-section {
+        margin-top: -15px;
     }
 
     .about-carousel {

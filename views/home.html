@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -22,13 +22,16 @@
         <main class="hero landing-bg">
             <div class="hero-inner">
                 <div class="hero-glow"></div>
-                <div class="hero-icon">
-                    <div class="logo-container">
-                        <img src="views/images/new _logo.png" alt="UniHelper logo" class="landing-logo">
+                <div class="hero-image-wrapper">
+                    <div class="hero-image-container">
+                        <img src="views/images/University_background.png" alt="University Background" class="hero-background-img">
+                        <div class="logo-container">
+                            <img src="views/images/new _logo.png" alt="UniHelper logo" class="landing-logo">
+                        </div>
                     </div>
                 </div>
 
-                <div>
+                <div class="hero-text-section">
                     <h1 class="hero-headline">We Help You Get There</h1>
                     <p class="hero-subtitle">From Application to Graduation</p>
                 </div>
@@ -46,28 +49,28 @@
                 <div class="features">
                     <div class="card">
                         <img src="views/images/icon1.png" alt="Feature icon 1" class="feature-icon">
-                        <h3>MAIN QORE Q&A</h3>
-                        <p>Connect with peers and get instant answers to your academic questions from experienced students.</p>
+                        <h3>Academic Q&A Forum</h3>
+                        <p>Engage in a categorized, tag-based discussion space where applicants and undergraduates connect to solve academic doubts and earn contribution badges.</p>
                     </div>
                     <div class="card">
                         <img src="views/images/icon2.png" alt="Feature icon 2" class="feature-icon">
-                        <h3>PEER LEARNING SESSIONS</h3>
-                        <p>Join collaborative study sessions and share knowledge with fellow students and build connections across universities.</p>
+                        <h3>Peer-Led "Kuppi" Sessions</h3>
+                        <p>Organize or join collaborative study sessions to share knowledge across different universities and disciplines in a dedicated "Kuppi" environment.</p>
                     </div>
                     <div class="card">
                         <img src="views/images/icon3.png" alt="Feature icon 3" class="feature-icon">
-                        <h3>Z-CORE GENERATOR</h3>
-                        <p>Enter your Z-score and discover eligible degree programs with our smart matching system.</p>
+                        <h3>Z-Score Eligibility Engine</h3>
+                        <p>Instantly identify eligible degree programs by matching your Z-score, stream, and district against historical cutoff data from the official handbook.</p>
                     </div>
                     <div class="card">
                         <img src="views/images/icon4 (2).png" alt="Feature icon 4" class="feature-icon">
-                        <h3>SECURE PLATFORM</h3>
-                        <p>Safe and moderated environment for academic discussions with enterprise-grade security.</p>
+                        <h3>Safe & Moderated Hub</h3>
+                        <p>Experience a secure, role-based ecosystem where approved student moderators ensure content integrity and a respectful academic environment.</p>
                     </div>
                     <div class="card">
                         <img src="views/images/icon5.png" alt="Feature icon 5" class="feature-icon">
-                        <h3>UNIVERSITY EVENTS</h3>
-                        <p>Discover academic events, workshops, and insight days from leading universities across Sri Lanka.</p>
+                        <h3>University Opportunities</h3>
+                        <p>Discover official workshops, insight days, and academic announcements published directly by Sri Lankan universities and institutional administrators.</p>
                     </div>
                 </div>
 
@@ -125,6 +128,21 @@
 
         <script>
             (function () {
+                // Scroll blur/fade effect for the fixed background
+                const handleScroll = function() {
+                    const scroll = window.scrollY || document.documentElement.scrollTop;
+                    const heroImage = document.querySelector('.hero-image-container');
+                    if (heroImage) {
+                        let blur = Math.max(0, Math.min(scroll / 40, 30));
+                        let opacity = Math.max(1 - (scroll / 600), 0.1);
+                        heroImage.style.filter = `blur(${blur}px)`;
+                        heroImage.style.opacity = opacity;
+                    }
+                };
+                window.addEventListener('scroll', handleScroll, { passive: true });
+                // Ensure no blur on first load at the absolute top
+                setTimeout(handleScroll, 100);
+
                 const testimonialsGrid = document.getElementById('feedbackTestimonials');
                 const testimonialsClone = document.getElementById('feedbackTestimonialsClone');
 
@@ -305,14 +323,14 @@
                     <div class="site-footer-contact">
                         <h3 class="site-footer-heading">Contact Info</h3>
                         <ul class="site-footer-list">
-                            <li><a href="mailto:project.unihelper@gmail.com" target="_blank" rel="noopener noreferrer"></a><strong>Email:</strong> project.unihelper@gmail.com</li>
+                            <li><strong>Email:</strong> <a href="mailto:project.unihelper@gmail.com" style="color:inherit;">project.unihelper@gmail.com</a></li>
                             <li><strong>Phone:</strong> +94 76 144 6310</li>
                             <li><strong>Location:</strong> Colombo, Sri Lanka</li>
                         </ul>
                     </div>
                 </div>
 
-                <div class="site-footer-bottom">© 2025 UniHelper. All rights reserved.</div>
+                <div class="site-footer-bottom">© 2026 UniHelper. All rights reserved.</div>
             </div>
         </footer>
     </div>

@@ -12,14 +12,14 @@
   <nav class="nav">
     <div class="nav-container">
       <div class="nav-left">
-        <a href="home" class="logo">UniHelper</a>
+        <a href="home" class="logo" style="text-decoration:none;">UniHelper</a>
         <div class="nav-links">
           <!--a href="#home" class="nav-link">Home</a-->
         </div>
       </div>
       <div class="nav-right">
-        <a href="login"><button class="btn btn-outline text1">Login</button></a>
-        <a href="register"><button class="btn btn-primary">Register</button></a>
+        <a href="login" class="btn btn-outline">Login</a>
+        <a href="register" class="btn btn-primary">Register</a>
       </div>
     </div>
   </nav>
@@ -162,7 +162,7 @@
       <!-- Footer Bottom -->
       <div class="footer-bottom">
         <div class="footer-bottom-content">
-          <p>&copy; 2025 UniHelper. All rights reserved.</p>
+          <p>&copy; 2026 UniHelper. All rights reserved.</p>
         </div>
       </div>
     </div>
