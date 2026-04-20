@@ -211,6 +211,7 @@
                     <option value="commerce">Commerce</option>
                     <option value="arts">Arts</option>
                     <option value="technology">Technology</option>
+                    <option value="other">Other</option>
                 </select>
             </div>
 
@@ -227,7 +228,11 @@
                     <input type="text" id="subject2" name="subject2" class="form-input"
                            placeholder="Subject 2" required>
                     <input type="text" id="subject3" name="subject3" class="form-input"
-                           placeholder="Subject 3" required>
+                              placeholder="Subject 3 (Chemistry or ICT)" required>
+                    <select id="subject3Option" class="form-select" style="display: none;">
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Information &amp; Communication Technology">Information Communication Technology</option>
+                    </select>
                 </div>
                 <small class="form-instructions">Subjects auto-fill when you select a known stream above.</small>
             </div>
