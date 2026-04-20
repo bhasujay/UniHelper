@@ -78,7 +78,7 @@ class ZScoreController
                 $this->sendJsonResponse(false, 'User not authenticated', null, 401);
                 return;
             }
-            
+
             // Validate request method
             if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
                 $this->sendJsonResponse(false, 'Method not allowed', null, 405);
@@ -268,8 +268,8 @@ class ZScoreController
         
         // Validate Z-Score range
         $zScore = floatval($data['zScore']);
-        if ($zScore < 0 || $zScore > 3.0) {
-            $this->sendJsonResponse(false, 'Z-Score must be between 0 and 3.0', null, 400);
+        if ($zScore < -1 || $zScore > 4.0) {
+            $this->sendJsonResponse(false, 'Z-Score must be between -1 and 4.0', null, 400);
             return false;
         }
         

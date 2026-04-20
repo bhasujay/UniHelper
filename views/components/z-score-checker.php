@@ -33,7 +33,7 @@
                 Get Started
             </button>
 
-            <div class="zscore-quick-links">
+            <!-- <div class="zscore-quick-links">
                 <a href="#" class="btn-quick-link" onclick="event.preventDefault();">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                          stroke-linecap="round" stroke-linejoin="round">
@@ -49,7 +49,7 @@
                     </svg>
                     Top Programs
                 </a>
-            </div>
+            </div> -->
         </div>
     </div>
 
@@ -247,9 +247,9 @@
                 <label for="zScore" class="form-label">Z-Score</label>
                 <div class="zscore-field-group">
                     <input type="number" id="zScore" name="zScore" class="form-input"
-                           step="0.0001" min="0" max="3"
+                           step="0.0001" min="-1" max="4.0"
                            placeholder="e.g. 1.8234" required>
-                    <span class="zscore-range-hint">Range: 0.0000 – 3.0000</span>
+                    <span class="zscore-range-hint">Range: -1.0000 – 4.0000</span>
                 </div>
             </div>
 

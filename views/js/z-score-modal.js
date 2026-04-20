@@ -162,8 +162,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            if (parseFloat(zScore) < 0 || parseFloat(zScore) > 3.0) {
-                showToast('Z-Score must be between 0 and 3.0', 'error');
+            if (parseFloat(zScore) < -1 || parseFloat(zScore) > 4.0) {
+                showToast('Z-Score must be between -1 and 4.0', 'error');
                 return;
             }
 
