@@ -16,7 +16,7 @@
     border: none;
     border-radius: 999px;
     background: var(--gradient-primary);
-    color: #111;
+    color: var(--key) !important;
     font-size: 0.9rem;
     font-weight: 700;
     padding: 0.65rem 0.8rem;
@@ -304,7 +304,7 @@
 
 .feed-search-btn {
     border: none;
-    color: #111;
+    color: var(--key) !important;
     background: var(--gradient-primary);
 }
 
@@ -417,7 +417,7 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
     padding: 0.3rem 0.6rem;
-    color: #111;
+    color: var(--key) !important;
     background: var(--gradient-primary);
 }
 
