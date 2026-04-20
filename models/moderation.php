@@ -354,12 +354,48 @@ class QaReport
 
     public function backToPending($reportId)
     {
-        // this should set the report status back to pending and clear the action taken and mod_id, this is useful when a moderator wants to re-evaluate a report after taking an action
-        $sql = "UPDATE reports SET status = 'pending', action_taken = NULL, mod_id = NULL WHERE report_id = :report_id";
+        $sql = "SELECT report_id, q_id, a_id FROM reports WHERE report_id = :report_id LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['report_id' => (int) $reportId]);
+        $report = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        return $stmt->rowCount() > 0;
+        if (!$report) {
+            return false;
+        }
+
+        $isQuestionReport = !empty($report['q_id']) && empty($report['a_id']);
+        $isAnswerReport = !empty($report['a_id']) && empty($report['q_id']);
+
+        if (!$isQuestionReport && !$isAnswerReport) {
+            throw new \InvalidArgumentException('Invalid report content reference.');
+        }
+
+        $connection = $this->db->getConnection();
+        $connection->beginTransaction();
+
+        try {
+            // Re-open moderation report and clear assignment/action data.
+            $sql = "UPDATE reports SET status = 'pending', action_taken = NULL, mod_id = NULL WHERE report_id = :report_id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute(['report_id' => (int) $reportId]);
+
+            // Restore content visibility when it had been moderated to flagged/removed.
+            if ($isQuestionReport) {
+                $contentStmt = $this->db->prepare("UPDATE questions SET status = 'normal' WHERE q_id = :id AND status IN ('flagged', 'removed')");
+                $contentStmt->execute(['id' => (int) $report['q_id']]);
+            } else {
+                $contentStmt = $this->db->prepare("UPDATE answers SET status = 'normal' WHERE a_id = :id AND status IN ('flagged', 'removed')");
+                $contentStmt->execute(['id' => (int) $report['a_id']]);
+            }
+
+            $connection->commit();
+            return $stmt->rowCount() > 0;
+        } catch (\Throwable $e) {
+            if ($connection->inTransaction()) {
+                $connection->rollBack();
+            }
+            throw $e;
+        }
     }
 
     public function removeContent($reportId, $adminId = null)

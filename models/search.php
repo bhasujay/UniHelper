@@ -66,7 +66,7 @@ class search extends BaseModel
             JOIN qa_tag qt ON q.q_id = qt.q_id
             JOIN tags t    ON t.tag_id = qt.tag_id
             WHERE LOWER(t.tag_name) = LOWER(:tagName)
-              AND q.status = 'normal'
+                            AND q.status IN ('normal', 'flagged')
             ORDER BY q.vote_count DESC, q.added_time DESC
         ";
 
@@ -97,7 +97,7 @@ class search extends BaseModel
                    COALESCE(last_modified, added_time) AS timestamp
             FROM questions
             WHERE LOWER(question) LIKE LOWER(:query)
-              AND status = 'normal'
+                            AND status IN ('normal', 'flagged')
             ORDER BY vote_count DESC, added_time DESC
         ";
 
@@ -128,7 +128,7 @@ class search extends BaseModel
                    COALESCE(last_modified, added_time) AS timestamp
             FROM questions
             WHERE LOWER(text) LIKE LOWER(:query)
-              AND status = 'normal'
+              AND status IN ('normal', 'flagged')
         ";
 
         // Exclude question IDs already found in the title tier
@@ -182,7 +182,7 @@ class search extends BaseModel
             JOIN questions q ON a.q_id = q.q_id
             WHERE LOWER(a.text) LIKE LOWER(:query)
               AND a.status = 'normal'
-              AND q.status = 'normal'
+                            AND q.status IN ('normal', 'flagged')
             ORDER BY a.added_time DESC
         ";
 
