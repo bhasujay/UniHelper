@@ -214,6 +214,31 @@ class ProgramController extends DashboardController
 
         $this->sendJsonResponse(true, 'Degree program retrieved successfully.', $degreeData);
     }
+
+    /**
+     * Get one degree program details for read-only views (applicant/admin)
+     * GET /api?controller=ProgramController&action=getDegreeProgramDetails&id=:id
+     */
+    public function getDegreeProgramDetails(Request $request)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            $this->sendJsonResponse(false, 'Method not allowed', null, 405);
+        }
+
+        $programId = (int)($request->get('id') ?? $request->get('program_id') ?? 0);
+        if ($programId <= 0) {
+            $this->sendJsonResponse(false, 'Invalid degree program ID.', null, 400);
+        }
+
+        $degreeModel = new DegreeProgram();
+        $degreeData = $degreeModel->getDegreeById($programId);
+
+        if ($degreeData === null) {
+            $this->sendJsonResponse(false, 'Degree program not found.', null, 404);
+        }
+
+        $this->sendJsonResponse(true, 'Degree program details retrieved successfully.', $degreeData);
+    }
         /**
      * Search degree programs
      * GET /api?controller=ProgramController&action=searchPrograms

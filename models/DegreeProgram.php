@@ -150,10 +150,21 @@ class DegreeProgram {
             $degree['duration'] = '';
         }
 
-        $requirements = $this->fetchSubjectRequirements((int)$id);
-        $degree['path_description'] = $this->fetchPathDescription((int)$id);
+        $paths = $this->fetchSubjectRequirementPaths((int)$id);
+        $requirements = $this->flattenRequirementsFromPaths($paths);
+
+        if (empty($requirements)) {
+            $requirements = $this->fetchSubjectRequirements((int)$id);
+        }
+
+        $degree['path_description'] = !empty($paths) && !empty($paths[0]['path_description'])
+            ? (string)$paths[0]['path_description']
+            : $this->fetchPathDescription((int)$id);
+        $degree['subject_requirement_paths'] = $paths;
         $degree['subject_requirements'] = $requirements;
-        $degree['subject_requirements_text'] = $this->formatRequirementsText($requirements);
+        $degree['subject_requirements_text'] = !empty($paths)
+            ? $this->formatRequirementsTextByPaths($paths)
+            : $this->formatRequirementsText($requirements);
 
         return $degree;
     }
@@ -251,30 +262,38 @@ class DegreeProgram {
         $deletePathsStmt = $this->db->prepare("DELETE FROM program_entry_paths WHERE program_id = :program_id");
         $deletePathsStmt->execute(['program_id' => $programId]);
 
-        $requirements = $this->parseRequirementsText($requirementsText);
-        if (empty($requirements)) {
+        $pathPayloads = $this->parseRequirementPathsText($requirementsText, $pathDescription);
+        if (empty($pathPayloads)) {
             return;
         }
 
         $insertPathStmt = $this->db->prepare(
             "INSERT INTO program_entry_paths (program_id, description) VALUES (:program_id, :description)"
         );
-        $insertPathStmt->execute([
-            'program_id' => $programId,
-            'description' => $pathDescription !== '' ? $pathDescription : 'Default Entry Path'
-        ]);
-
-        $pathId = (int)$this->db->lastInsertId();
         $insertSubjectStmt = $this->db->prepare(
             "INSERT INTO path_subjects (path_id, subject_name, min_grade) VALUES (:path_id, :subject_name, :min_grade)"
         );
 
-        foreach ($requirements as $requirement) {
-            $insertSubjectStmt->execute([
-                'path_id' => $pathId,
-                'subject_name' => $requirement['subject_name'],
-                'min_grade' => $requirement['min_grade']
+        foreach ($pathPayloads as $pathPayload) {
+            $pathLabel = trim((string)($pathPayload['path_description'] ?? ''));
+
+            $insertPathStmt->execute([
+                'program_id' => $programId,
+                'description' => $pathLabel !== '' ? $pathLabel : 'Default Entry Path'
             ]);
+
+            $pathId = (int)$this->db->lastInsertId();
+            $requirements = is_array($pathPayload['subject_requirements'] ?? null)
+                ? $pathPayload['subject_requirements']
+                : [];
+
+            foreach ($requirements as $requirement) {
+                $insertSubjectStmt->execute([
+                    'path_id' => $pathId,
+                    'subject_name' => $requirement['subject_name'],
+                    'min_grade' => $requirement['min_grade']
+                ]);
+            }
         }
     }
 
@@ -290,6 +309,10 @@ class DegreeProgram {
         foreach ($lines as $line) {
             $line = trim($line);
             if ($line === '') {
+                continue;
+            }
+
+            if (preg_match('/^path\s*[:\-]/i', $line) === 1) {
                 continue;
             }
 
@@ -317,6 +340,88 @@ class DegreeProgram {
         return $requirements;
     }
 
+    private function parseRequirementPathsText(string $requirementsText, string $defaultPathDescription = ''): array
+    {
+        $trimmedText = trim($requirementsText);
+        if ($trimmedText === '') {
+            return [];
+        }
+
+        $blocks = preg_split('/(?:\r\n|\r|\n)\s*(?:\r\n|\r|\n)+/', $trimmedText);
+        if ($blocks === false || empty($blocks)) {
+            return [];
+        }
+
+        $paths = [];
+        $pathIndex = 1;
+        $hasMultipleBlocks = count($blocks) > 1;
+
+        foreach ($blocks as $block) {
+            $block = trim($block);
+            if ($block === '') {
+                continue;
+            }
+
+            $lines = preg_split('/\r\n|\r|\n/', $block);
+            if ($lines === false || empty($lines)) {
+                continue;
+            }
+
+            $normalizedLines = [];
+            foreach ($lines as $line) {
+                $line = trim((string)$line);
+                if ($line !== '') {
+                    $normalizedLines[] = $line;
+                }
+            }
+
+            if (empty($normalizedLines)) {
+                continue;
+            }
+
+            $pathDescription = '';
+            if (preg_match('/^path\s*[:\-]\s*(.+)$/i', $normalizedLines[0], $matches) === 1) {
+                $pathDescription = trim((string)($matches[1] ?? ''));
+                array_shift($normalizedLines);
+            }
+
+            $requirements = $this->parseRequirementsText(implode("\n", $normalizedLines));
+            if (empty($requirements)) {
+                continue;
+            }
+
+            if ($pathDescription === '') {
+                if ($hasMultipleBlocks) {
+                    $pathDescription = 'Alternative Path ' . $pathIndex;
+                } elseif ($defaultPathDescription !== '') {
+                    $pathDescription = $defaultPathDescription;
+                } else {
+                    $pathDescription = 'Default Entry Path';
+                }
+            }
+
+            $paths[] = [
+                'path_description' => $pathDescription,
+                'subject_requirements' => $requirements
+            ];
+            $pathIndex++;
+        }
+
+        if (empty($paths)) {
+            $requirements = $this->parseRequirementsText($trimmedText);
+            if (empty($requirements)) {
+                return [];
+            }
+
+            $paths[] = [
+                'path_description' => $defaultPathDescription !== '' ? $defaultPathDescription : 'Default Entry Path',
+                'subject_requirements' => $requirements
+            ];
+        }
+
+        return $paths;
+    }
+
     private function fetchSubjectRequirements(int $programId): array
     {
         if (!$this->hasRequirementTables()) {
@@ -332,6 +437,86 @@ class DegreeProgram {
         $stmt = $this->db->prepare($query);
         $stmt->execute(['program_id' => $programId]);
         return $stmt->fetchAll();
+    }
+
+    private function fetchSubjectRequirementPaths(int $programId): array
+    {
+        if (!$this->hasRequirementTables()) {
+            return [];
+        }
+
+        $query = "SELECT pep.path_id,
+                         COALESCE(pep.description, '') AS path_description,
+                         ps.subject_name,
+                         COALESCE(ps.min_grade, 'S') AS min_grade
+                  FROM program_entry_paths pep
+                  LEFT JOIN path_subjects ps ON pep.path_id = ps.path_id
+                  WHERE pep.program_id = :program_id
+                  ORDER BY pep.path_id ASC, ps.id ASC";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute(['program_id' => $programId]);
+        $rows = $stmt->fetchAll();
+
+        if (empty($rows)) {
+            return [];
+        }
+
+        $pathsById = [];
+        foreach ($rows as $row) {
+            $pathId = (int)($row['path_id'] ?? 0);
+            if ($pathId <= 0) {
+                continue;
+            }
+
+            if (!isset($pathsById[$pathId])) {
+                $pathsById[$pathId] = [
+                    'path_id' => $pathId,
+                    'path_description' => (string)($row['path_description'] ?? ''),
+                    'subject_requirements' => []
+                ];
+            }
+
+            $subjectName = trim((string)($row['subject_name'] ?? ''));
+            if ($subjectName === '') {
+                continue;
+            }
+
+            $pathsById[$pathId]['subject_requirements'][] = [
+                'subject_name' => $subjectName,
+                'min_grade' => (string)($row['min_grade'] ?? 'S')
+            ];
+        }
+
+        return array_values($pathsById);
+    }
+
+    private function flattenRequirementsFromPaths(array $paths): array
+    {
+        if (empty($paths)) {
+            return [];
+        }
+
+        $requirements = [];
+        foreach ($paths as $path) {
+            if (!isset($path['subject_requirements']) || !is_array($path['subject_requirements'])) {
+                continue;
+            }
+
+            foreach ($path['subject_requirements'] as $requirement) {
+                $subjectName = trim((string)($requirement['subject_name'] ?? ''));
+                if ($subjectName === '') {
+                    continue;
+                }
+
+                $requirements[] = [
+                    'subject_name' => $subjectName,
+                    'min_grade' => (string)($requirement['min_grade'] ?? 'S')
+                ];
+            }
+        }
+
+        return $requirements;
     }
 
     private function fetchPathDescription(int $programId): string
@@ -367,6 +552,53 @@ class DegreeProgram {
         }
 
         return implode("\n", $lines);
+    }
+
+    private function formatRequirementsTextByPaths(array $paths): string
+    {
+        if (empty($paths)) {
+            return '';
+        }
+
+        $blocks = [];
+        $includePathLabels = count($paths) > 1;
+        $pathIndex = 1;
+
+        foreach ($paths as $path) {
+            $requirements = is_array($path['subject_requirements'] ?? null)
+                ? $path['subject_requirements']
+                : [];
+
+            if (empty($requirements)) {
+                continue;
+            }
+
+            $lines = [];
+            if ($includePathLabels) {
+                $pathDescription = trim((string)($path['path_description'] ?? ''));
+                if ($pathDescription === '') {
+                    $pathDescription = 'Path ' . $pathIndex;
+                }
+                $lines[] = 'Path: ' . $pathDescription;
+            }
+
+            foreach ($requirements as $requirement) {
+                $subject = (string)($requirement['subject_name'] ?? '');
+                $grade = (string)($requirement['min_grade'] ?? 'S');
+                if ($subject === '') {
+                    continue;
+                }
+
+                $lines[] = $subject . '|' . ($grade !== '' ? $grade : 'S');
+            }
+
+            if (!empty($lines)) {
+                $blocks[] = implode("\n", $lines);
+                $pathIndex++;
+            }
+        }
+
+        return implode("\n\n", $blocks);
     }
 
     private function hasRequirementTables(): bool

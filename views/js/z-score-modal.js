@@ -66,28 +66,80 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (streamSelect) {
+        const subject1Input = document.getElementById('subject1');
+        const subject2Input = document.getElementById('subject2');
+        const subject3Input = document.getElementById('subject3');
+        const subject3OptionSelect = document.getElementById('subject3Option');
+
+        if (subject3OptionSelect) {
+            subject3OptionSelect.addEventListener('change', function () {
+                subject3Input.value = this.value;
+            });
+        }
+
         streamSelect.addEventListener('change', function () {
             const selectedStream = this.value;
             const subjects = streamSubjects[selectedStream];
 
-            if (subjects) {
-                document.getElementById('subject1').value = subjects.subject1;
-                document.getElementById('subject2').value = subjects.subject2;
-                document.getElementById('subject3').value = subjects.subject3;
+            if (selectedStream === 'physical-science') {
+                subject1Input.value = streamSubjects['physical-science'].subject1;
+                subject2Input.value = streamSubjects['physical-science'].subject2;
 
-                // Make subject fields read-only
-                document.getElementById('subject1').readOnly = true;
-                document.getElementById('subject2').readOnly = true;
-                document.getElementById('subject3').readOnly = true;
+                const currentSubject3 = String(subject3Input.value || '').trim().toLowerCase();
+                const isIct = [
+                    'ict',
+                    'information communication technology',
+                    'information & communication technology',
+                    'information and communication technology',
+                    'informantion communication technology'
+                ].includes(currentSubject3);
+
+                if (currentSubject3 === '' || (!isIct && currentSubject3 !== 'chemistry')) {
+                    subject3Input.value = 'Chemistry';
+                } else if (isIct) {
+                    subject3Input.value = 'Information & Communication Technology';
+                } else {
+                    subject3Input.value = 'Chemistry';
+                }
+
+                // For Physical Science, subject 3 can be Chemistry or ICT.
+                subject1Input.readOnly = true;
+                subject2Input.readOnly = true;
+                subject3Input.readOnly = true;
+                if (subject3OptionSelect) {
+                    subject3OptionSelect.value = subject3Input.value;
+                    subject3OptionSelect.style.display = '';
+                }
+                subject3Input.style.display = 'none';
+                subject3Input.placeholder = 'Subject 3 (Chemistry or ICT)';
+            } else if (subjects) {
+                subject1Input.value = subjects.subject1;
+                subject2Input.value = subjects.subject2;
+                subject3Input.value = subjects.subject3;
+
+                // Make subject fields read-only for fixed stream subject sets.
+                subject1Input.readOnly = true;
+                subject2Input.readOnly = true;
+                subject3Input.readOnly = true;
+                if (subject3OptionSelect) {
+                    subject3OptionSelect.style.display = 'none';
+                }
+                subject3Input.style.display = '';
+                subject3Input.placeholder = 'Subject 3';
             } else {
-                document.getElementById('subject1').value = '';
-                document.getElementById('subject2').value = '';
-                document.getElementById('subject3').value = '';
+                subject1Input.value = '';
+                subject2Input.value = '';
+                subject3Input.value = '';
 
                 // Make subject fields editable for "Other" streams
-                document.getElementById('subject1').readOnly = false;
-                document.getElementById('subject2').readOnly = false;
-                document.getElementById('subject3').readOnly = false;
+                subject1Input.readOnly = false;
+                subject2Input.readOnly = false;
+                subject3Input.readOnly = false;
+                if (subject3OptionSelect) {
+                    subject3OptionSelect.style.display = 'none';
+                }
+                subject3Input.style.display = '';
+                subject3Input.placeholder = 'Subject 3';
             }
         });
     }
@@ -106,19 +158,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Basic validation
             if (!district || !stream || !subject1 || !subject2 || !subject3 || !zScore) {
-                alert('Please fill in all fields');
+                showToast('Please fill in all fields', 'error');
                 return;
             }
 
-            if (parseFloat(zScore) < 0 || parseFloat(zScore) > 3.0) {
-                alert('Z-Score must be between 0 and 3.0');
+            if (parseFloat(zScore) < -1 || parseFloat(zScore) > 4.0) {
+                showToast('Z-Score must be between -1 and 4.0', 'error');
                 return;
             }
 
             // Validate Z-Score decimal places (max 4 decimal places)
             const decimalPlaces = (zScore.toString().split('.')[1] || '').length;
             if (decimalPlaces > 4) {
-                alert('Z-Score can have maximum 4 decimal places');
+                showToast('Z-Score can have maximum 4 decimal places', 'error');
                 return;
             }
 
@@ -242,14 +294,14 @@ function addButtonEventListeners() {
                         displayEligiblePrograms(data);
                     } else {
                         displayEligiblePrograms([]);
-                        alert(`No eligible programs found for your Z-Score of ${submittedZScoreData.zScore}.\n\nTry exploring other streams or check back later for updates.`);
+                        showToast(`No eligible programs found for your Z-Score of ${submittedZScoreData.zScore}. Try exploring other streams or check back later for updates.`, 'error');
                     }
                 } else {
-                    alert('Error: ' + (result.message || 'Failed to find eligible programs'));
+                    showToast('Error: ' + (result.message || 'Failed to find eligible programs'), 'error');
                 }
             } catch (error) {
                 console.error('Error finding eligible degrees:', error);
-                alert('Failed to find eligible programs. Please try again.');
+                showToast('Failed to find eligible programs. Please try again.', 'error');
             } finally {
                 // Restore button state
                 this.disabled = false;
@@ -272,11 +324,13 @@ function addButtonEventListeners() {
                 // Pre-fill form with existing data
                 if (submittedZScoreData) {
                     document.getElementById('district').value = submittedZScoreData.district;
-                    document.getElementById('stream').value = submittedZScoreData.stream;
+                    const streamField = document.getElementById('stream');
+                    streamField.value = submittedZScoreData.stream;
                     document.getElementById('subject1').value = submittedZScoreData.subject1;
                     document.getElementById('subject2').value = submittedZScoreData.subject2;
                     document.getElementById('subject3').value = submittedZScoreData.subject3;
                     document.getElementById('zScore').value = submittedZScoreData.zScore || submittedZScoreData.z_score || '';
+                    streamField.dispatchEvent(new Event('change'));
                 }
             }
         });
@@ -323,17 +377,17 @@ async function saveZScoreToAPI(formData) {
         if (result.success) {
             console.log('✅ Z-Score saved/updated successfully');
             const action = submittedZScoreData ? 'updated' : 'saved';
-            alert(`Z-Score ${action} successfully!`);
+            showToast(`Z-Score ${action} successfully!`, 'success');
             updateZScoreCard(formData);
             document.getElementById('zScoreModal').style.display = 'none';
             document.getElementById('zScoreForm').reset();
         } else {
             console.log('❌ API returned error:', result.message);
-            alert('Error: ' + result.message);
+            showToast('Error: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('❌ Error saving Z-Score:', error);
-        alert('Error saving Z-Score. Please try again.');
+        showToast('Error saving Z-Score. Please try again.', 'error');
     }
 }
 
@@ -354,17 +408,17 @@ async function updateZScoreToAPI(formData) {
 
         if (result.success) {
             console.log('✅ Z-Score updated successfully');
-            alert('Z-Score updated successfully!');
+            showToast('Z-Score updated successfully!', 'success');
             updateZScoreCard(formData);
             document.getElementById('zScoreModal').style.display = 'none';
             document.getElementById('zScoreForm').reset();
         } else {
             console.log('❌ API returned error:', result.message);
-            alert('Error: ' + result.message);
+            showToast('Error: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('❌ Error updating Z-Score:', error);
-        alert('Error updating Z-Score. Please try again.');
+        showToast('Error updating Z-Score. Please try again.', 'error');
     }
 }
 
@@ -421,14 +475,14 @@ async function deleteZScoreFromAPI() {
         const result = await response.json();
 
         if (result.success) {
-            alert('Z-Score removed successfully!');
+            showToast('Z-Score removed successfully!', 'success');
             resetZScoreCard();
         } else {
-            alert('Error: ' + result.message);
+            showToast('Error: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error deleting Z-Score:', error);
-        alert('Error removing Z-Score. Please try again.');
+        showToast('Error removing Z-Score. Please try again.', 'error');
     }
 }
 
