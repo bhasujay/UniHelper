@@ -15,7 +15,7 @@ Nobody builds a custom router, a hand-written ORM base, and a polyglot Python/PH
 
 ## System Architecture
 
-![UniHelper System Architecture](doc\architecture%20diagram.jpeg)
+![UniHelper System Architecture](doc/architecture-diagram.jpeg)
 
 The diagram above is the authoritative map of the entire system. Every box is a real layer in the codebase, every arrow is a real call path, and the distinction between **solid lines** (server-rendered page channel) and **dashed lines** (stateless JSON/API channel) is the single most important architectural decision in the system. What follows is a layer-by-layer breakdown, reading the diagram from top to bottom, left to right.
 
